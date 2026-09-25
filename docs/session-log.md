@@ -79,3 +79,33 @@ Vercel → verify live `/health` and "API: Online".
   its default scope is the team, so the project was created without an
   explicit team id: `contact-sphere` (`prj_Yg9SI4oDlYfQGmzJDrbiCycDU8it`),
   root `apps/web`, Node 24, previews behind Vercel Authentication.
+
+---
+
+## 2026-09-25 — Live verification: Phase 1 shipped
+
+- Vercel production is at `https://contact-sphere-nine.vercel.app`; both
+  Render services' `WEB_ORIGIN` updated to it (Render redeployed both).
+- Vercel functions pinned to `fra1` (were `iad1`, Washington): every status
+  check would otherwise have crossed the Atlantic twice.
+- Found: the project's first Vercel build (from a docs branch) was promoted
+  to the production domain, likely because a new project promotes its first
+  deployment. The `main` build replaced it minutes later. The next branch
+  push is checked to confirm branches deploy as previews only.
+- **Live smoke test**, run from a Vercel Sandbox in fra1 (this agent's own
+  network cannot reach `*.onrender.com` or `*.vercel.app`), with egress
+  limited to the three hosts under test:
+
+| Check                                                            | Staging API           | Production API        | Web production |
+| ---------------------------------------------------------------- | --------------------- | --------------------- | -------------- |
+| `/health`                                                        | 200 `{"status":"ok"}` | 200 `{"status":"ok"}` | —              |
+| Page status (web server → Render API)                            | —                     | —                     | **Online**     |
+| CSP `default-src 'none'`, HSTS, nosniff                          | yes                   | yes                   | —              |
+| CORS: Vercel origin allowed                                      | yes                   | yes                   | —              |
+| CORS: `https://evil.example` refused                             | yes                   | yes                   | —              |
+| 404 leaks no internals                                           | yes                   | yes                   | —              |
+| X-Frame-Options DENY, HSTS, noindex, Referrer/Permissions-Policy | —                     | —                     | yes            |
+| robots.txt `Disallow: /`                                         | —                     | —                     | yes            |
+
+**Phase 1 acceptance criteria (PROJECT_CONTEXT §18): met**, except the
+owner running the app locally on the Windows PC.

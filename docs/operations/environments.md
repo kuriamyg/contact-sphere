@@ -20,7 +20,11 @@ was already taken on Render; the service's _name_ is still
 `contact-sphere-api`. Always use the URL above, never a guessed one.
 
 Both Render services: free plan, Frankfurt, build `main`, `autoDeploy: no`.
-`WEB_ORIGIN` on both is `https://contact-sphere.vercel.app`.
+`WEB_ORIGIN` on both is `https://contact-sphere-nine.vercel.app`.
+
+The Vercel production domain is **<https://contact-sphere-nine.vercel.app>**
+(`contact-sphere.vercel.app` belongs to another account). Vercel functions
+run in `fra1` (Frankfurt), next to the API and database.
 
 ## Credentials
 

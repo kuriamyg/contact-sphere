@@ -29,10 +29,11 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Render staging + production services created and live (verified via Render deploy status and logs)
 - [ ] Render health check path `/health` set on both services (dashboard only)
 - [x] Vercel project created, linked to the repo, `API_URL` per target
-- [ ] Vercel production shows "API: Online"
+- [x] Vercel production shows "API: Online" (live smoke test, see session log)
 - [ ] Branch protection on `main` (require PR + green CI) — owner, GitHub
       settings
 - [ ] 2FA enabled on GitHub, Neon, Render, Vercel — owner
+- [ ] Tidy Dependabot PRs #2–#6 (one at a time, CI green)
 - [ ] Owner runs the app on the Windows PC (`npm ci`, both dev servers)
 
 ## Phase 2 — Database
