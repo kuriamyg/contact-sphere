@@ -49,6 +49,9 @@ instruction and flag the concern in the PR description.
 - **Nothing is merged without green CI and the owner's explicit words
   "merge it".**
 - Verify, don't assume: a document saying something exists is not proof.
+- "Green" means **every** signal on the commit: GitHub Actions checks AND the
+  commit's combined status (Vercel reports there) AND the Vercel deployment
+  state READY. A green check list alone is not enough.
 - UI: responsive from 360 px, WCAG 2.2 AA, keyboard reachable, respects
   `prefers-reduced-motion`; state never conveyed by colour alone.
 

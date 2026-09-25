@@ -15,7 +15,7 @@ LOCAL_OWNER_URL="postgresql://postgres:localtest@localhost:5432/contact_sphere_t
 LOCAL_APP_PASSWORD="local-session-only-not-a-secret"
 LOCAL_APP_URL="postgresql://contact_sphere_app:${LOCAL_APP_PASSWORD}@localhost:5432/contact_sphere_test"
 
-echo "[session-start] Installing dependencies from the lockfile (also generates the Prisma client)..."
+echo "[session-start] Installing dependencies from the lockfile..."
 npm ci
 
 echo "[session-start] Ensuring local Postgres is running..."
