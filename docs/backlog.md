@@ -25,9 +25,11 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Repository made public (owner, for free GitHub Actions minutes — ADR 0011)
 - [ ] Secret scanning, push protection and private vulnerability reporting
       enabled (owner, GitHub → Settings → Code security)
-- [ ] CI green on the first PR
-- [ ] Render staging + production services created; `/health` verified live
-- [ ] Vercel project created; preview shows "API: Online"
+- [x] CI green on the first PR (after the repository was made public)
+- [x] Render staging + production services created and live (verified via Render deploy status and logs)
+- [ ] Render health check path `/health` set on both services (dashboard only)
+- [x] Vercel project created, linked to the repo, `API_URL` per target
+- [ ] Vercel production shows "API: Online"
 - [ ] Branch protection on `main` (require PR + green CI) — owner, GitHub
       settings
 - [ ] 2FA enabled on GitHub, Neon, Render, Vercel — owner

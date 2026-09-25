@@ -61,3 +61,21 @@ Vercel → verify live `/health` and "API: Online".
   runners are free for public repositories (ADR 0011). Before that, the full
   git history was scanned: no credentials, connection strings or personal
   email in any commit.
+
+---
+
+## 2026-09-25 — Phase 1 merged and deployed
+
+- PR #1 merged on the owner's "merge it" (merge commit `200b91d`) after CI
+  passed on GitHub-hosted runners.
+- Render: created `contact-sphere-api-staging` (`srv-darbnvhsrm7s73dulcg0`)
+  and `contact-sphere-api` (`srv-darbssou01pc73bagk60`, hostname suffixed
+  `-js7c`). Staging verified from Render's own deploy status and logs:
+  build OK (0 vulnerabilities), "Nest application successfully started",
+  `/health` route mapped, service live.
+- The agent sandbox cannot reach `*.onrender.com` (egress policy denies it),
+  so live HTTP checks are done through Vercel's servers instead.
+- Vercel: the connector's token cannot address the team by id (403), but
+  its default scope is the team, so the project was created without an
+  explicit team id: `contact-sphere` (`prj_Yg9SI4oDlYfQGmzJDrbiCycDU8it`),
+  root `apps/web`, Node 24, previews behind Vercel Authentication.

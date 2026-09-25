@@ -1,23 +1,26 @@
 # Environments
 
-**Last verified: 2026-09-25**, against the Neon API. If this file and any
+**Last verified: 2026-09-25**, against the Neon, Render and Vercel APIs. If this file and any
 plan disagree, trust this file — and re-verify it against the provider,
 because a database's _name_ is never proof of which database it is
 (ADR 0008).
 
 ## Topology
 
-| Layer                 | Production                                                              | Staging                                       | Development                               |
-| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
-| Neon project          | `contact-sphere` (`noisy-base-91471369`), AWS eu-central-1, Postgres 18 | same project                                  | same project                              |
-| Neon branch           | `production` (`br-autumn-sun-b1tkzogt`) — default branch                | `staging` (`br-holy-breeze-b1atievt`)         | `development` (`br-frosty-pine-b1a44tgc`) |
-| Database / owner role | `contacts` / `contacts_owner`                                           | same names, separate branch data and endpoint | same                                      |
-| Render service        | `contact-sphere-api` — _pending_                                        | `contact-sphere-api-staging` — _pending_      | local `npm run dev:api`                   |
-| Vercel                | project `contact-sphere`, Production target — _pending_                 | same project, Preview target — _pending_      | local `npm run dev:web`                   |
+| Layer                 | Production                                                                                                              | Staging                                                                                                       | Development                               |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Neon project          | `contact-sphere` (`noisy-base-91471369`), AWS eu-central-1, Postgres 18                                                 | same project                                                                                                  | same project                              |
+| Neon branch           | `production` (`br-autumn-sun-b1tkzogt`) — default branch                                                                | `staging` (`br-holy-breeze-b1atievt`)                                                                         | `development` (`br-frosty-pine-b1a44tgc`) |
+| Database / owner role | `contacts` / `contacts_owner`                                                                                           | same names, separate branch data and endpoint                                                                 | same                                      |
+| Render service        | `contact-sphere-api` (`srv-darbssou01pc73bagk60`) — <https://contact-sphere-api-js7c.onrender.com>                      | `contact-sphere-api-staging` (`srv-darbnvhsrm7s73dulcg0`) — <https://contact-sphere-api-staging.onrender.com> | local `npm run dev:api`                   |
+| Vercel                | project `contact-sphere` (`prj_Yg9SI4oDlYfQGmzJDrbiCycDU8it`), Production target, `API_URL` → production Render service | same project, Preview target (behind Vercel login), `API_URL` → staging Render service                        | local `npm run dev:web`                   |
 
-"_pending_" = not created yet because the GitHub repository must exist first
-(Render and Vercel deploy from it). Update this table, with IDs, the moment
-they exist.
+Render gave production a suffixed hostname (`-js7c`) because the plain name
+was already taken on Render; the service's _name_ is still
+`contact-sphere-api`. Always use the URL above, never a guessed one.
+
+Both Render services: free plan, Frankfurt, build `main`, `autoDeploy: no`.
+`WEB_ORIGIN` on both is `https://contact-sphere.vercel.app`.
 
 ## Credentials
 
