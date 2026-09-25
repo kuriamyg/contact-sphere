@@ -60,7 +60,6 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # Also generates the Prisma client (root postinstall).
       - name: Install dependencies (lockfile only)
         run: npm ci
 
@@ -92,6 +91,29 @@ jobs:
         run: npm run db:drift
 
       - name: Build
+        run: npm run build
+
+  # Vercel installs from apps/web (the project's root directory) with
+  # `npm install`, not from the repository root with `npm ci`. On 2026-09-25
+  # a root postinstall step broke every Vercel deployment for five PRs while
+  # this workflow stayed green, because the two installs behave differently.
+  # This job reproduces Vercel's steps exactly, so that cannot happen again.
+  vercel-parity:
+    name: Web builds the way Vercel builds it
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: npm install from apps/web (as Vercel does)
+        working-directory: apps/web
+        run: npm install --no-audit --no-fund
+      - name: next build (as Vercel does)
+        working-directory: apps/web
         run: npm run build
 
   audit:

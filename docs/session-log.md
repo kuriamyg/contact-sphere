@@ -163,3 +163,30 @@ a new one back into the session). App-role passwords can be rotated any
 time with `db:app-role` + Render (docs/operations/database-roles.md).
 
 **Phase 2 acceptance: met.**
+
+---
+
+## 2026-09-25 — Correction: Vercel deployments were failing since Phase 2
+
+The owner spotted a red status on GitHub. GitHub Actions was green on every
+current commit, but the **Vercel** commit status had been red since PR #10:
+every Vercel deployment (previews and production) failed at `npm install`
+with exit 127, `sh: prisma: not found`.
+
+- **Cause:** Phase 2 added a root `postinstall: prisma generate`. Vercel runs
+  `npm install` from `apps/web` (the project's root directory), where the
+  Prisma CLI is not available to that script. CI installs differently
+  (`npm ci` at the repository root), so CI never saw it. Reproduced exactly
+  in a fresh clone.
+- **Impact:** production kept serving the last good build (PR #9). The web
+  code did not change in Phase 2, so what users saw was identical, but the
+  "web production page: Online" check in the Phase 2 entry above was
+  answered by that older build — not proof that Phase 2's web build
+  deployed. The API and database verification stand.
+- **How it was missed:** the check I read was "Vercel Preview Comments"
+  (green); the deployment itself reports as a separate commit status.
+- **Fix:** no root postinstall; the API generates its Prisma client in its
+  own pre-hooks (`prebuild`, `pretest`, …). New CI job **"Web builds the way
+  Vercel builds it"** runs `npm install` + `next build` from `apps/web`.
+- **Process change:** a deployment is verified by the Vercel deployment's
+  own state (READY) and the commit's combined status, not by a check name.
