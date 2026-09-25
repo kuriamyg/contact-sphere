@@ -4,6 +4,18 @@ The order is always: **CI green → owner says "merge it" → merge → (schema
 changes: migrate staging, verify, migrate production) → deploy staging →
 verify → deploy production → verify → log it** in `docs/session-log.md`.
 
+## Migrations
+
+Run **Actions → Deploy migrations** with `staging`, confirm it passes
+(including its drift check), then with `production` (type `production` to
+confirm). Each GitHub Environment (`staging`, `production`) needs one secret,
+`DIRECT_URL`: the Neon **owner** connection for that branch, direct host,
+`sslmode=verify-full`. Roles and `DATABASE_URL`:
+[`database-roles.md`](database-roles.md).
+
+Verify after deploying code: `GET /health/ready` →
+`{"status":"ok","checks":{"database":"ok"}}`.
+
 ## API on Render
 
 Two services, both building `main`, both `autoDeploy: false`

@@ -10,7 +10,9 @@ async function bootstrap(): Promise<void> {
   // should fail here, loudly, naming the variable.
   const env = loadEnv();
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule.forEnv(env),
+  );
   configureApp(app, env);
 
   // 0.0.0.0 so Render's router can reach the process inside its container.

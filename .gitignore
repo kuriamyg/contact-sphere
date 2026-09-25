@@ -44,3 +44,6 @@ Thumbs.db
 # shadow the project contract at the repo root.
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+
+# Generated Prisma client (npm run prisma:generate)
+apps/api/src/generated/

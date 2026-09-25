@@ -39,14 +39,21 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 
 ## Phase 2 — Database
 
-- [ ] Prisma 7 + schema for users, contacts, phone_numbers, email_addresses
-- [ ] Least-privilege runtime role; owner role for migrations only
-- [ ] `DATABASE_URL`/`DIRECT_URL` per environment; pre-flight URL checker
-      (port TrustGiving's `scripts/check-database-urls.mjs`)
-- [ ] CI Postgres service; migration drift check
-- [ ] Session hook starts a disposable local Postgres
-- [ ] `GET /health/ready` (readiness, cached, one-word results)
-- [ ] Migration deploy workflow: staging first, production with confirmation
+- [x] Prisma 7 + initial schema: `users`, `audit_logs` (contact tables are
+      Phase 4, after ADRs 0005/0007/0010 — ADR 0012)
+- [x] Least-privilege runtime role (`app_runtime` / `contact_sphere_app`);
+      owner for migrations only; append-only audit log; guarantee tests
+- [x] Pre-flight URL checker (ported from TrustGiving)
+- [x] CI Postgres 18 service; tests run as the app role; drift check
+- [x] Session hook starts a disposable local Postgres
+- [x] `GET /health/ready` (readiness, cached, one-word results)
+- [x] Migration deploy workflow: staging first, production with confirmation
+- [x] Seed strategy: none. Tests create synthetic rows; no environment is
+      ever seeded with personal data
+- [ ] Staging + production migrated, app roles created, Render
+      `DATABASE_URL` set, `/health/ready` verified live
+- [ ] GitHub Environments `staging`/`production` with a `DIRECT_URL` secret
+      (owner), needed for the Deploy migrations workflow — owner action
 
 ## Phase 3 — Authentication (decide ADR 0006 first)
 
