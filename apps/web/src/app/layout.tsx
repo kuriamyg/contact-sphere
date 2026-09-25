@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { connection } from 'next/server';
 import './globals.css';
 
 // next/font downloads these at build time and serves them from our own
@@ -30,7 +31,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  // Every page renders per request, so each gets its own CSP nonce
+  // (src/proxy.ts). A page built once at deploy time could not carry one.
+  await connection();
   return (
     <html
       lang="en"

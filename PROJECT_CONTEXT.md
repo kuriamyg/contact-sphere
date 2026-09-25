@@ -433,8 +433,8 @@ it — it must not be treated as final before then.
 | Node.js version and package manager                    | **Accepted** — Node 24 LTS, npm workspaces                                                                                    | ADR 0002 |
 | PostgreSQL and application hosting                     | **Accepted** — Neon (Frankfurt) + Render (API, free plan for now) + Vercel (web) (owner, 2026-09-25)                          | ADR 0003 |
 | Environments and isolation                             | **Accepted**                                                                                                                  | ADR 0008 |
-| Authentication approach                                | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
-| Session/token strategy                                 | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
+| Authentication approach                                | **Accepted** — email + argon2id password, BFF, first-account setup token                                                      | ADR 0006 |
+| Session/token strategy                                 | **Accepted** — opaque token, HttpOnly `__Host-` cookie, hashed in Postgres                                                    | ADR 0006 |
 | Meaning of "last used"                                 | Proposed                                                                                                                      | ADR 0007 |
 | Hard delete, soft delete, or archive                   | Proposed — decide at Phase 4                                                                                                  | ADR 0005 |
 | Exact contact fields; email and notes in first release | Proposed — decide at Phase 4                                                                                                  | ADR 0010 |

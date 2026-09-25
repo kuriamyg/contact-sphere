@@ -31,11 +31,34 @@ async function sqlState(promise: Promise<unknown>): Promise<string> {
   throw new Error('expected the statement to be refused, but it succeeded');
 }
 
-async function insertUser(client: Client, email: string): Promise<string> {
+// A syntactically valid argon2id PHC string; the database checks the
+// prefix, not the maths.
+const HASH = '$argon2id$v=19$m=65536,t=3,p=4$c2FsdHNhbHQ$aGFzaGhhc2hoYXNo';
+const TOKEN_HASH = 'a'.repeat(64);
+
+async function insertUser(
+  client: Client,
+  email: string,
+  passwordHash = HASH,
+): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
-    `INSERT INTO users (id, email, updated_at)
-     VALUES (gen_random_uuid(), $1, now()) RETURNING id`,
-    [email],
+    `INSERT INTO users (id, email, password_hash, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, now()) RETURNING id`,
+    [email, passwordHash],
+  );
+  return rows[0].id;
+}
+
+async function insertSession(
+  client: Client,
+  userId: string,
+  tokenHash = TOKEN_HASH,
+  expiresIn = "interval '30 days'",
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO sessions (id, user_id, token_hash, expires_at)
+     VALUES (gen_random_uuid(), $1, $2, now() + ${expiresIn}) RETURNING id`,
+    [userId, tokenHash],
   );
   return rows[0].id;
 }
@@ -62,7 +85,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await owner.query('TRUNCATE audit_logs, users');
+  await owner.query('TRUNCATE sessions, audit_logs, users');
 });
 
 afterAll(async () => {
@@ -168,10 +191,64 @@ describe('users', () => {
     );
   });
 
+  it('refuses a password that is not an argon2id hash', async () => {
+    expect(
+      await sqlState(insertUser(app, 'ann@example.com', 'hunter2hunter2')),
+    ).toBe(CHECK_VIOLATION);
+    expect(
+      await sqlState(
+        insertUser(app, 'ann@example.com', '$2b$10$bcryptbcryptbcrypt'),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+
   it('refuses a duplicate email', async () => {
     await insertUser(app, 'ann@example.com');
     expect(await sqlState(insertUser(app, 'ann@example.com'))).toBe(
       UNIQUE_VIOLATION,
     );
+  });
+});
+
+describe('sessions', () => {
+  it('the app can create, read, refresh and delete them', async () => {
+    const userId = await insertUser(app, 'ann@example.com');
+    const id = await insertSession(app, userId);
+    await app.query('UPDATE sessions SET last_seen_at = now() WHERE id = $1', [
+      id,
+    ]);
+    await app.query('DELETE FROM sessions WHERE id = $1', [id]);
+    const { rows } = await app.query('SELECT id FROM sessions');
+    expect(rows).toEqual([]);
+  });
+
+  it('stores only a SHA-256 hex digest, never a raw token', async () => {
+    const userId = await insertUser(app, 'ann@example.com');
+    expect(await sqlState(insertSession(app, userId, 'raw-token-value'))).toBe(
+      CHECK_VIOLATION,
+    );
+  });
+
+  it('refuses a duplicate token hash', async () => {
+    const userId = await insertUser(app, 'ann@example.com');
+    await insertSession(app, userId);
+    expect(await sqlState(insertSession(app, userId))).toBe(UNIQUE_VIOLATION);
+  });
+
+  it('refuses an expiry that is not after creation', async () => {
+    const userId = await insertUser(app, 'ann@example.com');
+    expect(
+      await sqlState(
+        insertSession(app, userId, TOKEN_HASH, "interval '-1 second'"),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+
+  it('are deleted with their account', async () => {
+    const userId = await insertUser(app, 'ann@example.com');
+    await insertSession(app, userId);
+    await app.query('DELETE FROM users WHERE id = $1', [userId]);
+    const { rows } = await app.query('SELECT id FROM sessions');
+    expect(rows).toEqual([]);
   });
 });

@@ -1,31 +1,15 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 
-import { AppModule } from '../../src/app.module';
-import { configureApp } from '../../src/bootstrap/configure-app';
-import { loadEnv } from '../../src/config/env';
-import { requireLocalDatabaseUrl } from '../support/local-database';
+import { createTestApp } from '../support/test-app';
 
 describe('health endpoints (e2e)', () => {
   let app: NestExpressApplication;
   let server: App;
 
   beforeAll(async () => {
-    // The real database from CI / the session hook (a disposable Postgres).
-    const env = loadEnv({
-      NODE_ENV: 'test',
-      WEB_ORIGIN: 'http://localhost:3000',
-      DATABASE_URL: requireLocalDatabaseUrl('DATABASE_URL'),
-    });
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule.forEnv(env)],
-    }).compile();
-
-    app = moduleRef.createNestApplication<NestExpressApplication>();
-    configureApp(app, env);
-    await app.init();
+    ({ app } = await createTestApp());
     server = app.getHttpServer();
   });
 
@@ -72,7 +56,7 @@ describe('health endpoints (e2e)', () => {
     expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 
-  it('returns 404 for unknown routes without leaking internals', async () => {
+  it('returns 404 for unknown routes, leaking nothing', async () => {
     const res = await request(server).get('/does-not-exist').expect(404);
     expect(JSON.stringify(res.body)).not.toMatch(/stack|node_modules/i);
   });

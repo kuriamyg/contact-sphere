@@ -21,7 +21,7 @@ mattered.
 | [0003](0003-hosting.md)                          | Hosting: Vercel + Render + Neon (Frankfurt)                | Accepted |
 | [0004](0004-single-user-multi-user-ready.md)     | Single-user first release, multi-user-ready data model     | Accepted |
 | [0005](0005-deletion-policy.md)                  | Archive, trash, then hard delete                           | Proposed |
-| [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                | Proposed |
+| [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                | Accepted |
 | [0007](0007-last-used.md)                        | Definition of "last used"                                  | Proposed |
 | [0008](0008-environments-and-isolation.md)       | Environments and isolation                                 | Accepted |
 | [0009](0009-backup-encryption.md)                | Encrypted local backups                                    | Proposed |

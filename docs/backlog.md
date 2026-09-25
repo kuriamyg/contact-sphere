@@ -57,12 +57,21 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] GitHub Environments `staging`/`production` with a `DIRECT_URL` secret
       (owner), needed for the Deploy migrations workflow — owner action
 
-## Phase 3 — Authentication (decide ADR 0006 first)
+## Phase 3 — Authentication (ADR 0006)
 
-- [ ] BFF proxy, session cookies, argon2id, throttling, owner bootstrap
-- [ ] Web Content-Security-Policy with nonces
+- [x] BFF: web server calls the API with a shared secret; browsers never do
+- [x] argon2id passwords, policy; DB refuses non-argon2id hashes
+- [x] Sessions hashed in Postgres; HttpOnly `__Host-` cookie; idle/absolute
+      expiry; sign out; sign out everywhere; password change ends others
+- [x] Per-IP and per-account brute-force limits; uniform login errors
+- [x] One-time owner setup (setup token, advisory lock)
+- [x] Web CSP with per-request nonces
+- [x] Audit entries for every auth event (no emails)
+- [x] Tests: unit, DB guarantees, API e2e, real-browser flow
+- [ ] TOTP two-factor — **before real contact data** (next PR)
+- [ ] Breached-password check; device/session list
+- [ ] Move the per-account failure counter out of memory before scaling out
 - [ ] Structured logging with redaction (pino) — never contact content
-- [ ] Security tests: unauthenticated, cross-user, session expiry
 
 ## Later phases
 
