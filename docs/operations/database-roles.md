@@ -7,7 +7,8 @@ Background: ADR 0012. Two connection strings per environment, never mixed:
 | `DIRECT_URL`   | owner (`contacts_owner`) | direct (no `-pooler`)  | migrations only | GitHub Environment secret; your shell, for one command |
 | `DATABASE_URL` | `contact_sphere_app`     | **pooled** (`-pooler`) | the running API | Render service env var                                 |
 
-Both must end in `?sslmode=verify-full`. Percent-encode `# / ?` in passwords.
+Both must end in `?sslmode=verify-full` (node-postgres treats `require` as
+`verify-full` today but will weaken it in v9, so say what we mean). Percent-encode `# / ?` in passwords.
 
 ## Set up an environment (once per Neon branch)
 
@@ -35,6 +36,13 @@ when a minute of downtime is acceptable.
 
 ## Never
 
+- Never rely on whatever `DIRECT_URL`/`DATABASE_URL` a shell already has.
+  On 2026-09-25 the shared agent environment carried **another project's**
+  (TrustGiving's) database credentials under these same names, and a
+  Contact Sphere command briefly targeted them (the connection was blocked
+  by the network; nothing was changed). Set both explicitly for every
+  command. `db:app-role` now refuses any database that lacks this project's
+  first migration.
 - Never give the API the owner connection.
 - Never run `test:db` or `test:e2e` against Neon (the suites refuse non-local
   hosts, and that guard must never be weakened).
