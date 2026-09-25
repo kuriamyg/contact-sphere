@@ -1,4 +1,4 @@
-# CLAUDE.md — Contact Management
+# CLAUDE.md — Contact Sphere
 
 This is a **privacy-sensitive system holding other people's personal data**.
 Full context: `PROJECT_CONTEXT.md`. Decisions and their reasons:

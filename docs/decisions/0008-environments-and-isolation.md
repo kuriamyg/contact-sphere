@@ -4,13 +4,13 @@
 
 ## Decision
 
-| Environment         | Database                                                                         | Who uses it                    |
-| ------------------- | -------------------------------------------------------------------------------- | ------------------------------ |
-| Local unit tests    | none                                                                             | developer, CI                  |
-| CI / agent sessions | **disposable** Postgres (GitHub Actions service / local container)               | CI, Claude Code sessions       |
-| Local development   | Neon `development` branch, or local Docker Postgres                              | owner's Windows PC             |
-| Staging             | Neon `staging` branch + Render `contact-management-api-staging` + Vercel Preview | verification before production |
-| Production          | Neon `production` branch + Render `contact-management-api` + Vercel Production   | the owner's real contacts      |
+| Environment         | Database                                                                     | Who uses it                    |
+| ------------------- | ---------------------------------------------------------------------------- | ------------------------------ |
+| Local unit tests    | none                                                                         | developer, CI                  |
+| CI / agent sessions | **disposable** Postgres (GitHub Actions service / local container)           | CI, Claude Code sessions       |
+| Local development   | Neon `development` branch, or local Docker Postgres                          | owner's Windows PC             |
+| Staging             | Neon `staging` branch + Render `contact-sphere-api-staging` + Vercel Preview | verification before production |
+| Production          | Neon `production` branch + Render `contact-sphere-api` + Vercel Production   | the owner's real contacts      |
 
 Rules:
 

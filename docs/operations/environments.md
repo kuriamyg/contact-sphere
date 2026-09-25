@@ -7,13 +7,13 @@ because a database's _name_ is never proof of which database it is
 
 ## Topology
 
-| Layer                 | Production                                                                  | Staging                                       | Development                               |
-| --------------------- | --------------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
-| Neon project          | `contact-management` (`noisy-base-91471369`), AWS eu-central-1, Postgres 18 | same project                                  | same project                              |
-| Neon branch           | `production` (`br-autumn-sun-b1tkzogt`) — default branch                    | `staging` (`br-holy-breeze-b1atievt`)         | `development` (`br-frosty-pine-b1a44tgc`) |
-| Database / owner role | `contacts` / `contacts_owner`                                               | same names, separate branch data and endpoint | same                                      |
-| Render service        | `contact-management-api` — _pending_                                        | `contact-management-api-staging` — _pending_  | local `npm run dev:api`                   |
-| Vercel                | project `contact-management`, Production target — _pending_                 | same project, Preview target — _pending_      | local `npm run dev:web`                   |
+| Layer                 | Production                                                              | Staging                                       | Development                               |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
+| Neon project          | `contact-sphere` (`noisy-base-91471369`), AWS eu-central-1, Postgres 18 | same project                                  | same project                              |
+| Neon branch           | `production` (`br-autumn-sun-b1tkzogt`) — default branch                | `staging` (`br-holy-breeze-b1atievt`)         | `development` (`br-frosty-pine-b1a44tgc`) |
+| Database / owner role | `contacts` / `contacts_owner`                                           | same names, separate branch data and endpoint | same                                      |
+| Render service        | `contact-sphere-api` — _pending_                                        | `contact-sphere-api-staging` — _pending_      | local `npm run dev:api`                   |
+| Vercel                | project `contact-sphere`, Production target — _pending_                 | same project, Preview target — _pending_      | local `npm run dev:web`                   |
 
 "_pending_" = not created yet because the GitHub repository must exist first
 (Render and Vercel deploy from it). Update this table, with IDs, the moment

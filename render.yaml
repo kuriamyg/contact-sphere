@@ -1,4 +1,4 @@
-# Render Blueprint for the Contact Management API.
+# Render Blueprint for the Contact Sphere API.
 #
 # NOTHING SECRET LIVES IN THIS FILE. Any credential is declared with
 # `sync: false`: the name is committed, the value is typed into the Render
@@ -12,7 +12,7 @@
 
 services:
   - type: web
-    name: contact-management-api-staging
+    name: contact-sphere-api-staging
     runtime: node
     plan: free # Owner decision 2026-09-25: free until real data goes in.
     region: frankfurt # Same AWS region as the Neon project (eu-central-1).
@@ -40,7 +40,7 @@ services:
         sync: false
 
   - type: web
-    name: contact-management-api
+    name: contact-sphere-api
     runtime: node
     plan: free
     region: frankfurt

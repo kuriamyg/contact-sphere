@@ -14,9 +14,10 @@ TrustGiving's discipline.
 
 - Reviewed the handoff; found 12 gaps (PROJECT_CONTEXT §22) and wrote ADRs
   0001–0010, the threat model, environment and deployment docs.
-- Owner decisions: name `contact-management`; single-user, multi-user-ready;
+- Owner decisions: name `contact-management`, then `contact-sphere` when the
+  owner created the repository (the Neon project was renamed to match); single-user, multi-user-ready;
   Render free plan for now.
-- Neon: created project `contact-management` (`noisy-base-91471369`,
+- Neon: created project `contact-sphere` (`noisy-base-91471369`,
   eu-central-1, Postgres 18) with branches `production`, `staging`,
   `development`. Verified with the Neon API (list_branches). Protecting
   `production` was refused: the free plan's one protected branch is used by

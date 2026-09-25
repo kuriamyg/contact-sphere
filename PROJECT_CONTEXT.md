@@ -1,4 +1,4 @@
-# Contact Management Platform — Project Context
+# Contact Sphere Platform — Project Context
 
 **Version:** 1.1.0  
 **Date:** 2026-09-25  
@@ -57,7 +57,7 @@ The project owner is a beginner in this specific workflow and wants every major 
 ## 4. Proposed repository structure
 
 ```text
-contact-management/
+contact-sphere/
 ├── apps/
 │   ├── web/                 # Next.js frontend
 │   └── api/                 # NestJS backend
@@ -426,22 +426,22 @@ decided and recorded in an ADR under `docs/decisions/`. "Proposed" means a
 recommendation exists but it is decided at the start of the phase that needs
 it — it must not be treated as final before then.
 
-| Decision                                               | Status                                                                                               | Where    |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | -------- |
-| Project and repository name                            | **Accepted** — `contact-management` (owner, 2026-09-25)                                              | ADR 0002 |
-| Single-user vs multi-user first release                | **Accepted** — single-user, multi-user-ready (owner, 2026-09-25)                                     | ADR 0004 |
-| Node.js version and package manager                    | **Accepted** — Node 24 LTS, npm workspaces                                                           | ADR 0002 |
-| PostgreSQL and application hosting                     | **Accepted** — Neon (Frankfurt) + Render (API, free plan for now) + Vercel (web) (owner, 2026-09-25) | ADR 0003 |
-| Environments and isolation                             | **Accepted**                                                                                         | ADR 0008 |
-| Authentication approach                                | Proposed — decide at Phase 3                                                                         | ADR 0006 |
-| Session/token strategy                                 | Proposed — decide at Phase 3                                                                         | ADR 0006 |
-| Meaning of "last used"                                 | Proposed                                                                                             | ADR 0007 |
-| Hard delete, soft delete, or archive                   | Proposed — decide at Phase 4                                                                         | ADR 0005 |
-| Exact contact fields; email and notes in first release | Proposed — decide at Phase 4                                                                         | ADR 0010 |
-| Backup encryption and recovery design                  | Proposed — decide at Phase 8                                                                         | ADR 0009 |
-| Graph library                                          | Open — evaluate at Phase 7                                                                           | backlog  |
-| Scope of shared groups and organizations               | Deferred to Phase 11 (single-user first)                                                             | ADR 0004 |
-| Monetization model                                     | Deferred to Phase 11                                                                                 | §16      |
+| Decision                                               | Status                                                                                                                        | Where    |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Project and repository name                            | **Accepted** — `contact-sphere` (owner, 2026-09-25; `contact-management` was chosen first, renamed when the repo was created) | ADR 0002 |
+| Single-user vs multi-user first release                | **Accepted** — single-user, multi-user-ready (owner, 2026-09-25)                                                              | ADR 0004 |
+| Node.js version and package manager                    | **Accepted** — Node 24 LTS, npm workspaces                                                                                    | ADR 0002 |
+| PostgreSQL and application hosting                     | **Accepted** — Neon (Frankfurt) + Render (API, free plan for now) + Vercel (web) (owner, 2026-09-25)                          | ADR 0003 |
+| Environments and isolation                             | **Accepted**                                                                                                                  | ADR 0008 |
+| Authentication approach                                | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
+| Session/token strategy                                 | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
+| Meaning of "last used"                                 | Proposed                                                                                                                      | ADR 0007 |
+| Hard delete, soft delete, or archive                   | Proposed — decide at Phase 4                                                                                                  | ADR 0005 |
+| Exact contact fields; email and notes in first release | Proposed — decide at Phase 4                                                                                                  | ADR 0010 |
+| Backup encryption and recovery design                  | Proposed — decide at Phase 8                                                                                                  | ADR 0009 |
+| Graph library                                          | Open — evaluate at Phase 7                                                                                                    | backlog  |
+| Scope of shared groups and organizations               | Deferred to Phase 11 (single-user first)                                                                                      | ADR 0004 |
+| Monetization model                                     | Deferred to Phase 11                                                                                                          | §16      |
 
 ## 18. Phase 1 acceptance criteria
 
@@ -484,7 +484,7 @@ Do not migrate personal contact data until the foundation and data protection ap
   threat model, environment plan and backlog written.
 - Phase 1 foundation built and verified locally (see `CHANGELOG.md` and
   `docs/session-log.md`).
-- Neon project `contact-management` created with `production`, `staging` and
+- Neon project `contact-sphere` created with `production`, `staging` and
   `development` branches (see `docs/operations/environments.md`).
 - No personal contact data exists anywhere yet, and none may be added until
   Phase 3 (authentication) is merged and reviewed.

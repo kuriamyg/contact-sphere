@@ -20,5 +20,5 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 - `PROJECT_CONTEXT.md` v1.1 with gap analysis; ADRs 0001–0010; threat
   model; environments and deployment docs; backlog; session log.
-- Neon project `contact-management` with production/staging/development
+- Neon project `contact-sphere` with production/staging/development
   branches.

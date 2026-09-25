@@ -22,7 +22,7 @@ for Android phones and Windows PCs.
 > **Honest security note.** Data is encrypted in transit (HTTPS) and at rest
 > by the database provider, and access is restricted to your account. It is
 > **not end-to-end encrypted**: the server can read the contacts it stores,
-> because search and duplicate detection run there. Backups *are* encrypted
+> because search and duplicate detection run there. Backups _are_ encrypted
 > on your device. See `docs/security/threat-model.md`.
 
 > **Status:** Phase 1 — Foundation. There is no login yet, so **do not put
@@ -58,8 +58,8 @@ Start with [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), then
    and Tailwind CSS IntelliSense extensions.
 4. **Clone and install:**
    ```powershell
-   git clone https://github.com/kuriamyg/contact-management.git
-   cd contact-management
+   git clone https://github.com/kuriamyg/contact-sphere.git
+   cd contact-sphere
    npm ci
    ```
    `npm ci` installs exactly what `package-lock.json` lists — never

@@ -4,11 +4,11 @@
 
 ## Decision
 
-| Layer                    | Provider                          | Region                                | Plan                              |
-| ------------------------ | --------------------------------- | ------------------------------------- | --------------------------------- |
-| Web (Next.js)            | Vercel                            | automatic (edge) + functions near API | Hobby                             |
-| API (NestJS)             | Render web service                | Frankfurt                             | **Free** for now (owner decision) |
-| Database (PostgreSQL 18) | Neon project `contact-management` | AWS eu-central-1 (Frankfurt)          | Free                              |
+| Layer                    | Provider                      | Region                                | Plan                              |
+| ------------------------ | ----------------------------- | ------------------------------------- | --------------------------------- |
+| Web (Next.js)            | Vercel                        | automatic (edge) + functions near API | Hobby                             |
+| API (NestJS)             | Render web service            | Frankfurt                             | **Free** for now (owner decision) |
+| Database (PostgreSQL 18) | Neon project `contact-sphere` | AWS eu-central-1 (Frankfurt)          | Free                              |
 
 ## Why
 

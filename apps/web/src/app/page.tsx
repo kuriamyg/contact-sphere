@@ -22,7 +22,7 @@ export default function Home() {
           Private · Phase 1 foundation
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Contact Management
+          Contact Sphere
         </h1>
         <p className="max-w-prose text-lg text-muted">
           A privacy-first home for your contacts, groups and relationships. Your

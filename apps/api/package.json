@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "0.0.1",
-  "description": "Contact Management API (NestJS)",
+  "description": "Contact Sphere API (NestJS)",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

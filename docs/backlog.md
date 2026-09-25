@@ -7,7 +7,7 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 ## Phase 0 — Planning
 
 - [x] Handoff reviewed; gap analysis (PROJECT_CONTEXT §22)
-- [x] Project and repository name — `contact-management`
+- [x] Project and repository name — `contact-sphere`
 - [x] ADRs 0001–0010 (accepted and proposed)
 - [x] Threat model and data classification
 - [x] Environment plan; Neon project with three branches (verified via API)

@@ -4,7 +4,7 @@
 
 ## Decision
 
-- One repository, `kuriamyg/contact-management` (private), with
+- One repository, `kuriamyg/contact-sphere` (private), with
   `apps/web` (Next.js) and `apps/api` (NestJS) as **npm workspaces**.
 - **Node.js 24** (Active LTS, supported until April 2028), pinned in `.nvmrc`
   and `engines`. CI and Render read the same version.

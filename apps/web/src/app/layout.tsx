@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Contact Management',
+  title: 'Contact Sphere',
   description: 'A private, privacy-first contact manager.',
   // A private application: keep every page out of search engines.
   robots: { index: false, follow: false },
