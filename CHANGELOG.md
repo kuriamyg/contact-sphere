@@ -16,6 +16,13 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 - CI: Postgres 18 service, migrations, drift check. Manual
   "Deploy migrations" workflow. Session hook starts a local Postgres.
 - Dependabot limited to minor/patch updates (majors by hand, ADR 0002).
+- Deployed: staging and production migrated; app roles created; live
+  `/health/ready` reports the database on both.
+
+### Fixed
+
+- `db:app-role` works with Neon's non-superuser owner, and refuses any
+  database that is not a migrated Contact Sphere database.
 
 ### Added — Phase 1 (foundation)
 

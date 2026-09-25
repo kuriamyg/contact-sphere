@@ -26,6 +26,14 @@ The Vercel production domain is **<https://contact-sphere-nine.vercel.app>**
 (`contact-sphere.vercel.app` belongs to another account). Vercel functions
 run in `fra1` (Frankfurt), next to the API and database.
 
+## Database state (verified 2026-09-25)
+
+| Branch        | Migrations                                          | `contact_sphere_app`                           | Render `DATABASE_URL`               |
+| ------------- | --------------------------------------------------- | ---------------------------------------------- | ----------------------------------- |
+| `production`  | `20260925185127_init` applied, no drift             | created, verified member of `app_runtime` only | set (pooled, `sslmode=verify-full`) |
+| `staging`     | same                                                | same (its own password)                        | set (pooled, `sslmode=verify-full`) |
+| `development` | not migrated — for the owner's local setup (README) | —                                              | —                                   |
+
 ## Credentials
 
 - No connection string is stored in this repository or in these docs.

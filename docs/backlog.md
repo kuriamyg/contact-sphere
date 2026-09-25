@@ -50,8 +50,10 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Migration deploy workflow: staging first, production with confirmation
 - [x] Seed strategy: none. Tests create synthetic rows; no environment is
       ever seeded with personal data
-- [ ] Staging + production migrated, app roles created, Render
-      `DATABASE_URL` set, `/health/ready` verified live
+- [x] Staging + production migrated, app roles created, Render
+      `DATABASE_URL` set, `/health/ready` verified live (session log)
+- [ ] Rotate the Neon owner password on all three branches (it passed
+      through the agent session during setup) — owner, Neon console
 - [ ] GitHub Environments `staging`/`production` with a `DIRECT_URL` secret
       (owner), needed for the Deploy migrations workflow — owner action
 
