@@ -93,6 +93,12 @@ All documented in [`.env.example`](.env.example). Real values live only in
 `.env` files on your machine (git-ignored) and in the Render/Vercel
 dashboards. See [`docs/operations/environments.md`](docs/operations/environments.md).
 
+## Licence
+
+The source code is public so that CI can run on free GitHub runners
+(ADR 0011), but **no licence is granted**: all rights reserved. The data in
+any deployment is private and never part of this repository.
+
 ## Documentation map
 
 | Where                             | What                                       |

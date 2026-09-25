@@ -5,9 +5,10 @@ address book. Security reports are welcome and taken seriously.
 
 ## Reporting a vulnerability
 
-Please **do not open a public issue**. Contact the repository owner
-privately (GitHub: @kuriamyg), describing the problem and how to reproduce
-it. You will get an acknowledgement within 72 hours.
+Please **do not open a public issue**. Use GitHub's private reporting:
+the repository's **Security** tab → **Report a vulnerability**. Describe the
+problem and how to reproduce it. You will get an acknowledgement within 72
+hours.
 
 ## Scope and principles
 

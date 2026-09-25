@@ -21,7 +21,10 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Security headers (API + web), CORS allowlist, noindex
 - [x] `.env.example`, README (incl. Windows), CONTRIBUTING, SECURITY
 - [x] CI workflow, Dependabot, PR template
-- [ ] GitHub repository created (private) — **blocked: owner creates it**
+- [x] GitHub repository `kuriamyg/contact-sphere` created by the owner
+- [ ] Repository made public (owner, for free GitHub Actions minutes — ADR 0011)
+- [ ] Secret scanning, push protection and private vulnerability reporting
+      enabled (owner, GitHub → Settings → Code security)
 - [ ] CI green on the first PR
 - [ ] Render staging + production services created; `/health` verified live
 - [ ] Vercel project created; preview shows "API: Online"

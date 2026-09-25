@@ -44,5 +44,20 @@ DENY` and `X-Robots-Tag: noindex, nofollow`; the API refuses to boot in
 (403 — the Claude GitHub App cannot create repositories). Render and Vercel
 deploy from GitHub, so they wait for the repository too.
 
-**Next.** Owner creates the empty private repo → push → CI → Render and
+**Next (superseded below).** Owner creates the empty private repo → push → CI → Render and
 Vercel → verify live `/health` and "API: Online".
+
+---
+
+## 2026-09-25 — Repository created; made public for CI
+
+- The owner created `kuriamyg/contact-sphere` (the name changed from
+  `contact-management`; everything was renamed, including the Neon project).
+- PR #1 opened. CI never started: both jobs died in 2–3 s with no runner.
+  Cause: the account's GitHub Actions minutes for private repositories are
+  exhausted (TrustGiving's CI fails identically the same day). One re-run
+  confirmed it.
+- Owner decision: make the repository public, since standard GitHub-hosted
+  runners are free for public repositories (ADR 0011). Before that, the full
+  git history was scanned: no credentials, connection strings or personal
+  email in any commit.
