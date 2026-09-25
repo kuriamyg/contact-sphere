@@ -1,0 +1,117 @@
+/**
+ * The one place the API reads its environment.
+ *
+ * Every variable is parsed and validated here, at boot, so that a
+ * misconfigured deployment fails immediately with a message naming the
+ * variable — instead of starting "healthy" and failing on the first request
+ * that happens to need the missing value.
+ *
+ * Error messages name the variable and what is wrong with it, but never echo
+ * the value: later phases add secrets here, and a boot log is not a safe
+ * place for a secret.
+ */
+
+export type NodeEnv = 'development' | 'test' | 'production';
+
+export interface Env {
+  nodeEnv: NodeEnv;
+  port: number;
+  /** Exact browser origins allowed to call the API. Never a wildcard. */
+  webOrigins: string[];
+  /**
+   * How many reverse proxies in front of us are trusted to set
+   * X-Forwarded-For. 0 locally; 1 on Render (its TLS-terminating proxy).
+   */
+  trustProxyHops: number;
+}
+
+export class EnvError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EnvError';
+  }
+}
+
+const NODE_ENVS: readonly NodeEnv[] = ['development', 'test', 'production'];
+const DEFAULT_PORT = 3001;
+const DEFAULT_DEV_ORIGIN = 'http://localhost:3000';
+
+function parseNodeEnv(raw: string | undefined): NodeEnv {
+  const value = raw?.trim() || 'development';
+  if (!(NODE_ENVS as readonly string[]).includes(value)) {
+    throw new EnvError(`NODE_ENV must be one of ${NODE_ENVS.join(', ')}.`);
+  }
+  return value as NodeEnv;
+}
+
+function parseNonNegativeInt(
+  name: string,
+  raw: string | undefined,
+  fallback: number,
+): number {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new EnvError(`${name} must be a whole number of 0 or more.`);
+  }
+  return value;
+}
+
+function parseOrigins(raw: string | undefined, nodeEnv: NodeEnv): string[] {
+  const configured = (raw ?? '')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
+  if (configured.length === 0) {
+    // In production a missing allowlist is a deployment mistake, not a
+    // reason to guess. Locally, the Next.js dev server is the only caller.
+    if (nodeEnv === 'production') {
+      throw new EnvError(
+        'WEB_ORIGIN must be set in production (comma-separated exact origins).',
+      );
+    }
+    return [DEFAULT_DEV_ORIGIN];
+  }
+
+  for (const origin of configured) {
+    if (origin.includes('*')) {
+      throw new EnvError('WEB_ORIGIN must list exact origins; "*" is refused.');
+    }
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      throw new EnvError(`WEB_ORIGIN contains an entry that is not a URL.`);
+    }
+    // An origin is scheme + host + port. A path here would never match a
+    // browser's Origin header, silently breaking CORS.
+    if (url.origin !== origin) {
+      throw new EnvError(
+        'WEB_ORIGIN entries must be bare origins like https://app.example.com (no path).',
+      );
+    }
+    if (nodeEnv === 'production' && url.protocol !== 'https:') {
+      throw new EnvError('WEB_ORIGIN entries must use https in production.');
+    }
+  }
+  return configured;
+}
+
+export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
+  const nodeEnv = parseNodeEnv(source.NODE_ENV);
+  const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
+  if (port < 1 || port > 65535) {
+    throw new EnvError('PORT must be between 1 and 65535.');
+  }
+  return {
+    nodeEnv,
+    port,
+    webOrigins: parseOrigins(source.WEB_ORIGIN, nodeEnv),
+    trustProxyHops: parseNonNegativeInt(
+      'TRUST_PROXY_HOPS',
+      source.TRUST_PROXY_HOPS,
+      0,
+    ),
+  };
+}

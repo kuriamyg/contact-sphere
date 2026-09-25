@@ -1,8 +1,8 @@
-# Contact Management Platform — Project Context
+# Contact Sphere Platform — Project Context
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Date:** 2026-09-25  
-**Status:** Planning / Phase 0  
+**Status:** Phase 1 — Foundation (in review)  
 **Purpose:** Authoritative handoff document for human developers and AI coding agents.
 
 ## 1. Project vision
@@ -13,30 +13,30 @@ The project owner is a beginner in this specific workflow and wants every major 
 
 ## 2. Confirmed preferences and decisions
 
-| Area | Decision |
-|---|---|
-| Platform | Private online web application |
-| Frontend | Next.js |
-| Backend | NestJS |
-| Language | TypeScript |
-| Database | PostgreSQL |
-| ORM | Prisma |
-| Styling | Tailwind CSS |
-| Devices | Android phone and Windows PC |
-| Development computer | Windows PC |
-| Initial workflow | Local development first, then private deployment |
-| Experience | Beginner-friendly, detailed explanations |
-| UI | Premium, responsive, accessible, animated where useful |
-| Sorting | Alphabetical, date saved, last used |
-| Search | Name and phone number |
-| Duplicates | Detection, review, safe merge, conflict resolution |
-| Relationships | Family, friendship, work, business, church, community |
-| Relationship approach | Manual relationships plus system suggestions |
-| Visualization | Interactive relationship map plus accessible list alternative |
-| Data exchange | VCF import and export |
-| Backup | Encrypted local backup |
-| Engineering | Git, code review, automated tests, CI/CD, security, documentation |
-| Future direction | Potential monetization after validation |
+| Area                  | Decision                                                          |
+| --------------------- | ----------------------------------------------------------------- |
+| Platform              | Private online web application                                    |
+| Frontend              | Next.js                                                           |
+| Backend               | NestJS                                                            |
+| Language              | TypeScript                                                        |
+| Database              | PostgreSQL                                                        |
+| ORM                   | Prisma                                                            |
+| Styling               | Tailwind CSS                                                      |
+| Devices               | Android phone and Windows PC                                      |
+| Development computer  | Windows PC                                                        |
+| Initial workflow      | Local development first, then private deployment                  |
+| Experience            | Beginner-friendly, detailed explanations                          |
+| UI                    | Premium, responsive, accessible, animated where useful            |
+| Sorting               | Alphabetical, date saved, last used                               |
+| Search                | Name and phone number                                             |
+| Duplicates            | Detection, review, safe merge, conflict resolution                |
+| Relationships         | Family, friendship, work, business, church, community             |
+| Relationship approach | Manual relationships plus system suggestions                      |
+| Visualization         | Interactive relationship map plus accessible list alternative     |
+| Data exchange         | VCF import and export                                             |
+| Backup                | Encrypted local backup                                            |
+| Engineering           | Git, code review, automated tests, CI/CD, security, documentation |
+| Future direction      | Potential monetization after validation                           |
 
 ## 3. Important privacy principles
 
@@ -57,7 +57,7 @@ The project owner is a beginner in this specific workflow and wants every major 
 ## 4. Proposed repository structure
 
 ```text
-contact-management/
+contact-sphere/
 ├── apps/
 │   ├── web/                 # Next.js frontend
 │   └── api/                 # NestJS backend
@@ -92,6 +92,7 @@ Support creating, viewing, editing, archiving/deleting, searching, and exporting
 ### Sorting
 
 Support ascending and descending sorting by:
+
 - Alphabetical name.
 - Date saved.
 - Last used.
@@ -107,6 +108,7 @@ Support case-insensitive partial search by name and phone number. Normalize phon
 Detect possible duplicates using explainable signals such as normalized phone number, email, similar name, and matching details. Show reasons and confidence where useful. Never perform destructive automatic merges in the initial versions.
 
 Safe merge must:
+
 1. Show candidate records and conflicts.
 2. Let the user select the surviving record.
 3. Preserve non-conflicting phones, emails, notes, groups, and relationships.
@@ -120,6 +122,7 @@ Safe merge must:
 Support family, friendship, work, business, church, community, and later custom types. Store source, target, type, direction when relevant, notes, status, timestamps, and creator/confirming user in a multi-user version.
 
 Distinguish:
+
 - User-confirmed relationship.
 - User-entered relationship.
 - System-generated suggestion.
@@ -146,6 +149,7 @@ Support explicit backup creation, encryption, integrity checks, versioning, rest
 ## 6. Initial database entities
 
 Potential entities:
+
 - `users`
 - `contacts`
 - `phone_numbers`
@@ -162,18 +166,22 @@ Use primary keys, foreign keys, appropriate unique constraints, indexes, timesta
 ## 7. Architecture responsibilities
 
 ### Next.js frontend
+
 - Responsive UI, forms, navigation, loading/error states, accessibility, graph rendering, and API calls.
 - Never treat frontend controls as the security boundary.
 
 ### NestJS backend
+
 - Authentication, authorization, validation, business rules, contact operations, duplicate detection, safe merges, relationships, groups, VCF processing, audit logs, rate limiting, and consistent errors.
 
 ### PostgreSQL/Prisma
+
 - Persistent structured data, migrations, constraints, indexes, and transactional operations.
 
 ## 8. UI/UX standards
 
 Build a professional, modern interface with:
+
 - Responsive Android and desktop layouts.
 - Clear typography, spacing, hierarchy, icons, empty states, error states, and confirmation dialogs.
 - Optional light/dark themes.
@@ -187,13 +195,16 @@ login, dashboard, contact list, contact details, create/edit contact, search, du
 ## 9. Professional engineering workflow
 
 ### Git
+
 Use Git with clear commits such as:
+
 - `feat: add contact creation endpoint`
 - `fix: prevent duplicate phone insertion`
 - `docs: explain local setup`
 - `test: add merge conflict coverage`
 
 Suggested branches:
+
 - `main` for stable code.
 - Feature branches such as `feature/contact-crud`.
 - Fix branches such as `fix/merge-validation`.
@@ -201,9 +212,11 @@ Suggested branches:
 Do not work directly on `main` for risky changes.
 
 ### Pull requests
+
 Each PR should state purpose, implementation summary, screenshots for UI work, tests, limitations, security concerns, migrations, and breaking changes.
 
 ### Code review
+
 Review correctness, security, readability, tests, performance, accessibility, database integrity, error handling, and compatibility. AI-generated code must be reviewed and tested.
 
 ## 10. CI/CD
@@ -211,6 +224,7 @@ Review correctness, security, readability, tests, performance, accessibility, da
 CI means Continuous Integration. CD means Continuous Delivery or Continuous Deployment.
 
 Every pull request should run, as applicable:
+
 1. Dependency installation.
 2. Formatting check.
 3. Linting.
@@ -222,6 +236,7 @@ Every pull request should run, as applicable:
 9. Dependency vulnerability checks.
 
 A later deployment pipeline should use:
+
 1. Feature branch.
 2. Local checks.
 3. Pull request.
@@ -237,61 +252,79 @@ Separate local, test, staging, and production environments where practical. Neve
 ## 11. Testing strategy
 
 ### Unit tests
+
 Phone normalization, validation, sorting, duplicate matching, relationship rules, and permission checks.
 
 ### Integration tests
+
 API/database operations, contact CRUD, transactional merges, relationships, and imports.
 
 ### End-to-end tests
+
 Login, create/search contact, VCF import, duplicate review, merge, export, and restore.
 
 ### Security tests
+
 Unauthorized access, cross-user access, malformed uploads, invalid input, rate limits, session expiration, and permission boundaries.
 
 ### Manual tests
+
 Android responsiveness, Windows browsers, accessibility, animation, graph usability, and VCF compatibility.
 
 ## 12. Development phases
 
 ### Phase 0 — Planning
+
 Create this document, requirements, architecture decisions, security baseline, and initial backlog.
 
 ### Phase 1 — Foundation
+
 Initialize Git and monorepo; create Next.js and NestJS apps; configure TypeScript, linting, formatting, environment template, README, health endpoint, and first CI workflow.
 
 ### Phase 2 — Database
+
 Configure PostgreSQL and Prisma, initial schema, migrations, seed strategy, and test database.
 
 ### Phase 3 — Authentication
+
 Implement secure account/login/session handling, protected routes, authorization, and tests.
 
 ### Phase 4 — Contact CRUD
+
 Implement contacts, phone numbers, validation, search, sorting, pagination, and tests.
 
 ### Phase 5 — VCF and duplicates
+
 Implement validated import/export, preview, duplicate candidates, safe transactional merge, audit logging, and tests.
 
 ### Phase 6 — Groups and relationships
+
 Implement group membership, relationship types, confirmation status, suggestions, and filters.
 
 ### Phase 7 — Relationship map
+
 Select and integrate graph library, filtering, focus/search, mobile behavior, accessibility alternative, and performance testing.
 
 ### Phase 8 — Backups
+
 Design and implement encrypted local backup, restore validation, integrity checks, recovery documentation, and restore tests.
 
 ### Phase 9 — UI refinement
+
 Design system, responsive layouts, animation, loading/error/empty states, accessibility, and mobile testing.
 
 ### Phase 10 — Deployment
+
 Choose hosting, configure HTTPS, production database, secret management, monitoring, backups, CI/CD deployment, and rollback.
 
 ### Phase 11 — Commercial readiness
+
 Review multi-user design, roles, subscriptions, billing provider, usage limits, privacy policy, terms, support, costs, and product validation.
 
 ## 13. Initial backlog
 
 ### Foundation
+
 - [ ] Confirm project and repository names.
 - [ ] Initialize Git and monorepo.
 - [ ] Create Next.js frontend.
@@ -303,6 +336,7 @@ Review multi-user design, roles, subscriptions, billing provider, usage limits, 
 - [ ] Verify local startup.
 
 ### Architecture
+
 - [ ] Create Architecture Decision Records (ADRs).
 - [ ] Select authentication and session strategy.
 - [ ] Select hosting.
@@ -314,6 +348,7 @@ Review multi-user design, roles, subscriptions, billing provider, usage limits, 
 - [ ] Define API and error conventions.
 
 ### Security
+
 - [ ] Create threat model.
 - [ ] Define sensitive fields.
 - [ ] Implement input validation.
@@ -327,6 +362,7 @@ Review multi-user design, roles, subscriptions, billing provider, usage limits, 
 ## 14. Definition of done
 
 A feature is complete only when:
+
 - Requirements are understood.
 - Code is readable and modular.
 - Validation and authorization are present.
@@ -342,6 +378,7 @@ A feature is complete only when:
 ## 15. AI agent instructions
 
 Before changing code, an agent must:
+
 1. Read `PROJECT_CONTEXT.md` and `README.md`.
 2. Inspect repository structure, Git status, branch, and relevant files.
 3. Check existing tests and configuration.
@@ -350,6 +387,7 @@ Before changing code, an agent must:
 Agents must not assume that code, migrations, tests, backups, deployment, or security controls exist merely because they are documented. Verify them.
 
 Agents must not:
+
 - Delete user data without explicit confirmation.
 - Perform irreversible merges without confirmation.
 - Commit secrets.
@@ -360,6 +398,7 @@ Agents must not:
 - Expose personal contact data unnecessarily.
 
 For every meaningful task, report:
+
 - Objective.
 - Files changed.
 - Design explanation.
@@ -371,6 +410,7 @@ For every meaningful task, report:
 ## 16. Monetization direction
 
 The architecture should leave room for:
+
 - Free personal plan.
 - Premium personal plan.
 - Family/group plan.
@@ -379,27 +419,34 @@ The architecture should leave room for:
 
 Monetization must not depend on selling contact data. Before charging users, validate demand, usability, retention, operating costs, support requirements, privacy obligations, and willingness to pay.
 
-## 17. Pending decisions
+## 17. Decisions — status
 
-These remain open and must not be silently treated as final:
-- Project and repository name.
-- Single-user versus multi-user first release.
-- Authentication approach.
-- Session/token strategy.
-- PostgreSQL and application hosting.
-- Node.js version and package manager.
-- Graph library.
-- Exact contact fields.
-- Meaning of “last used.”
-- Hard delete, soft delete, or archive.
-- Backup encryption and recovery design.
-- Email and notes in first release.
-- Scope of shared groups and organizations.
-- Monetization model.
+Status of every decision that §17 of v1.0 listed as pending. "Accepted" means
+decided and recorded in an ADR under `docs/decisions/`. "Proposed" means a
+recommendation exists but it is decided at the start of the phase that needs
+it — it must not be treated as final before then.
+
+| Decision                                               | Status                                                                                                                        | Where    |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Project and repository name                            | **Accepted** — `contact-sphere` (owner, 2026-09-25; `contact-management` was chosen first, renamed when the repo was created) | ADR 0002 |
+| Single-user vs multi-user first release                | **Accepted** — single-user, multi-user-ready (owner, 2026-09-25)                                                              | ADR 0004 |
+| Node.js version and package manager                    | **Accepted** — Node 24 LTS, npm workspaces                                                                                    | ADR 0002 |
+| PostgreSQL and application hosting                     | **Accepted** — Neon (Frankfurt) + Render (API, free plan for now) + Vercel (web) (owner, 2026-09-25)                          | ADR 0003 |
+| Environments and isolation                             | **Accepted**                                                                                                                  | ADR 0008 |
+| Authentication approach                                | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
+| Session/token strategy                                 | Proposed — decide at Phase 3                                                                                                  | ADR 0006 |
+| Meaning of "last used"                                 | Proposed                                                                                                                      | ADR 0007 |
+| Hard delete, soft delete, or archive                   | Proposed — decide at Phase 4                                                                                                  | ADR 0005 |
+| Exact contact fields; email and notes in first release | Proposed — decide at Phase 4                                                                                                  | ADR 0010 |
+| Backup encryption and recovery design                  | Proposed — decide at Phase 8                                                                                                  | ADR 0009 |
+| Graph library                                          | Open — evaluate at Phase 7                                                                                                    | backlog  |
+| Scope of shared groups and organizations               | Deferred to Phase 11 (single-user first)                                                                                      | ADR 0004 |
+| Monetization model                                     | Deferred to Phase 11                                                                                                          | §16      |
 
 ## 18. Phase 1 acceptance criteria
 
 Phase 1 is complete when:
+
 - Repository and monorepo are initialized.
 - Next.js and NestJS applications start locally.
 - Frontend basic page works.
@@ -433,20 +480,40 @@ Do not migrate personal contact data until the foundation and data protection ap
 
 ## 20. Current status
 
-- Concept defined.
-- Technology preferences selected.
-- Privacy-first direction selected.
-- Android and Windows support required.
-- Local development first selected.
-- Detailed beginner-friendly teaching required.
-- Professional Git, testing, CI/CD, security, and documentation required.
-- Monetization is a future direction.
-- User is currently on a phone and wants documentation before using the Windows laptop.
+- Phase 0 complete: this document reviewed, gaps analysed (§22), ADRs,
+  threat model, environment plan and backlog written.
+- Phase 1 foundation built and verified locally (see `CHANGELOG.md` and
+  `docs/session-log.md`).
+- Neon project `contact-sphere` created with `production`, `staging` and
+  `development` branches (see `docs/operations/environments.md`).
+- No personal contact data exists anywhere yet, and none may be added until
+  Phase 3 (authentication) is merged and reviewed.
 
-**Current phase:** Phase 0 — Planning and documentation.
+**Current phase:** Phase 1 — Foundation, awaiting review and merge.
 
-**Immediate next step:** Place this file at the repository root, verify it, commit it, and begin Phase 1.
+**Immediate next step:** Merge Phase 1 once CI is green, deploy the health
+endpoint to Render staging and the web app to Vercel, then begin Phase 2.
 
 ## 21. Final instruction
 
 Treat this as a real privacy-sensitive software product. Work incrementally, explain important computer science concepts, verify every claim, protect user data, test changes, document decisions, and update this file as the project evolves.
+
+## 22. Gap analysis (added in v1.1 before any build work)
+
+The v1.0 handoff was reviewed against what a privacy-sensitive product needs
+before code is written. These gaps were found and are now covered:
+
+| #   | Gap in v1.0                                                                                                                                         | Resolution                                                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1   | No threat model or data classification, though both were in the backlog                                                                             | `docs/security/threat-model.md`                                                                                    |
+| 2   | No environment isolation rule. TrustGiving learned the hard way that "staging" and "production" were once the same database                         | ADR 0008; separate Neon branches; CI and agent sessions never touch Neon                                           |
+| 3   | Hosting was open, but Vercel (web) and Render (API) are **different sites**, so a login cookie set by the API would be a blocked third-party cookie | ADR 0006 routes browser calls through the web origin (backend-for-frontend)                                        |
+| 4   | No policy for what may be logged; contact data is personal data                                                                                     | Threat model §logging; `no-console` lint rule in the API                                                           |
+| 5   | No legal baseline. The owner is in Kenya; the Data Protection Act 2019 applies once other people's data is processed for others                     | Threat model §legal; review before Phase 11                                                                        |
+| 6   | Windows development not accounted for (line endings, shell scripts)                                                                                 | `.gitattributes` forces LF; README has Windows setup                                                               |
+| 7   | Phone numbers were "normalised appropriately" without a rule                                                                                        | ADR 0010 proposes E.164 via `libphonenumber-js`, default region KE, original text kept                             |
+| 8   | Accessibility target not stated                                                                                                                     | WCAG 2.2 AA (CLAUDE.md)                                                                                            |
+| 9   | Supply-chain risk not addressed                                                                                                                     | Lockfile-only installs (`npm ci`), npm install-scripts denied by default, Dependabot, `npm audit` in CI            |
+| 10  | "Private" deployment undefined                                                                                                                      | `noindex` everywhere, robots disallow, Vercel deployment protection, no public sign-up (ADR 0004)                  |
+| 11  | Server-side database backups not addressed (only user backups)                                                                                      | Neon point-in-time restore (6 h on the free plan) documented as a known limit in `docs/operations/environments.md` |
+| 12  | Merge discipline not stated                                                                                                                         | CLAUDE.md: nothing merges without green CI and the owner's explicit "merge it"                                     |

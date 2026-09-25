@@ -1,0 +1,14 @@
+# Mirrors .gitignore — keeps secrets, contact data and generated noise out of agent context.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.vcf
+*.cmbackup
+node_modules/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+*.log

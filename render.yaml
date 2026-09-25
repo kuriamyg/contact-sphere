@@ -1,0 +1,61 @@
+# Render Blueprint for the Contact Sphere API.
+#
+# NOTHING SECRET LIVES IN THIS FILE. Any credential is declared with
+# `sync: false`: the name is committed, the value is typed into the Render
+# dashboard. See docs/operations/deployment.md.
+#
+# The database is NOT defined here. It is Neon, managed separately, so that
+# deleting a Render service can never delete anyone's contacts.
+#
+# Two services, one codebase: staging and production both build `main`; they
+# differ only in which Neon branch and which web origin they are given.
+
+services:
+  - type: web
+    name: contact-sphere-api-staging
+    runtime: node
+    plan: free # Owner decision 2026-09-25: free until real data goes in.
+    region: frankfurt # Same AWS region as the Neon project (eu-central-1).
+    branch: main
+    rootDir: .
+    # NODE_ENV=production makes npm skip devDependencies (the Nest CLI and
+    # TypeScript) at install time, so install everything, build, then prune.
+    buildCommand: npm ci --include=dev && npm run build --workspace apps/api && npm prune --omit=dev
+    startCommand: node apps/api/dist/main.js
+    # Liveness only — see apps/api/src/health/health.controller.ts.
+    healthCheckPath: /health
+    # Deploys are triggered deliberately, after CI is green and (from Phase 2)
+    # after migrations have been applied: schema before code.
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      # Render terminates TLS at one proxy hop in front of the app.
+      - key: TRUST_PROXY_HOPS
+        value: 1
+      # Exact Vercel origin(s), comma-separated. Never a wildcard.
+      - key: WEB_ORIGIN
+        sync: false
+
+  - type: web
+    name: contact-sphere-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: .
+    buildCommand: npm ci --include=dev && npm run build --workspace apps/api && npm prune --omit=dev
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY_HOPS
+        value: 1
+      - key: WEB_ORIGIN
+        sync: false
