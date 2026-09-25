@@ -109,3 +109,57 @@ Vercel → verify live `/health` and "API: Online".
 
 **Phase 1 acceptance criteria (PROJECT_CONTEXT §18): met**, except the
 owner running the app locally on the Windows PC.
+
+---
+
+## 2026-09-25 — Dependabot tidy-up; Phase 2 merged and deployed
+
+**Dependabot.** #2 and #5 merged; #3 folded into #9; #4 and #6 closed (major
+upgrades that failed CI). #9 limits Dependabot to minor/patch (ADR 0002).
+
+**Phase 2** (PR #10, merge `23587ec`), then fix PR #11 (`a3af939`):
+
+- Staging migration succeeded, but `db:app-role` failed on
+  `ALTER ROLE … NOSUPERUSER`: Neon's owner is not a superuser, and Postgres
+  lets only superusers touch that attribute, even to restate the default.
+  Fixed by _verifying_ the role's attributes and memberships instead.
+- **Near miss:** this shared agent environment carries TrustGiving's
+  `DIRECT_URL`/`DATABASE_URL`. A local test command fell back to them and
+  tried to connect to TrustGiving's Neon database; the network blocked it
+  (timeout on every address), so no connection was made. The script now
+  refuses any database without this project's first migration, and every
+  agent command clears both variables first.
+- Postgres 16+ lists one membership per grantor; the check uses DISTINCT.
+
+**Deployment**, from a Vercel Sandbox in fra1 (this agent cannot reach
+Neon or Render), each step on staging first, then production:
+
+1. `prisma migrate deploy` (owner, direct host, `sslmode=verify-full`):
+   applied; `migrate status` up to date; drift check clean.
+2. `db:app-role`: `contact_sphere_app` created with a distinct random
+   password per environment; verified no dangerous attributes, member of
+   `app_runtime` only.
+3. Render `DATABASE_URL` set (app role, pooled host, `verify-full`); Render
+   redeployed `a3af939`; both deploys live.
+
+**Verified live** (from the sandbox):
+
+| Check                                      | Staging            | Production         |
+| ------------------------------------------ | ------------------ | ------------------ |
+| `/health`                                  | 200 ok             | 200 ok             |
+| `/health/ready`                            | 200 `database: ok` | 200 `database: ok` |
+| API CSP / CORS allowed / CORS evil refused | yes / yes / yes    | yes / yes / yes    |
+| As the live app role on Neon: CREATE TABLE | refused 42501      | refused 42501      |
+| UPDATE / DELETE `audit_logs`               | refused 42501      | refused 42501      |
+| Read `_prisma_migrations`                  | refused 42501      | refused 42501      |
+| `users` rows                               | 0                  | 0                  |
+
+Web production page: **Online**.
+
+**Credentials hygiene.** The Neon owner password and both app-role
+passwords passed through this agent session. The owner should reset the
+owner password on all three branches in the Neon console (tools would echo
+a new one back into the session). App-role passwords can be rotated any
+time with `db:app-role` + Render (docs/operations/database-roles.md).
+
+**Phase 2 acceptance: met.**
