@@ -22,6 +22,16 @@
 - `packages/` (shared types/validation) is **not created until something is
   actually shared**. An empty package is maintenance with no benefit.
 
+## Dependency updates
+
+Dependabot proposes **minor and patch** updates weekly (grouped), and
+security updates whenever advisories appear. **Major** upgrades are ignored
+by Dependabot and done by hand, one per PR, with this ADR updated. On
+2026-09-25 Dependabot's first run proposed Nest 12, TypeScript 7, ESLint 10
+and `@types/node` 26 together; CI failed on two of them (duplicate Nest
+types; `eslint-plugin-react` incompatible with ESLint 10). `@types/node` must
+track the Node major we run (24), not the newest.
+
 ## Why a monorepo
 
 The web app and the API change together (an endpoint and the screen that
