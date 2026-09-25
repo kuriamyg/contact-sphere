@@ -15,7 +15,7 @@
     "dev:web": "npm run dev --workspace apps/web",
     "dev:api": "npm run start:dev --workspace apps/api",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
+    "db:new-migration": "node scripts/new-migration.mjs",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:status": "prisma migrate status",
     "db:drift": "prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code",
@@ -38,7 +38,8 @@
     "@parcel/watcher": false,
     "unrs-resolver": false,
     "prisma@7.10.0": true,
-    "@prisma/engines@7.10.0": true
+    "@prisma/engines@7.10.0": true,
+    "argon2": false
   },
   "overrides": {
     "deepmerge-ts": "^8.0.2",

@@ -1,12 +1,8 @@
 import type { NextConfig } from 'next';
 
 /**
- * Security headers for every page.
- *
- * A Content-Security-Policy is deliberately NOT set yet: Next.js needs a
- * nonce-based CSP wired through proxy.ts to allow its own inline scripts, and
- * that is done properly in Phase 3 alongside authentication rather than
- * half-done here (docs/backlog.md).
+ * Security headers for every page. The Content-Security-Policy is set per
+ * request in src/proxy.ts, because it carries a fresh nonce each time.
  */
 const securityHeaders = [
   // Nobody may embed this app in a frame (clickjacking).

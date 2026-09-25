@@ -42,7 +42,16 @@ treat them as the most sensitive fields.
 - Error tracking (e.g. Sentry, if adopted) must have request bodies and
   breadcrumbs scrubbed before it is enabled.
 
-## 4. Controls in place today (Phase 1) — verified by tests
+## 4. Controls in place today — verified by tests
+
+Phase 3 (ADR 0006): only the web server can call the API (shared secret);
+argon2id passwords; hashed session tokens in HttpOnly `__Host-` cookies;
+idle/absolute expiry; per-IP and per-account brute-force limits; uniform
+login errors with equalised timing; one-time owner setup; per-request
+nonce CSP on every page; audit entries for auth events without emails.
+Proven by `apps/api/test/e2e/auth.e2e-spec.ts` and a browser flow.
+
+Phase 1–2:
 
 - API refuses to boot with a missing, wildcard, path-bearing or non-HTTPS
   (production) CORS origin (`apps/api/src/config/env.spec.ts`).
@@ -66,8 +75,8 @@ parties_ who never signed up; this belongs in the privacy policy.
 
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
-- No web Content-Security-Policy yet (needs nonces; Phase 3).
-- No authentication yet — **therefore no personal data may be stored**.
+- No two-factor authentication yet — add TOTP before real contact data.
+- Per-account login-failure counter is in memory (single instance only).
 - Neon `production` branch cannot be protected on the current plan.
 - 2FA on provider accounts is an owner action and cannot be verified from
   code.

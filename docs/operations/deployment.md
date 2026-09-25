@@ -38,6 +38,18 @@ Set **Settings → Health Check Path → `/health`** on both services in the
 Render dashboard: the Render API used to create them cannot set it, and
 without it Render only checks that the port is open.
 
+## Secrets shared by web and API (ADR 0006)
+
+| Variable            | Render service           | Vercel target | Must match                       |
+| ------------------- | ------------------------ | ------------- | -------------------------------- |
+| `API_SHARED_SECRET` | staging                  | Preview       | each other                       |
+| `API_SHARED_SECRET` | production               | Production    | each other                       |
+| `SETUP_TOKEN`       | production (and staging) | —             | — (one-time; delete after setup) |
+
+Generate each with `openssl rand -hex 32`. Staging and production secrets
+must differ. Changing one side without the other makes every page show the
+API as unavailable — change both, then redeploy both.
+
 ## Web on Vercel
 
 - Project root directory: `apps/web`. Framework: Next.js.

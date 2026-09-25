@@ -38,6 +38,15 @@ services:
       # Exact Vercel origin(s), comma-separated. Never a wildcard.
       - key: WEB_ORIGIN
         sync: false
+      # Pooled Neon connection as contact_sphere_app (ADR 0012).
+      - key: DATABASE_URL
+        sync: false
+      # Shared with the Vercel PREVIEW target only (ADR 0006).
+      - key: API_SHARED_SECRET
+        sync: false
+      # Optional, one-time: remove after the owner account exists.
+      - key: SETUP_TOKEN
+        sync: false
 
   - type: web
     name: contact-sphere-api
@@ -58,4 +67,11 @@ services:
       - key: TRUST_PROXY_HOPS
         value: 1
       - key: WEB_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      # Shared with the Vercel PRODUCTION target only (ADR 0006).
+      - key: API_SHARED_SECRET
+        sync: false
+      - key: SETUP_TOKEN
         sync: false

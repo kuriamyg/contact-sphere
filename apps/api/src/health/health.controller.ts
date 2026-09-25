@@ -1,6 +1,8 @@
 import { Controller, Get, Res } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
+import { BffExempt, Public } from '../auth/decorators';
 import { HealthService, type Readiness } from './health.service';
 
 /**
@@ -8,6 +10,9 @@ import { HealthService, type Readiness } from './health.service';
  * little as possible: no version, commit, hostname or NODE_ENV — those are
  * free reconnaissance.
  */
+@Public()
+@BffExempt()
+@SkipThrottle()
 @Controller('health')
 export class HealthController {
   constructor(private readonly health: HealthService) {}

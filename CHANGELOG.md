@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Phase 3 (sign-in)
+
+- Owner setup, sign in, sign out, sign out everywhere, change password.
+- Backend-for-frontend: only the web server can call the API.
+- argon2id passwords; sessions hashed in Postgres; HttpOnly `__Host-`
+  cookie; brute-force limits; audit entries; nonce-based CSP (ADR 0006).
+- `npm run db:new-migration` creates migrations without Prisma's shadow
+  database (the first migration cannot run in one).
+
 ### Added — Phase 2 (database)
 
 - Prisma 7 with the pg driver adapter; `users` and append-only

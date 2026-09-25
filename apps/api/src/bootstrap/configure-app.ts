@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 
@@ -39,11 +40,23 @@ export function configureApp(app: NestExpressApplication, env: Env): void {
     origin: env.webOrigins,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    // The session mechanism is decided in Phase 3 (docs/decisions/0006).
-    // Until then no credentials cross origins.
+    // Browsers never call this API (ADR 0006): the web server does,
+    // server-to-server, where CORS does not apply. Kept as a strict
+    // allowlist as defence in depth; no credentials cross origins.
     credentials: false,
     maxAge: 600,
   });
+
+  // Every request body is validated against its DTO. Unknown fields are
+  // refused outright, not silently dropped: an unexpected field is a client
+  // bug or a probe, and either way worth a 400.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.enableShutdownHooks();
 }

@@ -25,7 +25,7 @@ for Android phones and Windows PCs.
 > because search and duplicate detection run there. Backups _are_ encrypted
 > on your device. See `docs/security/threat-model.md`.
 
-> **Status:** Phase 2 — Database. There is no login yet, so **do not put
+> **Status:** Phase 3 — Sign-in. There is no login yet, so **do not put
 > real contacts into any deployed copy** until Phase 3 is complete.
 
 |          |                                                          |
@@ -74,8 +74,10 @@ npm run dev:api    # API on http://localhost:3001  → try /health
 npm run dev:web    # Web on http://localhost:3000
 ```
 
-For the web page to check the API, create `apps/web/.env.local` containing
-`API_URL=http://localhost:3001` (see `.env.example`).
+Create `apps/web/.env.local` with `API_URL=http://localhost:3001` and an
+`API_SHARED_SECRET`, and put the same `API_SHARED_SECRET` plus a
+`SETUP_TOKEN` in `apps/api/.env` (see `.env.example`). Then open
+<http://localhost:3000/setup> once to create your account.
 
 ### Database (local)
 

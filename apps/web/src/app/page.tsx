@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 
@@ -19,7 +20,7 @@ export default function Home() {
     >
       <header className="space-y-3">
         <p className="text-sm font-medium tracking-wide text-muted uppercase">
-          Private · Phase 1 foundation
+          Private · Phase 3 sign-in
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Contact Sphere
@@ -29,6 +30,13 @@ export default function Home() {
           data is never sold or used for advertising.
         </p>
       </header>
+
+      <Link
+        href="/login"
+        className="self-start rounded-lg bg-foreground px-5 py-2.5 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+      >
+        Sign in
+      </Link>
 
       <section
         aria-labelledby="status-heading"

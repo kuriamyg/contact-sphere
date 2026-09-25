@@ -34,4 +34,13 @@ export default tseslint.config(
       'no-console': 'error',
     },
   },
+  {
+    // HTTP response bodies in tests are untyped JSON by nature; asserting on
+    // them is the point. Production code keeps the strict rules.
+    files: ['test/**/*.ts', 'src/**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+    },
+  },
 );

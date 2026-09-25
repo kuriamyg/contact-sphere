@@ -28,6 +28,17 @@ export interface Env {
    * pooler in deployed environments (ADR 0012). Never the owner role.
    */
   databaseUrl: string;
+  /**
+   * Shared secret the web app's server sends with every request. Only the
+   * web server may call the API (ADR 0006): without this, a request is
+   * refused before any other processing.
+   */
+  apiSharedSecret: string;
+  /**
+   * One-time token that allows creating the first account while no account
+   * exists. Unset = setup disabled. Remove it after setup.
+   */
+  setupToken?: string;
 }
 
 export class EnvError extends Error {
@@ -139,6 +150,30 @@ function parseDatabaseUrl(raw: string | undefined, nodeEnv: NodeEnv): string {
   return value;
 }
 
+const MIN_SECRET_LENGTH = 32;
+
+function parseSecret(
+  name: string,
+  raw: string | undefined,
+  required: boolean,
+): string | undefined {
+  const value = raw?.trim();
+  if (!value) {
+    if (required) {
+      throw new EnvError(
+        `${name} must be set (at least ${MIN_SECRET_LENGTH} characters; openssl rand -hex 32).`,
+      );
+    }
+    return undefined;
+  }
+  if (value.length < MIN_SECRET_LENGTH) {
+    throw new EnvError(
+      `${name} must be at least ${MIN_SECRET_LENGTH} characters (openssl rand -hex 32).`,
+    );
+  }
+  return value;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const nodeEnv = parseNodeEnv(source.NODE_ENV);
   const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
@@ -155,5 +190,11 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       0,
     ),
     databaseUrl: parseDatabaseUrl(source.DATABASE_URL, nodeEnv),
+    apiSharedSecret: parseSecret(
+      'API_SHARED_SECRET',
+      source.API_SHARED_SECRET,
+      true,
+    ) as string,
+    setupToken: parseSecret('SETUP_TOKEN', source.SETUP_TOKEN, false),
   };
 }

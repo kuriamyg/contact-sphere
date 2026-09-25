@@ -21,20 +21,45 @@ datasource db {
   provider = "postgresql"
 }
 
-/// An account. Phase 2 has no credentials yet; ADR 0006 decides them in
-/// Phase 3. Email is stored lower-case (enforced by a CHECK constraint), so
-/// the unique index is effectively case-insensitive.
+/// An account. Email is stored lower-case (enforced by a CHECK constraint),
+/// so the unique index is effectively case-insensitive.
 model User {
   /// UUIDv7: time-ordered, so new rows append to the index instead of
   /// scattering across it, and ids reveal no row count.
-  id        String   @id @default(uuid(7)) @db.Uuid
-  email     String   @unique @db.VarChar(254)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id           String   @id @default(uuid(7)) @db.Uuid
+  email        String   @unique @db.VarChar(254)
+  /// argon2id, in PHC string format (algorithm, parameters and salt are
+  /// inside the string). Never the password itself. ADR 0006.
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   auditLogs AuditLog[]
+  sessions  Session[]
 
   @@map("users")
+}
+
+/// A signed-in browser. The cookie holds a random token; only its SHA-256
+/// hash is stored here, so a copy of this table cannot be used to sign in.
+/// Deleting a row signs that browser out ("sign out everywhere" deletes all
+/// of a user's rows). ADR 0006.
+model Session {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  /// Hex SHA-256 of the session token.
+  tokenHash  String   @unique @map("token_hash") @db.Char(64)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Refreshed at most every few minutes; drives the idle timeout.
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  /// Absolute expiry, however active the session is.
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
 }
 
 /// Append-only record of who did what, and when. The app role may INSERT and
