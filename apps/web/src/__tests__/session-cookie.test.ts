@@ -25,3 +25,19 @@ describe('session cookie', () => {
     });
   });
 });
+
+import { mfaCookieName, mfaCookieOptions } from '@/lib/session-cookie';
+
+describe('two-factor challenge cookie', () => {
+  it('is HttpOnly, Secure in production, short-lived and scoped to /login', () => {
+    const expires = new Date('2026-10-01T00:05:00Z');
+    expect(mfaCookieName(true)).toBe('__Secure-cs_mfa');
+    expect(mfaCookieOptions(true, expires)).toEqual({
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/login',
+      expires,
+    });
+  });
+});

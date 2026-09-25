@@ -39,6 +39,12 @@ export interface Env {
    * exists. Unset = setup disabled. Remove it after setup.
    */
   setupToken?: string;
+  /**
+   * 32-byte key (64 hex chars) that encrypts TOTP secrets at rest
+   * (AES-256-GCM, ADR 0013). Losing it disables everyone's two-factor
+   * (recovery codes still work); changing it requires re-enrolment.
+   */
+  totpEncryptionKey: Buffer;
 }
 
 export class EnvError extends Error {
@@ -174,6 +180,16 @@ function parseSecret(
   return value;
 }
 
+function parseKey(name: string, raw: string | undefined): Buffer {
+  const value = raw?.trim() ?? '';
+  if (!/^[0-9a-fA-F]{64}$/.test(value)) {
+    throw new EnvError(
+      `${name} must be 64 hex characters (32 bytes): openssl rand -hex 32.`,
+    );
+  }
+  return Buffer.from(value, 'hex');
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const nodeEnv = parseNodeEnv(source.NODE_ENV);
   const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
@@ -196,5 +212,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       true,
     ) as string,
     setupToken: parseSecret('SETUP_TOKEN', source.SETUP_TOKEN, false),
+    totpEncryptionKey: parseKey(
+      'TOTP_ENCRYPTION_KEY',
+      source.TOTP_ENCRYPTION_KEY,
+    ),
   };
 }

@@ -70,7 +70,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Tests: unit, DB guarantees, API e2e, real-browser flow
 - [x] Deployed: staging (16/16 live checks) and production (14/14)
 - [ ] Owner creates the production account; then remove `SETUP_TOKEN`
-- [ ] TOTP two-factor — **before real contact data** (next PR)
+- [x] TOTP two-factor (ADR 0013): encrypted secret, single-use codes,
+      recovery codes, challenge step; enable/disable from Account
 - [ ] Breached-password check; device/session list
 - [ ] Move the per-account failure counter out of memory before scaling out
 - [ ] Structured logging with redaction (pino) — never contact content

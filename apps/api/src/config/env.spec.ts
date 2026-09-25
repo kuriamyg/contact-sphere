@@ -3,10 +3,16 @@ import { EnvError, loadEnv } from './env';
 const DB = 'postgresql://app:pw@localhost:5432/db';
 const SECRET = 's'.repeat(32);
 /** The minimum valid configuration; tests override one thing at a time. */
-const BASE = { DATABASE_URL: DB, API_SHARED_SECRET: SECRET };
+const KEY = 'ab'.repeat(32);
+const BASE = {
+  DATABASE_URL: DB,
+  API_SHARED_SECRET: SECRET,
+  TOTP_ENCRYPTION_KEY: KEY,
+};
 const PROD_DB = 'postgresql://app:pw@db.example:5432/db?sslmode=verify-full';
 const PROD = {
   API_SHARED_SECRET: SECRET,
+  TOTP_ENCRYPTION_KEY: KEY,
   NODE_ENV: 'production',
   WEB_ORIGIN: 'https://app.example.com',
   DATABASE_URL: PROD_DB,
@@ -22,6 +28,7 @@ describe('loadEnv', () => {
       databaseUrl: DB,
       apiSharedSecret: SECRET,
       setupToken: undefined,
+      totpEncryptionKey: Buffer.from(KEY, 'hex'),
     });
   });
 
@@ -30,8 +37,17 @@ describe('loadEnv', () => {
   });
 
   it('requires DATABASE_URL', () => {
-    expect(() => loadEnv({ API_SHARED_SECRET: SECRET })).toThrow(
-      /DATABASE_URL must be set/,
+    expect(() =>
+      loadEnv({ API_SHARED_SECRET: SECRET, TOTP_ENCRYPTION_KEY: KEY }),
+    ).toThrow(/DATABASE_URL must be set/);
+  });
+
+  it('requires a 32-byte hex TOTP_ENCRYPTION_KEY', () => {
+    expect(() =>
+      loadEnv({ ...BASE, TOTP_ENCRYPTION_KEY: undefined as never }),
+    ).toThrow(/TOTP_ENCRYPTION_KEY/);
+    expect(() => loadEnv({ ...BASE, TOTP_ENCRYPTION_KEY: 'abc' })).toThrow(
+      /64 hex/,
     );
   });
 

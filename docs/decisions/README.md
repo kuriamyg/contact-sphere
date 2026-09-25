@@ -28,6 +28,7 @@ mattered.
 | [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                           | Proposed |
 | [0011](0011-public-source-code.md)               | Public source code, private data                           | Accepted |
 | [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL    | Accepted |
+| [0013](0013-two-factor-totp.md)                  | Two-factor sign-in with TOTP                               | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.

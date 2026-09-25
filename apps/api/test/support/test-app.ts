@@ -9,6 +9,7 @@ import { requireLocalDatabaseUrl } from './local-database';
 
 export const TEST_SECRET = 'test-only-bff-secret-0123456789abcdef';
 export const TEST_SETUP_TOKEN = 'test-only-setup-token-0123456789abcdef';
+export const TEST_TOTP_KEY = '0f'.repeat(32);
 
 /** The app exactly as main.ts builds it, against the local test database. */
 export async function createTestApp(
@@ -20,6 +21,7 @@ export async function createTestApp(
     DATABASE_URL: requireLocalDatabaseUrl('DATABASE_URL'),
     API_SHARED_SECRET: TEST_SECRET,
     SETUP_TOKEN: TEST_SETUP_TOKEN,
+    TOTP_ENCRYPTION_KEY: TEST_TOTP_KEY,
     ...overrides,
   });
   const moduleRef = await Test.createTestingModule({
@@ -41,5 +43,7 @@ export function ownerClient(): Client {
 }
 
 export async function resetDatabase(owner: Client): Promise<void> {
-  await owner.query('TRUNCATE sessions, audit_logs, users');
+  await owner.query(
+    'TRUNCATE mfa_challenges, recovery_codes, sessions, audit_logs, users',
+  );
 }

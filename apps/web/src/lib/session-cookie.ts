@@ -24,3 +24,21 @@ export function sessionCookieOptions(production: boolean, expiresAt: Date) {
     expires: expiresAt,
   };
 }
+
+/**
+ * Holds the two-factor challenge between the password step and the code
+ * step (ADR 0013): 5 minutes, HttpOnly, only sent to /login.
+ */
+export function mfaCookieName(production: boolean): string {
+  return production ? '__Secure-cs_mfa' : 'cs_mfa';
+}
+
+export function mfaCookieOptions(production: boolean, expiresAt: Date) {
+  return {
+    httpOnly: true,
+    secure: production,
+    sameSite: 'lax' as const,
+    path: '/login',
+    expires: expiresAt,
+  };
+}

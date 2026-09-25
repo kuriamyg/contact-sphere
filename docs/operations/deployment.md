@@ -40,11 +40,12 @@ without it Render only checks that the port is open.
 
 ## Secrets shared by web and API (ADR 0006)
 
-| Variable            | Render service           | Vercel target | Must match                       |
-| ------------------- | ------------------------ | ------------- | -------------------------------- |
-| `API_SHARED_SECRET` | staging                  | Preview       | each other                       |
-| `API_SHARED_SECRET` | production               | Production    | each other                       |
-| `SETUP_TOKEN`       | production (and staging) | —             | — (one-time; delete after setup) |
+| Variable              | Render service           | Vercel target | Must match                          |
+| --------------------- | ------------------------ | ------------- | ----------------------------------- |
+| `API_SHARED_SECRET`   | staging                  | Preview       | each other                          |
+| `API_SHARED_SECRET`   | production               | Production    | each other                          |
+| `SETUP_TOKEN`         | production (and staging) | —             | — (one-time; delete after setup)    |
+| `TOTP_ENCRYPTION_KEY` | each service its own     | —             | — (never change casually: ADR 0013) |
 
 Generate each with `openssl rand -hex 32`. Staging and production secrets
 must differ. Changing one side without the other makes every page show the

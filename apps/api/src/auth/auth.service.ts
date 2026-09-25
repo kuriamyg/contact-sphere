@@ -26,10 +26,26 @@ import {
   verifyPassword,
 } from './password';
 import { type IssuedSession, SessionService } from './session.service';
-import { hashToken, secretsEqual } from './tokens';
+import { hashToken, newSessionToken, secretsEqual } from './tokens';
+import { TotpService } from './totp.service';
+import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
 
 export interface SessionResult extends IssuedSession {
   user: { id: string; email: string };
+}
+
+/** Password was right; the second factor is still needed (ADR 0013). */
+export interface MfaRequired {
+  mfaRequired: true;
+  challenge: string;
+  expiresAt: Date;
+}
+
+export interface Me {
+  id: string;
+  email: string;
+  totpEnabled: boolean;
+  recoveryCodesLeft: number;
 }
 
 /** One message for every login failure, so it never reveals which part was wrong. */
@@ -43,6 +59,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly sessions: SessionService,
     private readonly audit: AuditService,
+    private readonly totp: TotpService,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -87,7 +104,7 @@ export class AuthService {
     });
   }
 
-  async login(dto: LoginDto): Promise<SessionResult> {
+  async login(dto: LoginDto): Promise<SessionResult | MfaRequired> {
     const key = hashToken(dto.email);
     if (this.failures.isLocked(key)) {
       throw new HttpException(
@@ -98,7 +115,12 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
-      select: { id: true, email: true, passwordHash: true },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        totpEnabledAt: true,
+      },
     });
 
     const ok = user
@@ -117,6 +139,22 @@ export class AuthService {
     }
 
     this.failures.clear(key);
+
+    if (user.totpEnabledAt) {
+      // The password alone is not enough: issue a short-lived challenge.
+      const challenge = newSessionToken();
+      const expiresAt = new Date(Date.now() + MFA_CHALLENGE_MS);
+      await this.prisma.mfaChallenge.create({
+        data: { userId: user.id, tokenHash: hashToken(challenge), expiresAt },
+      });
+      await this.audit.record('auth.mfa_challenged', {
+        actorUserId: user.id,
+        entityType: 'user',
+        entityId: user.id,
+      });
+      return { mfaRequired: true, challenge, expiresAt };
+    }
+
     const session = await this.sessions.create(user.id);
     await this.audit.record('auth.login_succeeded', {
       actorUserId: user.id,
@@ -124,6 +162,55 @@ export class AuthService {
       entityId: user.id,
     });
     return { ...session, user: { id: user.id, email: user.email } };
+  }
+
+  /** Second step of sign-in: the challenge plus a TOTP or recovery code. */
+  async completeMfa(challenge: string, code: string): Promise<SessionResult> {
+    const found = await this.prisma.mfaChallenge.findUnique({
+      where: { tokenHash: hashToken(challenge) },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        attempts: true,
+        user: { select: { email: true } },
+      },
+    });
+    const expired = !found || found.expiresAt <= new Date();
+    if (expired || found.attempts >= MFA_MAX_ATTEMPTS) {
+      if (found) {
+        await this.prisma.mfaChallenge.deleteMany({ where: { id: found.id } });
+      }
+      throw new UnauthorizedException(
+        'That sign-in has expired. Enter your email and password again.',
+      );
+    }
+
+    const ok = await this.totp.verifySecondFactor(found.userId, code);
+    if (!ok) {
+      await this.prisma.mfaChallenge.update({
+        where: { id: found.id },
+        data: { attempts: { increment: 1 } },
+      });
+      await this.audit.record('auth.mfa_failed', {
+        entityType: 'user',
+        entityId: found.userId,
+      });
+      throw new UnauthorizedException('That code is not right.');
+    }
+
+    await this.prisma.mfaChallenge.deleteMany({ where: { id: found.id } });
+    const session = await this.sessions.create(found.userId);
+    await this.audit.record('auth.login_succeeded', {
+      actorUserId: found.userId,
+      entityType: 'user',
+      entityId: found.userId,
+      metadata: { second_factor: true },
+    });
+    return {
+      ...session,
+      user: { id: found.userId, email: found.user.email },
+    };
   }
 
   async logout(userId: string, sessionId: string): Promise<void> {
@@ -145,15 +232,22 @@ export class AuthService {
     });
   }
 
-  async me(userId: string): Promise<{ id: string; email: string }> {
+  async me(userId: string): Promise<Me> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true },
+      select: { id: true, email: true, totpEnabledAt: true },
     });
     // A session whose user vanished cannot happen (cascade), but never
     // answer "who am I" with nothing.
     if (!user) throw new UnauthorizedException();
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      totpEnabled: user.totpEnabledAt !== null,
+      recoveryCodesLeft: user.totpEnabledAt
+        ? await this.totp.remainingRecoveryCodes(userId)
+        : 0,
+    };
   }
 
   /** Changes the password and signs out every OTHER session. */

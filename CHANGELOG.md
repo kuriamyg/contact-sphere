@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Two-factor sign-in (ADR 0013)
+
+- TOTP with an authenticator app: QR/`otpauth://` enrolment, 10 one-time
+  recovery codes, a verification step at sign-in, turn off with password +
+  code. Secret encrypted at rest; each code works once.
+
+### Fixed
+
+- Sign-out and the two-factor step now really remove their `__Host-`/
+  `__Secure-` cookies (a plain delete lacks `Secure`, which browsers
+  require to touch those cookies).
+
 ### Added — Phase 3 (sign-in)
 
 - Owner setup, sign in, sign out, sign out everywhere, change password.

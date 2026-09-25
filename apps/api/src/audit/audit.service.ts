@@ -10,7 +10,12 @@ export type AuditAction =
   | 'auth.login_failed'
   | 'auth.logout'
   | 'auth.logout_all'
-  | 'auth.password_changed';
+  | 'auth.password_changed'
+  | 'auth.mfa_challenged'
+  | 'auth.mfa_failed'
+  | 'auth.totp_enabled'
+  | 'auth.totp_disabled'
+  | 'auth.recovery_code_used';
 
 export interface AuditEntry {
   actorUserId?: string | null;

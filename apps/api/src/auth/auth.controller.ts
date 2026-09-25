@@ -8,9 +8,16 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
-import { AuthService, type SessionResult } from './auth.service';
+import {
+  AuthService,
+  type Me,
+  type MfaRequired,
+  type SessionResult,
+} from './auth.service';
 import { type AuthContext, CurrentAuth, Public } from './decorators';
 import { ChangePasswordDto, LoginDto, SetupDto } from './dto/credentials.dto';
+import { MfaLoginDto, TotpCodeDto, TotpDisableDto } from './dto/totp.dto';
+import { TotpService } from './totp.service';
 
 /** Brute-force-sensitive endpoints: 5 attempts per minute per client IP. */
 const STRICT = { default: { limit: 5, ttl: 60_000 } };
@@ -22,7 +29,10 @@ const STRICT = { default: { limit: 5, ttl: 60_000 } };
  */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly totp: TotpService,
+  ) {}
 
   @Public()
   @Get('setup')
@@ -41,8 +51,45 @@ export class AuthController {
   @Throttle(STRICT)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto): Promise<SessionResult> {
+  login(@Body() dto: LoginDto): Promise<SessionResult | MfaRequired> {
     return this.auth.login(dto);
+  }
+
+  @Public()
+  @Throttle(STRICT)
+  @Post('login/mfa')
+  @HttpCode(HttpStatus.OK)
+  loginMfa(@Body() dto: MfaLoginDto): Promise<SessionResult> {
+    return this.auth.completeMfa(dto.challenge, dto.code);
+  }
+
+  @Throttle(STRICT)
+  @Post('totp/setup')
+  @HttpCode(HttpStatus.OK)
+  totpSetup(
+    @CurrentAuth() a: AuthContext,
+  ): Promise<{ secret: string; uri: string }> {
+    return this.totp.setup(a.userId);
+  }
+
+  @Throttle(STRICT)
+  @Post('totp/enable')
+  @HttpCode(HttpStatus.OK)
+  totpEnable(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: TotpCodeDto,
+  ): Promise<{ recoveryCodes: string[] }> {
+    return this.totp.enable(a.userId, a.sessionId, dto.code);
+  }
+
+  @Throttle(STRICT)
+  @Post('totp/disable')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  totpDisable(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: TotpDisableDto,
+  ): Promise<void> {
+    return this.totp.disable(a.userId, dto.password, dto.code);
   }
 
   @Post('logout')
@@ -58,7 +105,7 @@ export class AuthController {
   }
 
   @Get('me')
-  me(@CurrentAuth() a: AuthContext): Promise<{ id: string; email: string }> {
+  me(@CurrentAuth() a: AuthContext): Promise<Me> {
     return this.auth.me(a.userId);
   }
 
