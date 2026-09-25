@@ -1,0 +1,10 @@
+# Normalise line endings. The owner develops on Windows, CI and Render run on
+# Linux. Without this, Git on Windows may check files out with CRLF, Prettier
+# then reports every file as changed, and shell scripts fail on Linux with
+# "/bin/bash^M: bad interpreter".
+* text=auto eol=lf
+*.sh text eol=lf
+*.png binary
+*.ico binary
+*.jpg binary
+*.webp binary

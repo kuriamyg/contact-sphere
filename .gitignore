@@ -1,0 +1,46 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Contact data — never commit real exports or backups, even "just for testing".
+# Test fixtures live under */test/fixtures and must be synthetic.
+*.vcf
+!**/test/fixtures/**/*.vcf
+*.cmbackup
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Test / coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Platform CLIs
+.vercel/
+
+# Written by `next dev` on every run. A stray CLAUDE.md under apps/web would
+# shadow the project contract at the repo root.
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
