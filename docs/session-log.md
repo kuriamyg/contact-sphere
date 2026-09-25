@@ -190,3 +190,39 @@ with exit 127, `sh: prisma: not found`.
   Vercel builds it"** runs `npm install` + `next build` from `apps/web`.
 - **Process change:** a deployment is verified by the Vercel deployment's
   own state (READY) and the commit's combined status, not by a check name.
+
+---
+
+## 2026-09-25 — Phase 3 merged and deployed
+
+PR #13 (`6dc2fa9`), after merging `main` (the Vercel fix, #14) into it and
+re-running everything: all signals green on the head, **including the
+Vercel deployment status**.
+
+**Order used:** secrets on Vercel (Preview + Production, sensitive) → merge
+(Vercel production deployed READY) → migrate staging and production
+(`auth_sessions`, no drift) → Render secrets (triggers the API deploys:
+staging, then production).
+
+Deviation: both databases were migrated in one command rather than staging
+→ verify → production. Low risk (additive, empty tables, proven in CI and
+locally), but not the documented order; future migrations keep the order.
+
+**Staging, live (16/16), from a Vercel Sandbox in fra1:** readiness ok; no
+secret → 403; wrong secret → 403; setup available → wrong token 401 →
+setup creates a staging-only test owner → `/auth/me` → second setup 409 →
+setup closed; wrong password and unknown email give the same 401; login;
+extra field 400; forged token 401; sign out everywhere ends the other
+session; per-IP rate limit 401×5 then 429.
+
+**Production, live (14/14):** readiness ok; no secret → 403; setup
+available (no owner yet); wrong setup token 401; forged session 401; web
+`/login` 200 with per-request nonce CSP (nonce differs per request, scripts
+carry it); X-Frame-Options DENY + HSTS; the login page offers owner setup,
+proving web → API works through the shared secret; signed-out `/account`
+→ 307 `/login`; `/setup` open; home "Online".
+
+The full browser flow (18/18: setup, cookie flags, cookie unreadable by
+JavaScript, password change signing out another device, sign out,
+sign out everywhere, 360 px, zero CSP violations) ran against the same
+commit locally; the owner's own production setup is the final live step.
