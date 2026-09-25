@@ -34,6 +34,15 @@ run in `fra1` (Frankfurt), next to the API and database.
 | `staging`     | same                                                | same (its own password)                        | set (pooled, `sslmode=verify-full`) |
 | `development` | not migrated — for the owner's local setup (README) | —                                              | —                                   |
 
+## Auth configuration (verified 2026-09-25, Phase 3)
+
+|                            | Staging                                                                  | Production                                                  |
+| -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Migrations                 | `init`, `auth_sessions` applied, no drift                                | same                                                        |
+| Render `API_SHARED_SECRET` | set (matches Vercel **Preview**)                                         | set (matches Vercel **Production**) — different value       |
+| Render `SETUP_TOKEN`       | set; setup already used by a test account (`staging-owner@example.test`) | set until the owner creates their account, then **removed** |
+| Accounts                   | 1 test account (staging only)                                            | owner (created by the owner in the browser)                 |
+
 ## Credentials
 
 - No connection string is stored in this repository or in these docs.
