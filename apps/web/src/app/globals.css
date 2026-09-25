@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Every colour the UI uses is defined here once, for light and
+ * dark, so contrast can be checked in one place (target: WCAG 2.2 AA).
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0d12;
+    --foreground: #e5e7eb;
+    --muted: #9ca3af;
+    --surface: #11141b;
+    --border: #1f2430;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Animations must never be forced on people who asked the OS for less. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
