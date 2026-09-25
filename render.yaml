@@ -47,6 +47,9 @@ services:
       # Optional, one-time: remove after the owner account exists.
       - key: SETUP_TOKEN
         sync: false
+      # Encrypts TOTP secrets at rest (ADR 0013). Never change casually.
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
 
   - type: web
     name: contact-sphere-api
@@ -74,4 +77,6 @@ services:
       - key: API_SHARED_SECRET
         sync: false
       - key: SETUP_TOKEN
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
         sync: false

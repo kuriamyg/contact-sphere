@@ -85,7 +85,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await owner.query('TRUNCATE sessions, audit_logs, users');
+  await owner.query(
+    'TRUNCATE mfa_challenges, recovery_codes, sessions, audit_logs, users',
+  );
 });
 
 afterAll(async () => {
@@ -250,5 +252,53 @@ describe('sessions', () => {
     await app.query('DELETE FROM users WHERE id = $1', [userId]);
     const { rows } = await app.query('SELECT id FROM sessions');
     expect(rows).toEqual([]);
+  });
+});
+
+describe('two-factor columns and tables', () => {
+  it('store a TOTP secret only in encrypted (v1:) form', async () => {
+    const id = await insertUser(app, 'ann@example.com');
+    expect(
+      await sqlState(
+        app.query(
+          `UPDATE users SET totp_secret = 'JBSWY3DPEHPK3PXP' WHERE id = $1`,
+          [id],
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
+    await app.query(`UPDATE users SET totp_secret = 'v1:abc' WHERE id = $1`, [
+      id,
+    ]);
+  });
+
+  it('cannot mark two-factor on without a secret', async () => {
+    const id = await insertUser(app, 'ann@example.com');
+    expect(
+      await sqlState(
+        app.query('UPDATE users SET totp_enabled_at = now() WHERE id = $1', [
+          id,
+        ]),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+
+  it('store recovery codes and challenges only as SHA-256 digests', async () => {
+    const id = await insertUser(app, 'ann@example.com');
+    expect(
+      await sqlState(
+        app.query(
+          `INSERT INTO recovery_codes (id, user_id, code_hash) VALUES (gen_random_uuid(), $1, 'K7QM-2XPA-9TRD')`,
+          [id],
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
+    expect(
+      await sqlState(
+        app.query(
+          `INSERT INTO mfa_challenges (id, user_id, token_hash, expires_at) VALUES (gen_random_uuid(), $1, 'raw', now() + interval '5 minutes')`,
+          [id],
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
   });
 });

@@ -7,6 +7,8 @@ import { api, sessionToken } from './api';
 export interface CurrentUser {
   id: string;
   email: string;
+  totpEnabled: boolean;
+  recoveryCodesLeft: number;
 }
 
 /** The signed-in user, or null. Always asks the API — the cookie alone proves nothing. */

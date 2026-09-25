@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { logoutEverywhere } from '@/app/actions/auth';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
+import { TwoFactorSection } from '@/components/auth/two-factor-section';
 import { requireUser } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Account · Contact Sphere' };
@@ -16,6 +17,16 @@ export default async function AccountPage() {
           Signed in as <span className="text-foreground">{user.email}</span>
         </p>
       </header>
+
+      <section aria-labelledby="twofa-heading" className="max-w-sm space-y-4">
+        <h2 id="twofa-heading" className="text-lg font-semibold">
+          Two-factor sign-in
+        </h2>
+        <TwoFactorSection
+          enabled={user.totpEnabled}
+          recoveryCodesLeft={user.recoveryCodesLeft}
+        />
+      </section>
 
       <section
         aria-labelledby="password-heading"

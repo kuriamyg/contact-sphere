@@ -51,6 +51,11 @@ login errors with equalised timing; one-time owner setup; per-request
 nonce CSP on every page; audit entries for auth events without emails.
 Proven by `apps/api/test/e2e/auth.e2e-spec.ts` and a browser flow.
 
+Two-factor (ADR 0013): TOTP with the secret encrypted at rest (AES-256-GCM),
+single-use codes, hashed single-use recovery codes, attempt-limited
+5-minute challenges. Proven by `apps/api/test/e2e/totp.e2e-spec.ts` and an
+18-step browser flow.
+
 Phase 1–2:
 
 - API refuses to boot with a missing, wildcard, path-bearing or non-HTTPS
@@ -75,7 +80,8 @@ parties_ who never signed up; this belongs in the privacy policy.
 
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
-- No two-factor authentication yet — add TOTP before real contact data.
+- Two-factor is optional per account (ADR 0013); turn it on before
+  storing real contacts.
 - Per-account login-failure counter is in memory (single instance only).
 - Neon `production` branch cannot be protected on the current plan.
 - 2FA on provider accounts is an owner action and cannot be verified from

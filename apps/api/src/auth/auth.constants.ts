@@ -18,3 +18,7 @@ export const PASSWORD_MAX = 128;
 /** Per-account brute-force limit, on top of the per-IP rate limit. */
 export const LOGIN_FAILURES_MAX = 10;
 export const LOGIN_FAILURE_WINDOW_MS = 15 * 60 * 1000;
+
+/** Between a correct password and a correct second factor (ADR 0013). */
+export const MFA_CHALLENGE_MS = 5 * 60 * 1000;
+export const MFA_MAX_ATTEMPTS = 5;

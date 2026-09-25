@@ -109,7 +109,12 @@ describe('first-account setup', () => {
   it('creates the owner, signs them in, and audits it without the email', async () => {
     const token = await setupOwner();
     const me = await withSession(bff().get('/auth/me'), token).expect(200);
-    expect(me.body).toEqual({ id: expect.any(String), email: EMAIL });
+    expect(me.body).toEqual({
+      id: expect.any(String),
+      email: EMAIL,
+      totpEnabled: false,
+      recoveryCodesLeft: 0,
+    });
     expect(await auditActions()).toEqual(['auth.setup_completed']);
     const { rows } = await owner.query('SELECT metadata::text FROM audit_logs');
     expect(JSON.stringify(rows)).not.toContain(EMAIL);
