@@ -1,0 +1,62 @@
+// Contact Sphere — Prisma schema.
+//
+// Phase 2 creates only what the next phase (authentication) needs: users and
+// the audit log. Contact tables arrive in Phase 4, once ADRs 0005 (deletion),
+// 0007 (last used) and 0010 (fields) are decided.
+//
+// Guarantees Prisma's schema language cannot express — the app role, its
+// grants, the append-only audit log, CHECK constraints — live in the
+// migration SQL. See ADR 0012.
+
+generator client {
+  provider     = "prisma-client"
+  // Generated TypeScript is compiled with the API. Git-ignored; regenerate
+  // with `npm run prisma:generate`.
+  output       = "../apps/api/src/generated/prisma"
+  // NestJS compiles to CommonJS.
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// An account. Phase 2 has no credentials yet; ADR 0006 decides them in
+/// Phase 3. Email is stored lower-case (enforced by a CHECK constraint), so
+/// the unique index is effectively case-insensitive.
+model User {
+  /// UUIDv7: time-ordered, so new rows append to the index instead of
+  /// scattering across it, and ids reveal no row count.
+  id        String   @id @default(uuid(7)) @db.Uuid
+  email     String   @unique @db.VarChar(254)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+/// Append-only record of who did what, and when. The app role may INSERT and
+/// SELECT only; UPDATE and DELETE are revoked in the database itself.
+///
+/// NEVER store contact content here — no names, numbers, emails or notes.
+/// Ids and action names only (docs/security/threat-model.md §3). `metadata`
+/// is for non-personal facts such as counts or field NAMES that changed.
+model AuditLog {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  /// Null for actions by the system, or after the actor's account is deleted.
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  /// e.g. "contact.merge", "backup.export". Dot-separated, lower-case.
+  action      String   @db.VarChar(64)
+  entityType  String?  @map("entity_type") @db.VarChar(64)
+  entityId    String?  @map("entity_id") @db.Uuid
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

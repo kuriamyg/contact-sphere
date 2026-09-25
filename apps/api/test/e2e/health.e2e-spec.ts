@@ -6,21 +6,25 @@ import type { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/bootstrap/configure-app';
 import { loadEnv } from '../../src/config/env';
+import { requireLocalDatabaseUrl } from '../support/local-database';
 
-describe('GET /health (e2e)', () => {
+describe('health endpoints (e2e)', () => {
   let app: NestExpressApplication;
   let server: App;
 
   beforeAll(async () => {
+    // The real database from CI / the session hook (a disposable Postgres).
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      WEB_ORIGIN: 'http://localhost:3000',
+      DATABASE_URL: requireLocalDatabaseUrl('DATABASE_URL'),
+    });
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule.forEnv(env)],
     }).compile();
 
     app = moduleRef.createNestApplication<NestExpressApplication>();
-    configureApp(
-      app,
-      loadEnv({ NODE_ENV: 'test', WEB_ORIGIN: 'http://localhost:3000' }),
-    );
+    configureApp(app, env);
     await app.init();
     server = app.getHttpServer();
   });
@@ -32,6 +36,11 @@ describe('GET /health (e2e)', () => {
   it('returns 200 {status: ok}', async () => {
     const res = await request(server).get('/health').expect(200);
     expect(res.body).toEqual({ status: 'ok' });
+  });
+
+  it('GET /health/ready reports the database reachable', async () => {
+    const res = await request(server).get('/health/ready').expect(200);
+    expect(res.body).toEqual({ status: 'ok', checks: { database: 'ok' } });
   });
 
   it('does not advertise the framework', async () => {

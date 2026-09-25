@@ -5,3 +5,5 @@ coverage
 package-lock.json
 next-env.d.ts
 *.tsbuildinfo
+apps/api/src/generated
+prisma/migrations/**/*.sql

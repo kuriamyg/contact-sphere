@@ -25,14 +25,14 @@ for Android phones and Windows PCs.
 > because search and duplicate detection run there. Backups _are_ encrypted
 > on your device. See `docs/security/threat-model.md`.
 
-> **Status:** Phase 1 — Foundation. There is no login yet, so **do not put
+> **Status:** Phase 2 — Database. There is no login yet, so **do not put
 > real contacts into any deployed copy** until Phase 3 is complete.
 
 |          |                                                          |
 | -------- | -------------------------------------------------------- |
 | Web      | Next.js 16 · React 19 · Tailwind CSS 4 — `apps/web`      |
 | API      | NestJS 11 — `apps/api`                                   |
-| Database | PostgreSQL 18 on Neon + Prisma (from Phase 2)            |
+| Database | PostgreSQL 18 on Neon + Prisma 7                         |
 | Hosting  | Vercel (web) · Render (API) · Neon (database), Frankfurt |
 
 Start with [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), then
@@ -75,8 +75,27 @@ npm run dev:web    # Web on http://localhost:3000
 ```
 
 For the web page to check the API, create `apps/web/.env.local` containing
-`API_URL=http://localhost:3001` (see `.env.example`). The API needs no
-configuration locally: its defaults are safe for development.
+`API_URL=http://localhost:3001` (see `.env.example`).
+
+### Database (local)
+
+The API needs a Postgres database. Easiest on Windows: use the Neon
+**`development`** branch (never `staging` or `production`).
+
+1. Neon console → project `contact-sphere` → branch `development` →
+   **Connect**: copy the **direct** connection string (owner).
+2. In PowerShell, from the repo root:
+   ```powershell
+   $env:DIRECT_URL = "<the direct connection string>"
+   npm run prisma:deploy
+   $env:APP_DB_PASSWORD = "<make up a long random password>"
+   npm run db:app-role
+   ```
+3. Create `apps/api/.env` with
+   `DATABASE_URL=postgresql://contact_sphere_app:<that password>@<pooled host>/contacts?sslmode=verify-full`
+   (pooled host = the same host with `-pooler` added; Neon shows both).
+
+Details: [`docs/operations/database-roles.md`](docs/operations/database-roles.md).
 
 ## Checks (what CI runs)
 
@@ -84,8 +103,10 @@ configuration locally: its defaults are safe for development.
 npm run check
 ```
 
-That runs, in order: formatting, linting, type checking, unit tests, API
-end-to-end tests, and production builds. `npm run format` fixes formatting.
+That runs, in order: formatting, linting, type checking, unit tests,
+database guarantee tests, API end-to-end tests, and production builds.
+`npm run format` fixes formatting. The database and e2e suites need a
+**local, disposable** Postgres (they refuse anything else); CI provides one.
 
 ## Environment variables
 

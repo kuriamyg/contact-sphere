@@ -20,11 +20,35 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # A throwaway Postgres for this job. The database guarantees (least
+    # privilege, append-only audit log, CHECK constraints) can only be proven
+    # against a real server, never a mock. Neon is for real environments and
+    # is never touched by CI (ADR 0008). Same major version as Neon.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: contact_sphere_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       # Throwaway values for this job only. Real configuration lives in the
       # Render and Vercel dashboards, never in the repository.
       NODE_ENV: test
       NEXT_TELEMETRY_DISABLED: '1'
+      # Migrations run as the owner; the API and its tests connect as the
+      # least-privilege app role, exactly as in production.
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/contact_sphere_test
+      APP_DB_PASSWORD: ci-only-app-password-not-used-anywhere
+      DATABASE_URL: postgresql://contact_sphere_app:ci-only-app-password-not-used-anywhere@localhost:5432/contact_sphere_test
 
     steps:
       - name: Checkout
@@ -36,6 +60,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # Also generates the Prisma client (root postinstall).
       - name: Install dependencies (lockfile only)
         run: npm ci
 
@@ -51,8 +76,20 @@ jobs:
       - name: Unit tests
         run: npm run test
 
-      - name: API end-to-end tests
+      - name: Apply migrations
+        run: npm run prisma:deploy
+
+      - name: Create the app login role (as production does)
+        run: npm run db:app-role
+
+      - name: Database guarantee tests (as the app role)
+        run: npm run test:db
+
+      - name: API end-to-end tests (as the app role)
         run: npm run test:e2e
+
+      - name: Schema and migrations agree (no drift)
+        run: npm run db:drift
 
       - name: Build
         run: npm run build

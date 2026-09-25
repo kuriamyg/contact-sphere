@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Phase 2 (database)
+
+- Prisma 7 with the pg driver adapter; `users` and append-only
+  `audit_logs`; least-privilege `app_runtime` role (ADR 0012).
+- Database guarantee tests run as the app role against real Postgres; a
+  guard refuses non-local databases.
+- `GET /health/ready`; `DATABASE_URL` validated at boot (TLS required in
+  production).
+- CI: Postgres 18 service, migrations, drift check. Manual
+  "Deploy migrations" workflow. Session hook starts a local Postgres.
+- Dependabot limited to minor/patch updates (majors by hand, ADR 0002).
+
 ### Added — Phase 1 (foundation)
 
 - npm-workspaces monorepo: `apps/api` (NestJS 11), `apps/web` (Next.js 16).

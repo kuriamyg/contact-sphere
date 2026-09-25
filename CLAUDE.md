@@ -66,12 +66,18 @@ Jest (API) · Vitest + Testing Library (web) · GitHub Actions.
   `test:e2e` / `build`
 - Dev servers: `npm run dev:api` (http://localhost:3001),
   `npm run dev:web` (http://localhost:3000)
+- Database: `npm run prisma:generate` / `prisma:migrate` (new migration,
+  local only) / `prisma:deploy` / `prisma:status` / `db:drift` /
+  `db:app-role`; `npm run test:db` (guarantees, local DB only)
+- Schema changes: see ADR 0012 — grants and guarantees go in migration SQL,
+  each with a test in `apps/api/test/db`
 
 ## LAYOUT
 
 ```
 apps/web     Next.js frontend
 apps/api     NestJS backend
+prisma/      schema.prisma + migrations (config: prisma.config.ts)
 docs/        decisions/, security/, operations/, architecture/,
              backlog.md, session-log.md
 render.yaml  Render blueprint (no secrets)

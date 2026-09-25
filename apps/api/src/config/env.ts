@@ -23,6 +23,11 @@ export interface Env {
    * X-Forwarded-For. 0 locally; 1 on Render (its TLS-terminating proxy).
    */
   trustProxyHops: number;
+  /**
+   * Runtime database connection: the least-privilege app role, through the
+   * pooler in deployed environments (ADR 0012). Never the owner role.
+   */
+  databaseUrl: string;
 }
 
 export class EnvError extends Error {
@@ -98,6 +103,42 @@ function parseOrigins(raw: string | undefined, nodeEnv: NodeEnv): string[] {
   return configured;
 }
 
+const DB_SCHEMES = ['postgresql:', 'postgres:'];
+
+function parseDatabaseUrl(raw: string | undefined, nodeEnv: NodeEnv): string {
+  const value = raw?.trim();
+  if (!value) {
+    throw new EnvError(
+      'DATABASE_URL must be set (see .env.example and docs/operations/database-roles.md).',
+    );
+  }
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    // A password containing # / ? must be percent-encoded, or the URL will
+    // not parse. Say so, without ever printing the value.
+    throw new EnvError(
+      'DATABASE_URL is not a parseable URL. Percent-encode # / ? in the password.',
+    );
+  }
+  if (!DB_SCHEMES.includes(url.protocol)) {
+    throw new EnvError('DATABASE_URL must start with postgresql://.');
+  }
+  // A deployed API must never talk to its database in clear text.
+  if (
+    nodeEnv === 'production' &&
+    !['require', 'verify-ca', 'verify-full'].includes(
+      url.searchParams.get('sslmode') ?? '',
+    )
+  ) {
+    throw new EnvError(
+      'DATABASE_URL must set sslmode=verify-full (or require) in production.',
+    );
+  }
+  return value;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const nodeEnv = parseNodeEnv(source.NODE_ENV);
   const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
@@ -113,5 +154,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       source.TRUST_PROXY_HOPS,
       0,
     ),
+    databaseUrl: parseDatabaseUrl(source.DATABASE_URL, nodeEnv),
   };
 }

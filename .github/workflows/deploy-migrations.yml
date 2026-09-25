@@ -1,0 +1,91 @@
+name: Deploy migrations
+
+# Manual only. This workflow writes to a real database, so nothing triggers it
+# automatically: a person chooses to run it and chooses which database.
+# Order for every schema change: staging, verify, then production — and only
+# then deploy the code that depends on it (schema before code, ADR 0008).
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target database
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+        required: true
+      confirm_production:
+        description: 'Production only: type "production" to confirm.'
+        type: string
+        default: ''
+        required: false
+
+permissions:
+  contents: read
+
+# Never two migrations against one database at once, and never cancel one
+# midway — that can leave a migration recorded as started but not finished.
+concurrency:
+  group: deploy-migrations-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # GitHub Environment secrets: DIRECT_URL (the Neon OWNER connection,
+    # direct host, sslmode=verify-full) for that environment's branch.
+    # Add required reviewers to `production` to gate it on a person.
+    environment: ${{ inputs.environment }}
+    env:
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+    steps:
+      # Inputs go through env, never straight into the shell, so a crafted
+      # input cannot become part of a command.
+      - name: Confirm production
+        if: inputs.environment == 'production'
+        env:
+          CONFIRM: ${{ inputs.confirm_production }}
+        run: |
+          if [ "$CONFIRM" != "production" ]; then
+            echo "::error title=Production not confirmed::Re-run and type 'production' in the confirmation field. Deliberate friction: production holds real people's contacts."
+            exit 1
+          fi
+
+      - name: Production deploys from main only
+        if: inputs.environment == 'production'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error title=Wrong ref::Production migrations deploy from main only (this run: $REF)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Names the faulty variable and fault; never prints a value.
+      - name: Validate connection string
+        run: node scripts/check-database-urls.mjs DIRECT_URL
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Migration status (before)
+        run: npm run prisma:status || true
+
+      - name: Apply migrations
+        run: npm run prisma:deploy
+
+      # The real pass/fail: nothing pending, and the database matches the
+      # schema exactly.
+      - name: Verify no drift
+        run: npm run db:drift
