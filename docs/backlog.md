@@ -33,7 +33,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Branch protection on `main` (require PR + green CI) — owner, GitHub
       settings
 - [ ] 2FA enabled on GitHub, Neon, Render, Vercel — owner
-- [ ] Tidy Dependabot PRs #2–#6 (one at a time, CI green)
+- [x] Dependabot PRs: #2, #5 merged; #3 folded into the dependency-policy PR; #4, #6 closed (major upgrades, see ADR 0002)
+- [ ] Planned majors, each its own PR when the ecosystem supports it: NestJS 12, TypeScript 7, ESLint 10
 - [ ] Owner runs the app on the Windows PC (`npm ci`, both dev servers)
 
 ## Phase 2 — Database

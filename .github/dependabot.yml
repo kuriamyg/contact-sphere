@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Major versions change APIs and are adopted deliberately, one per PR,
+    # with an ADR (docs/decisions/0002). Dependabot proposes minor and patch
+    # updates only; security updates are still raised for any version.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       # One PR per ecosystem instead of dozens — easier to review and test.
       nestjs:
