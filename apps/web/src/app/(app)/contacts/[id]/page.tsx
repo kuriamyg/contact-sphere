@@ -9,6 +9,7 @@ import {
   trashContact,
   unarchiveContact,
 } from '@/app/actions/contacts';
+import { addToGroup } from '@/app/actions/groups';
 import { undoMerge } from '@/app/actions/merge';
 import { Avatar } from '@/components/avatar';
 import { Notice } from '@/components/contacts/notice';
@@ -24,6 +25,7 @@ import {
   type Phone,
   undoableMerges,
 } from '@/lib/contacts';
+import { groupsForContact, listGroupsQuietly } from '@/lib/groups';
 import {
   formatBirthday,
   formatDate,
@@ -46,7 +48,14 @@ export default async function ContactPage({
   if (!c) notFound();
   // Opening a contact is what "last used" means (ADR 0007).
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
-  const merges = c.deletedAt ? [] : await undoableMerges(c.id);
+  const [merges, groups, allGroups] = c.deletedAt
+    ? [[], [], []]
+    : await Promise.all([
+        undoableMerges(c.id),
+        groupsForContact(c.id),
+        listGroupsQuietly(),
+      ]);
+  const joinable = allGroups.filter((g) => !groups.some((x) => x.id === g.id));
 
   // Absent only while an older API is still deploying.
   const tags = c.tags ?? [];
@@ -232,6 +241,69 @@ export default async function ContactPage({
                 </div>
               )}
             </dl>
+          )}
+        </section>
+      )}
+
+      {!c.deletedAt && (groups.length > 0 || joinable.length > 0) && (
+        <section aria-labelledby="groups" className="space-y-3">
+          <h2
+            id="groups"
+            className="text-sm font-semibold text-muted uppercase"
+          >
+            Groups
+          </h2>
+          {groups.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {groups.map((g) => (
+                <li key={g.id}>
+                  <Link
+                    href={`/groups/${g.id}`}
+                    className="inline-block rounded-full border border-border px-3 py-1 text-sm hover:bg-surface"
+                  >
+                    {g.name}
+                    {g.role && <span className="text-muted"> · {g.role}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {joinable.length > 0 && (
+            <details>
+              <summary className="cursor-pointer text-sm font-medium text-accent">
+                Add to a group
+              </summary>
+              <form action={addToGroup} className="mt-2 flex flex-wrap gap-2">
+                <input type="hidden" name="contactId" value={c.id} />
+                <label htmlFor="groupId" className="sr-only">
+                  Group
+                </label>
+                <select
+                  id="groupId"
+                  name="groupId"
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+                >
+                  {joinable.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+                <label htmlFor="role" className="sr-only">
+                  Role (optional)
+                </label>
+                <input
+                  id="role"
+                  name="role"
+                  maxLength={40}
+                  placeholder="Role (optional)"
+                  className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-base"
+                />
+                <button type="submit" className={button}>
+                  Add
+                </button>
+              </form>
+            </details>
           )}
         </section>
       )}

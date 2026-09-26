@@ -38,6 +38,19 @@ const NOTICES: Record<string, { success?: string; error?: string }> = {
   search_full: {
     error: 'You can keep up to 50 saved searches. Delete one first.',
   },
+  group_created: { success: 'Group created. Now add its members.' },
+  group_saved: { success: 'Group saved.' },
+  group_deleted: {
+    success: 'Group deleted. Its contacts are still in your contacts.',
+  },
+  group_exists: { error: 'You already have a group with that name.' },
+  members_added: { success: 'Added to the group.' },
+  none_picked: { error: 'Tick at least one contact to add.' },
+  member_removed: {
+    success: 'Removed from the group. The contact is still saved.',
+  },
+  role_saved: { success: 'Role saved.' },
+  added_to_group: { success: 'Added to the group.' },
   failed: { error: 'That did not work. Nothing was changed — try again.' },
 };
 

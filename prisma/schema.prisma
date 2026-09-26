@@ -49,6 +49,7 @@ model User {
   mfaChallenges MfaChallenge[]
   contacts      Contact[]
   savedSearches SavedSearch[]
+  groups        Group[]
 
   @@map("users")
 }
@@ -178,6 +179,7 @@ model Contact {
   dismissedAsB   DuplicateDismissal[] @relation("DismissalB")
   mergesKept     ContactMerge[]       @relation("MergeSurvivor")
   mergesAbsorbed ContactMerge[]       @relation("MergeMerged")
+  memberships    GroupMember[]
 
   /// Lets child rows reference (id, owner_id) together, so a phone number
   /// can never belong to one owner while its contact belongs to another.
@@ -287,4 +289,44 @@ model SavedSearch {
 
   @@unique([ownerId, name])
   @@map("saved_searches")
+}
+
+/// A community the owner belongs to or runs: a chama, church, family,
+/// estate… (Phase 8). Deleting a group never deletes its contacts.
+model Group {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  ownerId     String   @map("owner_id") @db.Uuid
+  name        String   @db.VarChar(80)
+  /// Lower-case, single-spaced name: one "Kasarani Chama" per owner.
+  nameKey     String   @map("name_key") @db.VarChar(80)
+  /// chama | church | family | work | estate | school | other (CHECK).
+  kind        String   @default("other") @db.VarChar(20)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  owner   User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members GroupMember[]
+
+  @@unique([id, ownerId])
+  @@unique([ownerId, nameKey])
+  @@map("groups")
+}
+
+/// A contact in a group, with an optional role ("treasurer"). Both sides
+/// always belong to the same owner (composite foreign keys).
+model GroupMember {
+  groupId   String   @map("group_id") @db.Uuid
+  contactId String   @map("contact_id") @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  /// Free text, lower-case, e.g. "chair", "treasurer", "pastor".
+  role      String?  @db.VarChar(40)
+  addedAt   DateTime @default(now()) @map("added_at") @db.Timestamptz(3)
+
+  group   Group   @relation(fields: [groupId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@id([groupId, contactId])
+  @@index([ownerId, contactId])
+  @@map("group_members")
 }

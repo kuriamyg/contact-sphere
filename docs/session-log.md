@@ -346,3 +346,19 @@ Rename/delete a tag across contacts; saved searches (migration
 export. Tests: unit (CATEGORIES parsing, round trip), e2e (rename merges,
 delete keeps contacts, saved searches follow, 50 limit, owner isolation,
 import/export groups), database CHECKs; browser flow 14/14.
+
+**Phase 7b deployed (PR #25, `f2adb20`).** Migration `saved_searches`
+applied to staging and production before merging (no drift); both APIs
+deployed with the web. Staging **18/18** live (groups → tags without
+system groups, saved searches, rename keeps "edited" and follows saved
+searches, delete keeps contacts, 404/401/409, CATEGORIES export, audit
+without tag names, CHECKs, grants). Production read-only **12/12**.
+
+## 2026-09-26 — Phase 8: communities
+
+Groups with kinds and roles (migration `communities`). Tests: e2e (CRUD,
+same-name 409, roles and ordering, trash hides and restore returns,
+contact's groups, .vcf export, owner isolation, audit ids/counts only),
+database guarantees (kinds, unique names, no cross-owner members, roles
+lower-case, cascade); browser flow 25/25 incl. SMS link, clipboard,
+download, 360 px.

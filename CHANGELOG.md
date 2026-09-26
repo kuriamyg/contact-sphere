@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Groups (Phase 8)
+
+- Groups (in the header): your chama, church, family, work, estate or
+  school, with notes and any number of members from your contacts.
+- Give members a role (chair, treasurer, pastor…); officials are listed
+  first. A contact's page shows their groups and can add them to one.
+- Text everyone (SMS), copy all numbers to make a WhatsApp group or
+  broadcast list, WhatsApp or call any member, or export the group as a
+  .vcf to share. Deleting a group never deletes its contacts.
+
 ### Added — Skills everywhere and saved searches (Phase 7b)
 
 - Contacts → Manage (next to the skill chips): rename a skill or remove it
