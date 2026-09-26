@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -540,6 +540,63 @@ describe('saved searches (Phase 7b)', () => {
     await app.query('DELETE FROM users WHERE id = $1', [u]);
     const { rows } = await app.query(
       'SELECT count(*)::int AS n FROM saved_searches',
+    );
+    expect(rows[0]).toEqual({ n: 0 });
+  });
+});
+
+describe('groups (Phase 8)', () => {
+  const group = (owner: string, name: string, kind = 'chama') =>
+    app.query<{ id: string }>(
+      `INSERT INTO groups (id, owner_id, name, name_key, kind, updated_at)
+       VALUES (gen_random_uuid(), $1, $2::varchar, lower($2::varchar), $3::varchar, now()) RETURNING id`,
+      [owner, name, kind],
+    );
+  const contact = async (owner: string) =>
+    (
+      await app.query<{ id: string }>(
+        `INSERT INTO contacts (id, owner_id, display_name, sort_name, updated_at)
+         VALUES (gen_random_uuid(), $1, 'Ann', 'ann', now()) RETURNING id`,
+        [owner],
+      )
+    ).rows[0].id;
+  const member = (
+    g: string,
+    c: string,
+    owner: string,
+    role: string | null = null,
+  ) =>
+    app.query(
+      `INSERT INTO group_members (group_id, contact_id, owner_id, role) VALUES ($1, $2, $3, $4::varchar)`,
+      [g, c, owner, role],
+    );
+
+  it('know their kinds, keep names tidy and unique per owner', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    await group(u, 'Kasarani Chama');
+    expect(await sqlState(group(u, 'kasarani chama'))).toBe('23505');
+    expect(await sqlState(group(u, 'X', 'cult'))).toBe(CHECK_VIOLATION);
+    expect(await sqlState(group(u, ' Padded'))).toBe(CHECK_VIOLATION);
+  });
+
+  it('can never hold another owner’s contact', async () => {
+    const a = await insertUser(app, 'ann@example.com');
+    const b = await insertUser(app, 'bob@example.com');
+    const g = (await group(a, 'Chama')).rows[0].id;
+    const theirs = await contact(b);
+    expect(await sqlState(member(g, theirs, a))).toBe('23503');
+    expect(await sqlState(member(g, theirs, b))).toBe('23503');
+  });
+
+  it('store roles lower-case, and lose members with their contact', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const g = (await group(u, 'Chama')).rows[0].id;
+    const c = await contact(u);
+    expect(await sqlState(member(g, c, u, 'Treasurer'))).toBe(CHECK_VIOLATION);
+    await member(g, c, u, 'treasurer');
+    await app.query('DELETE FROM contacts WHERE id = $1', [c]);
+    const { rows } = await app.query(
+      'SELECT count(*)::int AS n FROM group_members',
     );
     expect(rows[0]).toEqual({ n: 0 });
   });

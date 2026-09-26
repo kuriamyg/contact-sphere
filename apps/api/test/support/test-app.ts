@@ -44,6 +44,6 @@ export function ownerClient(): Client {
 
 export async function resetDatabase(owner: Client): Promise<void> {
   await owner.query(
-    'TRUNCATE saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 }

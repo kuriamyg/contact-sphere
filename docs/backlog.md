@@ -119,6 +119,16 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       CATEGORIES; rename or delete a tag everywhere (one transaction,
       audited with counts, "edited" date untouched)
 
+## Phase 8 — Communities
+
+- [x] Groups (kind, notes; unique name per owner) and members with roles
+      (migration `communities`: composite owner FKs, CHECKs, grants);
+      officials first; trashed contacts hidden and back on restore
+- [x] Group page: SMS everyone, copy numbers for WhatsApp, per-member
+      call/WhatsApp, .vcf export; add from a picker or a contact's page
+- [ ] Later: free-plan limit (3 groups) with billing (Phase 12); shared,
+      consented member directories (Community plan)
+
 ## Phase 6a — Profile and polish
 
 - [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`

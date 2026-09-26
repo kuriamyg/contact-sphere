@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
           </Link>
           <div className="flex items-center gap-1 text-sm sm:gap-2">
             <NavLink href="/contacts">Contacts</NavLink>
+            <NavLink href="/groups">Groups</NavLink>
             <Link
               href="/account"
               aria-label={`Profile and settings for ${user.displayName ?? user.email}`}

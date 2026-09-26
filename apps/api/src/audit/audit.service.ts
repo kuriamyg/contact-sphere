@@ -34,7 +34,13 @@ export type AuditAction =
   | 'contact.tag_renamed'
   | 'contact.tag_deleted'
   | 'search.saved'
-  | 'search.deleted';
+  | 'search.deleted'
+  | 'group.created'
+  | 'group.updated'
+  | 'group.deleted'
+  | 'group.members_added'
+  | 'group.member_removed'
+  | 'group.exported';
 
 export interface AuditEntry {
   actorUserId?: string | null;
