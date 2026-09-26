@@ -48,6 +48,8 @@ export default async function ContactPage({
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
   const merges = c.deletedAt ? [] : await undoableMerges(c.id);
 
+  // Absent only while an older API is still deploying.
+  const tags = c.tags ?? [];
   const subtitle = [c.jobTitle, c.organization].filter(Boolean).join(' · ');
   const primary = c.phones[0];
 
@@ -190,6 +192,47 @@ export default async function ContactPage({
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {(tags.length > 0 || c.area || c.metThrough) && (
+        <section aria-labelledby="know" className="space-y-3">
+          <h2 id="know" className="text-sm font-semibold text-muted uppercase">
+            Who they are to you
+          </h2>
+          {tags.length > 0 && (
+            <ul
+              aria-label="Skills and services"
+              className="flex flex-wrap gap-2"
+            >
+              {tags.map((t) => (
+                <li key={t}>
+                  <Link
+                    href={`/contacts?tag=${encodeURIComponent(t)}`}
+                    className="inline-block rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent hover:underline"
+                  >
+                    {t}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {(c.area || c.metThrough) && (
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {c.area && (
+                <div>
+                  <dt className="text-sm text-muted">Area</dt>
+                  <dd className="break-words">{c.area}</dd>
+                </div>
+              )}
+              {c.metThrough && (
+                <div>
+                  <dt className="text-sm text-muted">Met through</dt>
+                  <dd className="break-words">{c.metThrough}</dd>
+                </div>
+              )}
+            </dl>
+          )}
         </section>
       )}
 

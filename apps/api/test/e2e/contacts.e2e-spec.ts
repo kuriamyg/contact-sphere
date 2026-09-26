@@ -261,6 +261,102 @@ describe('search', () => {
   });
 });
 
+describe('know-who: tags, area, met through (Phase 7)', () => {
+  beforeEach(async () => {
+    await create({
+      displayName: 'Otieno',
+      tags: ['Plumber', ' plumber ', 'Fundi'],
+      area: 'Kasarani',
+      metThrough: 'Church',
+      phones: [{ raw: '0712 345 678' }],
+    });
+    await create({
+      displayName: 'Kamau',
+      tags: ['plumber'],
+      area: 'Thika Road',
+    });
+    await create({
+      displayName: 'Achieng',
+      tags: ['boda boda'],
+      area: 'Kasarani',
+      notes: 'Reliable at night',
+    });
+  });
+
+  it('stores tags tidied and returns them with area and met-through', async () => {
+    const { body } = await list('?q=otieno');
+    expect(body.items[0].tags).toEqual(['plumber', 'fundi']);
+    const detail = (
+      await api('get', `/contacts/${body.items[0].id}`).expect(200)
+    ).body as { area: string; metThrough: string; tags: string[] };
+    expect(detail).toMatchObject({
+      area: 'Kasarani',
+      metThrough: 'Church',
+      tags: ['plumber', 'fundi'],
+    });
+  });
+
+  it.each([
+    ['plumber kasarani', ['Otieno']],
+    ['Plumber', ['Kamau', 'Otieno']],
+    ['plumb', ['Kamau', 'Otieno']],
+    ['kasarani', ['Achieng', 'Otieno']],
+    ['church', ['Otieno']],
+    ['boda', ['Achieng']],
+    ['night kasarani', ['Achieng']],
+    ['plumber thika', ['Kamau']],
+    ['plumber nairobi', []],
+    ['0712', ['Otieno']],
+  ])('"%s" finds %j', async (q, expected) => {
+    expect(names(await list(`?q=${encodeURIComponent(q)}`)).sort()).toEqual(
+      [...expected].sort(),
+    );
+  });
+
+  it('filters by one tag, alone or with words', async () => {
+    expect(names(await list('?tag=plumber')).sort()).toEqual([
+      'Kamau',
+      'Otieno',
+    ]);
+    expect(names(await list('?tag=PLUMBER&q=kasarani'))).toEqual(['Otieno']);
+    expect(names(await list('?tag=plumb'))).toEqual([]);
+  });
+
+  it('lists tags with counts, most used first, without trashed contacts', async () => {
+    const { body } = await api('get', '/contacts/tags').expect(200);
+    expect(body).toEqual([
+      { tag: 'plumber', count: 2 },
+      { tag: 'boda boda', count: 1 },
+      { tag: 'fundi', count: 1 },
+    ]);
+    const achieng = (await list('?q=achieng')).body.items[0].id as string;
+    await api('delete', `/contacts/${achieng}`).expect(204);
+    const after = (await api('get', '/contacts/tags').expect(200)).body as {
+      tag: string;
+    }[];
+    expect(after.map((t) => t.tag)).toEqual(['plumber', 'fundi']);
+  });
+
+  it('refuses too many or too long tags', async () => {
+    await api('post', '/contacts')
+      .send({
+        displayName: 'X',
+        tags: Array.from({ length: 21 }, (_, i) => `t${i}`),
+      })
+      .expect(400);
+    await api('post', '/contacts')
+      .send({ displayName: 'X', tags: ['x'.repeat(41)] })
+      .expect(400);
+  });
+
+  it('another owner sees none of these tags', async () => {
+    const other = await secondUser();
+    const { body } = await api('get', '/contacts/tags', other).expect(200);
+    expect(body).toEqual([]);
+    expect((await list('?tag=plumber', other)).body.total).toBe(0);
+  });
+});
+
 describe('sorting and pagination', () => {
   it('sorts by name case- and accent-insensitively, both ways', async () => {
     for (const n of ['bob', 'Émile', 'alice', 'Zed', 'eve']) {

@@ -9,7 +9,13 @@ import {
 import { AuditService } from '../audit/audit.service';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { deriveDisplayName, sortKey } from './contact-names';
+import {
+  deriveDisplayName,
+  normaliseTags,
+  searchText,
+  searchWords,
+  sortKey,
+} from './contact-names';
 import type {
   ContactInputDto,
   ListContactsQueryDto,
@@ -43,6 +49,7 @@ export interface ContactSummary {
   id: string;
   displayName: string;
   organization: string | null;
+  tags: string[];
   primaryPhone: PhoneView | null;
   primaryEmail: string | null;
   createdAt: string;
@@ -61,6 +68,8 @@ export interface ContactDetail extends Omit<
   jobTitle: string | null;
   notes: string | null;
   birthday: string | null;
+  area: string | null;
+  metThrough: string | null;
   updatedAt: string;
   /** When a trashed contact will be deleted for good. */
   purgeAt: string | null;
@@ -352,32 +361,39 @@ export class ContactsService {
           ? { deletedAt: null, archivedAt: { not: null } }
           : { deletedAt: null, archivedAt: null }),
     };
+    if (q.tag) where.tags = { has: q.tag };
     if (!q.q) return where;
 
-    const text = likeEscape(q.q);
-    const contains = { contains: text, mode: 'insensitive' as const };
-    const or: Prisma.ContactWhereInput[] = [
-      { displayName: contains },
-      { givenName: contains },
-      { familyName: contains },
-      { nickname: contains },
-      { organization: contains },
-      {
-        emailAddresses: {
-          some: { address: { contains: text.toLowerCase() } },
-        },
-      },
-    ];
-    for (const d of phoneSearchDigits(q.q)) {
-      or.push({
+    // Every word must appear somewhere on the contact…
+    const words: Prisma.ContactWhereInput[] = searchWords(q.q).map((w) => ({
+      OR: [
+        { searchText: { contains: likeEscape(w) } },
+        { emailAddresses: { some: { address: { contains: likeEscape(w) } } } },
+      ],
+    }));
+    // …or the whole query is (part of) a phone number.
+    const phones: Prisma.ContactWhereInput[] = phoneSearchDigits(q.q).map(
+      (d) => ({
         phoneNumbers: {
           some: {
             OR: [{ digits: { contains: d } }, { e164: { contains: d } }],
           },
         },
-      });
-    }
-    return { ...where, OR: or };
+      }),
+    );
+    return { ...where, OR: [{ AND: words }, ...phones] };
+  }
+
+  /** The owner's tags, most used first, counting contacts not in the trash. */
+  async tags(ownerId: string): Promise<{ tag: string; count: number }[]> {
+    const rows = await this.prisma.$queryRaw<{ tag: string; count: number }[]>`
+      SELECT t AS tag, count(*)::int AS count
+      FROM contacts, unnest(tags) AS t
+      WHERE owner_id = ${ownerId}::uuid AND deleted_at IS NULL
+      GROUP BY t
+      ORDER BY count DESC, t ASC
+      LIMIT 500`;
+    return rows;
   }
 
   /** Not found for other owners; conflict for a contact in the trash. */
@@ -462,15 +478,22 @@ function contactData(dto: ContactInputDto) {
       'Give the contact a name, organisation, phone number or email.',
     );
   }
-  return {
+  const fields = {
     displayName,
-    sortName: sortKey(displayName),
     givenName: dto.givenName ?? null,
     familyName: dto.familyName ?? null,
     nickname: dto.nickname ?? null,
     organization: dto.organization ?? null,
     jobTitle: dto.jobTitle ?? null,
     notes: dto.notes ?? null,
+    area: dto.area ?? null,
+    metThrough: dto.metThrough ?? null,
+    tags: normaliseTags(dto.tags),
+  };
+  return {
+    ...fields,
+    sortName: sortKey(displayName),
+    searchText: searchText(fields),
     birthday: dto.birthday ? parseBirthday(dto.birthday) : null,
   };
 }
@@ -522,6 +545,7 @@ function summaryFields(
     id: c.id,
     displayName: c.displayName,
     organization: c.organization,
+    tags: c.tags,
     createdAt: c.createdAt.toISOString(),
     lastUsedAt: iso(c.lastUsedAt),
     archivedAt: iso(c.archivedAt),
@@ -538,6 +562,8 @@ function detailView(c: ContactWithChildren): ContactDetail {
     jobTitle: c.jobTitle,
     notes: c.notes,
     birthday: c.birthday ? c.birthday.toISOString().slice(0, 10) : null,
+    area: c.area,
+    metThrough: c.metThrough,
     updatedAt: c.updatedAt.toISOString(),
     purgeAt: c.deletedAt
       ? new Date(c.deletedAt.getTime() + TRASH_DAYS * DAY_MS).toISOString()

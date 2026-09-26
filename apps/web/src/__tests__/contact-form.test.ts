@@ -33,6 +33,7 @@ describe('readContactForm + toContactInput', () => {
         { raw: '0733 000 000' },
       ],
       emails: [{ address: 'ann@example.com', label: 'work' }],
+      tags: [],
     });
   });
 
@@ -51,6 +52,7 @@ describe('readContactForm + toContactInput', () => {
       organization: 'Acme',
       phones: [],
       emails: [],
+      tags: [],
     });
   });
 
@@ -66,7 +68,46 @@ describe('readContactForm + toContactInput', () => {
       'emails',
       'givenName',
       'phones',
+      'tags',
     ]);
+  });
+
+  it('reads skills as a comma list, and area and met-through as text', () => {
+    const v = readContactForm(
+      form([
+        ['givenName', 'Otieno'],
+        ['tags', ' Plumber, boda  boda,, plumber '],
+        ['area', ' Kasarani '],
+        ['metThrough', 'church'],
+      ]),
+    );
+    expect(toContactInput(v)).toMatchObject({
+      tags: ['plumber', 'boda boda'],
+      area: 'Kasarani',
+      metThrough: 'church',
+    });
+    expect(
+      fromContact({
+        ...EMPTY_CONTACT,
+        givenName: 'Otieno',
+        familyName: null,
+        nickname: null,
+        organization: null,
+        jobTitle: null,
+        birthday: null,
+        notes: null,
+        displayName: 'Otieno',
+        tags: ['plumber', 'boda boda'],
+        area: 'Kasarani',
+        metThrough: null,
+        phones: [],
+        emails: [],
+      }),
+    ).toMatchObject({
+      tags: 'plumber, boda boda',
+      area: 'Kasarani',
+      metThrough: '',
+    });
   });
 });
 

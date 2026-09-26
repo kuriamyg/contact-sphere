@@ -178,6 +178,37 @@ function Fields({ v }: { v: ContactFormValues }) {
           defaultValue={v.jobTitle}
         />
       </div>
+      <fieldset className="space-y-4 rounded-xl border border-border p-4">
+        <legend className="px-1 text-sm font-semibold">
+          Who they are to you
+        </legend>
+        <Field
+          label="Skills and services"
+          name="tags"
+          autoComplete="off"
+          maxLength={900}
+          hint="Separate with commas, e.g. plumber, boda boda, lawyer. You can search by these."
+          defaultValue={v.tags}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Area"
+            name="area"
+            autoComplete="off"
+            maxLength={100}
+            hint="Estate, town or stage"
+            defaultValue={v.area}
+          />
+          <Field
+            label="Met through"
+            name="metThrough"
+            autoComplete="off"
+            maxLength={200}
+            hint="e.g. church, chama, work"
+            defaultValue={v.metThrough}
+          />
+        </div>
+      </fieldset>
       <Field
         label="Birthday"
         name="birthday"

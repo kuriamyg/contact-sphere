@@ -151,6 +151,16 @@ model Contact {
   jobTitle     String?   @map("job_title") @db.VarChar(200)
   notes        String?   @db.VarChar(10000)
   birthday     DateTime? @db.Date
+  /// Where they are: estate, town, stage ("Kasarani", "Thika Road").
+  area         String?   @db.VarChar(100)
+  /// How the owner knows them ("church", "Wanjiru's wedding").
+  metThrough   String?   @map("met_through") @db.VarChar(200)
+  /// What they do or offer ("plumber", "boda boda"). Lower-case, no
+  /// repeats, at most 20 (CHECK); normalised by the API.
+  tags         String[]  @default([]) @db.VarChar(40)
+  /// Folded names, organisation, job, area, met-through, tags and notes, for
+  /// word search. Maintained by the API (contact-names.ts); never shown.
+  searchText   String    @default("") @map("search_text")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   /// Last time the owner opened this contact in the app (ADR 0007). Never
@@ -175,6 +185,7 @@ model Contact {
   @@index([ownerId, createdAt])
   @@index([ownerId, lastUsedAt])
   @@index([ownerId, deletedAt])
+  @@index([tags], type: Gin)
   @@map("contacts")
 }
 

@@ -1,4 +1,10 @@
-import { deriveDisplayName, sortKey } from './contact-names';
+import {
+  deriveDisplayName,
+  normaliseTags,
+  searchText,
+  searchWords,
+  sortKey,
+} from './contact-names';
 
 describe('deriveDisplayName', () => {
   it('prefers an explicit display name, tidied', () => {
@@ -29,5 +35,39 @@ describe('sortKey', () => {
   it('folds case and accents', () => {
     expect(sortKey('Émile Zola')).toBe('emile zola');
     expect(sortKey('ann')).toBe(sortKey('Ann'));
+  });
+});
+
+describe('know-who search (Phase 7)', () => {
+  it('normalises tags: trimmed, lower-case, one space, no repeats, max 20', () => {
+    expect(
+      normaliseTags([' Plumber ', 'plumber', 'Boda  Boda', '', ' ']),
+    ).toEqual(['plumber', 'boda boda']);
+    expect(
+      normaliseTags(Array.from({ length: 30 }, (_, i) => `t${i}`)),
+    ).toHaveLength(20);
+    expect(normaliseTags(['x'.repeat(41)])).toEqual([]);
+  });
+
+  it('folds every searchable field into one line', () => {
+    expect(
+      searchText({
+        displayName: 'Émile Otieno',
+        organization: 'Acme',
+        area: 'Kasarani',
+        metThrough: 'Church',
+        tags: ['plumber'],
+        notes: 'Fixed the\n  sink',
+      }),
+    ).toBe('emile otieno acme kasarani church plumber fixed the sink');
+  });
+
+  it('splits a query into folded words', () => {
+    expect(searchWords('  Plumber   KASARANI ')).toEqual([
+      'plumber',
+      'kasarani',
+    ]);
+    expect(searchWords('Émile')).toEqual(['emile']);
+    expect(searchWords('a b c d e f g h')).toHaveLength(6);
   });
 });

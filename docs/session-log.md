@@ -311,3 +311,22 @@ contacts, snapshot is an object, undone after created. Tests: unit (pair
 finding, merge rules), e2e (merge, conflicts, undo, dismiss, other owner
 404, trashed 409), database guarantees; browser flow 27/27 at phone size,
 360 px, no CSP violations.
+
+**Phase 5b deployed (PR #23, `cd03ca9`).** Migration `duplicates_and_merges`
+applied to staging (no drift); staging API deployed; **22/22 live checks**
+(pairs with reasons, preview changes nothing, merge keeps everything,
+trash, undo restores exactly, second undo 409, dismiss, 400/401/403/404,
+audit ids only, 4 CHECKs, app-role grants; test data removed with
+`DELETE FROM users`, audit log kept). Production migrated (no drift), API
+deployed, read-only **13/13**: readiness, the four new routes refuse
+no-BFF (403) and forged sessions (401), signed-out `/contacts/duplicates`
+redirects to sign-in, CHECKs and grants present, the owner's 464 contacts
+untouched.
+
+## 2026-09-26 — Phase 7a: know who
+
+Tags (skills and services), area and met-through on contacts; word search
+over one API-maintained folded column, backfilled in the migration for
+existing contacts. Tests: unit (tag normalising, folding, words), e2e
+(search table, tag filter, tag counts without trash, limits, owner
+isolation), database CHECKs; browser flow 17/17 at phone size and 360 px.
