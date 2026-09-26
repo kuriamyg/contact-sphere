@@ -15,7 +15,16 @@ export type AuditAction =
   | 'auth.mfa_failed'
   | 'auth.totp_enabled'
   | 'auth.totp_disabled'
-  | 'auth.recovery_code_used';
+  | 'auth.recovery_code_used'
+  | 'contact.created'
+  | 'contact.updated'
+  | 'contact.archived'
+  | 'contact.unarchived'
+  | 'contact.trashed'
+  | 'contact.restored'
+  | 'contact.deleted'
+  | 'contact.trash_emptied'
+  | 'contact.trash_purged';
 
 export interface AuditEntry {
   actorUserId?: string | null;

@@ -76,6 +76,19 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Move the per-account failure counter out of memory before scaling out
 - [ ] Structured logging with redaction (pino) — never contact content
 
+## Phase 4 — Contacts (ADRs 0005, 0007, 0010 accepted)
+
+- [x] Schema: contacts, phone numbers (raw + E.164), emails; owner on every
+      row, composite FKs, CHECKs, cascade; migration with grants
+- [x] API: create, view, edit, archive, trash, restore, delete for good,
+      empty trash; 30-day purge; search (names, org, email, phone digits);
+      sort by name / date saved / last used; pagination; audit by id only
+- [x] Tests: unit (phones, names), DB guarantees as the app role, API e2e
+      including cross-owner isolation
+- [ ] Web: list, search, sort, detail with call/SMS/WhatsApp/email, create
+      and edit, archive and trash views (Phase 4b)
+- [ ] Account deletion (ADR 0005 §4) — with Settings, later
+
 ## Later phases
 
 See `PROJECT_CONTEXT.md` §12. Open evaluation: graph library for Phase 7

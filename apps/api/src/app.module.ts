@@ -9,6 +9,7 @@ import { SessionGuard } from './auth/session.guard';
 import { ClientIpThrottlerGuard } from './auth/throttler.guard';
 import type { Env } from './config/env';
 import { ConfigModule } from './config/env.provider';
+import { ContactsModule } from './contacts/contacts.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -31,6 +32,7 @@ export class AppModule {
         AuditModule,
         HealthModule,
         AuthModule,
+        ContactsModule,
       ],
       // Global guards run in this order for EVERY route (ADR 0006):
       // 1. is the caller our web server?  2. rate limit  3. valid session?

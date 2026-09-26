@@ -435,9 +435,9 @@ it — it must not be treated as final before then.
 | Environments and isolation                             | **Accepted**                                                                                                                  | ADR 0008 |
 | Authentication approach                                | **Accepted** — email + argon2id password, BFF, first-account setup token                                                      | ADR 0006 |
 | Session/token strategy                                 | **Accepted** — opaque token, HttpOnly `__Host-` cookie, hashed in Postgres                                                    | ADR 0006 |
-| Meaning of "last used"                                 | Proposed                                                                                                                      | ADR 0007 |
-| Hard delete, soft delete, or archive                   | Proposed — decide at Phase 4                                                                                                  | ADR 0005 |
-| Exact contact fields; email and notes in first release | Proposed — decide at Phase 4                                                                                                  | ADR 0010 |
+| Meaning of "last used"                                 | Accepted — opening the contact in the app, at most one write a minute                                                         | ADR 0007 |
+| Hard delete, soft delete, or archive                   | Accepted — archive; 30-day trash; then hard delete                                                                            | ADR 0005 |
+| Exact contact fields; email and notes in first release | Accepted — as proposed; emails and notes included                                                                             | ADR 0010 |
 | Backup encryption and recovery design                  | Proposed — decide at Phase 8                                                                                                  | ADR 0009 |
 | Graph library                                          | Open — evaluate at Phase 7                                                                                                    | backlog  |
 | Scope of shared groups and organizations               | Deferred to Phase 11 (single-user first)                                                                                      | ADR 0004 |

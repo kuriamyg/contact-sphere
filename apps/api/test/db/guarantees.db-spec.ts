@@ -13,6 +13,7 @@ import { requireLocalDatabaseUrl } from '../support/local-database';
 const PERMISSION_DENIED = '42501';
 const CHECK_VIOLATION = '23514';
 const UNIQUE_VIOLATION = '23505';
+const FOREIGN_KEY_VIOLATION = '23503';
 
 const owner = new Client({
   connectionString: requireLocalDatabaseUrl('DIRECT_URL'),
@@ -86,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -300,5 +301,126 @@ describe('two-factor columns and tables', () => {
         ),
       ),
     ).toBe(CHECK_VIOLATION);
+  });
+});
+
+describe('contacts (ADRs 0004, 0005, 0010)', () => {
+  async function insertContact(
+    client: Client,
+    ownerId: string,
+    displayName = 'Ann',
+    sortName = displayName.toLowerCase(),
+  ): Promise<string> {
+    const { rows } = await client.query<{ id: string }>(
+      `INSERT INTO contacts (id, owner_id, display_name, sort_name, updated_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, now()) RETURNING id`,
+      [ownerId, displayName, sortName],
+    );
+    return rows[0].id;
+  }
+
+  const insertPhone = (
+    client: Client,
+    ownerId: string,
+    contactId: string,
+    raw = '0712345678',
+    e164: string | null = '+254712345678',
+    digits = '0712345678',
+    position = 0,
+  ) =>
+    client.query(
+      `INSERT INTO phone_numbers (id, owner_id, contact_id, raw, e164, digits, position)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)`,
+      [ownerId, contactId, raw, e164, digits, position],
+    );
+
+  const insertEmail = (
+    client: Client,
+    ownerId: string,
+    contactId: string,
+    address: string,
+    position = 0,
+  ) =>
+    client.query(
+      `INSERT INTO email_addresses (id, owner_id, contact_id, address, position)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4)`,
+      [ownerId, contactId, address, position],
+    );
+
+  it('the app can create, read, change and hard-delete them', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const c = await insertContact(app, u);
+    await insertPhone(app, u, c);
+    await insertEmail(app, u, c, 'a@x.co');
+    await app.query('UPDATE contacts SET deleted_at = now() WHERE id = $1', [
+      c,
+    ]);
+    await app.query('DELETE FROM contacts WHERE id = $1', [c]);
+    const { rows } = await app.query(
+      `SELECT (SELECT count(*) FROM phone_numbers)::int AS p,
+              (SELECT count(*) FROM email_addresses)::int AS e`,
+    );
+    // Numbers and emails go with the contact: nothing personal lingers.
+    expect(rows[0]).toEqual({ p: 0, e: 0 });
+  });
+
+  it('a phone or email can never belong to a different owner than its contact', async () => {
+    const ann = await insertUser(app, 'ann@example.com');
+    const bob = await insertUser(app, 'bob@example.com');
+    const annsContact = await insertContact(app, ann);
+    expect(await sqlState(insertPhone(app, bob, annsContact))).toBe(
+      FOREIGN_KEY_VIOLATION,
+    );
+    expect(await sqlState(insertEmail(app, bob, annsContact, 'x@y.co'))).toBe(
+      FOREIGN_KEY_VIOLATION,
+    );
+  });
+
+  it('are deleted with their account', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    await insertPhone(app, u, await insertContact(app, u));
+    await owner.query('DELETE FROM users WHERE id = $1', [u]);
+    const { rows } = await owner.query(
+      'SELECT (SELECT count(*) FROM contacts)::int + (SELECT count(*) FROM phone_numbers)::int AS n',
+    );
+    expect(rows[0].n).toBe(0);
+  });
+
+  it('always have a display name, and a folded sort name', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    expect(await sqlState(insertContact(app, u, '   ', '   '))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insertContact(app, u, 'Ann', 'Ann'))).toBe(
+      CHECK_VIOLATION,
+    );
+  });
+
+  it('refuses malformed phone numbers and duplicate positions', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const c = await insertContact(app, u);
+    // Unparsed numbers are allowed (e164 null) — but a stored E.164 must be one.
+    await insertPhone(app, u, c, '*144#', null, '144', 0);
+    expect(
+      await sqlState(insertPhone(app, u, c, '0712', '0712345678', '0712', 1)),
+    ).toBe(CHECK_VIOLATION);
+    expect(await sqlState(insertPhone(app, u, c, 'x', null, 'abc', 1))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insertPhone(app, u, c, '  ', null, '', 1))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insertPhone(app, u, c))).toBe(UNIQUE_VIOLATION);
+  });
+
+  it('stores email addresses lower-case only', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const c = await insertContact(app, u);
+    expect(await sqlState(insertEmail(app, u, c, 'Ann@X.co'))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insertEmail(app, u, c, 'no-at-sign'))).toBe(
+      CHECK_VIOLATION,
+    );
   });
 });

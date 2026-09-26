@@ -1,8 +1,7 @@
 // Contact Sphere — Prisma schema.
 //
-// Phase 2 creates only what the next phase (authentication) needs: users and
-// the audit log. Contact tables arrive in Phase 4, once ADRs 0005 (deletion),
-// 0007 (last used) and 0010 (fields) are decided.
+// Users, sessions and the audit log (Phases 2–3); contacts with their phone
+// numbers and email addresses (Phase 4; ADRs 0005, 0007, 0010).
 //
 // Guarantees Prisma's schema language cannot express — the app role, its
 // grants, the append-only audit log, CHECK constraints — live in the
@@ -46,6 +45,7 @@ model User {
   sessions      Session[]
   recoveryCodes RecoveryCode[]
   mfaChallenges MfaChallenge[]
+  contacts      Contact[]
 
   @@map("users")
 }
@@ -126,4 +126,89 @@ model MfaChallenge {
 
   @@index([userId])
   @@map("mfa_challenges")
+}
+
+/// A person or organisation in the owner's address book.
+///
+/// Lifecycle (ADR 0005): active → archived (hidden, kept) and/or trashed
+/// (`deleted_at` set; restorable for 30 days) → hard-deleted with its phone
+/// numbers and emails. Every query is scoped by `owner_id` (ADR 0004).
+model Contact {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  ownerId      String    @map("owner_id") @db.Uuid
+  givenName    String?   @map("given_name") @db.VarChar(100)
+  familyName   String?   @map("family_name") @db.VarChar(100)
+  /// What lists show. Derived from the other fields when left blank, so it
+  /// is never empty (CHECK constraint).
+  displayName  String    @map("display_name") @db.VarChar(200)
+  /// Lower-case, accent-folded display name: case-insensitive A–Z sorting
+  /// with a plain index. Maintained by the API (contact-names.ts).
+  sortName     String    @map("sort_name") @db.VarChar(200)
+  nickname     String?   @db.VarChar(100)
+  organization String?   @db.VarChar(200)
+  jobTitle     String?   @map("job_title") @db.VarChar(200)
+  notes        String?   @db.VarChar(10000)
+  birthday     DateTime? @db.Date
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  /// Last time the owner opened this contact in the app (ADR 0007). Never
+  /// inferred from call logs.
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(3)
+  archivedAt   DateTime? @map("archived_at") @db.Timestamptz(3)
+  /// Set = in the trash. Hard-deleted 30 days later (ADR 0005).
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  phoneNumbers   PhoneNumber[]
+  emailAddresses EmailAddress[]
+
+  /// Lets child rows reference (id, owner_id) together, so a phone number
+  /// can never belong to one owner while its contact belongs to another.
+  @@unique([id, ownerId])
+  @@index([ownerId, sortName])
+  @@index([ownerId, createdAt])
+  @@index([ownerId, lastUsedAt])
+  @@index([ownerId, deletedAt])
+  @@map("contacts")
+}
+
+/// A contact's phone number. Both what the owner typed and, when it parses,
+/// the E.164 form are kept (ADR 0010). Position 0 is the primary number.
+model PhoneNumber {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  ownerId   String  @map("owner_id") @db.Uuid
+  contactId String  @map("contact_id") @db.Uuid
+  /// e.g. "mobile", "work". Free text, optional.
+  label     String? @db.VarChar(40)
+  /// Exactly as entered or imported. Never rewritten.
+  raw       String  @db.VarChar(64)
+  /// Null when the number could not be parsed; such numbers are kept, not
+  /// rejected (old SIM exports contain oddities).
+  e164      String? @db.VarChar(16)
+  /// The digits of `raw`, for "0712"-style partial search.
+  digits    String  @db.VarChar(64)
+  position  Int     @db.SmallInt
+
+  contact Contact @relation(fields: [contactId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@unique([contactId, position])
+  @@index([ownerId, e164])
+  @@map("phone_numbers")
+}
+
+/// A contact's email address. Position 0 is the primary address.
+model EmailAddress {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  ownerId   String  @map("owner_id") @db.Uuid
+  contactId String  @map("contact_id") @db.Uuid
+  label     String? @db.VarChar(40)
+  /// Stored lower-case (CHECK constraint), so matching is case-insensitive.
+  address   String  @db.VarChar(254)
+  position  Int     @db.SmallInt
+
+  contact Contact @relation(fields: [contactId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@unique([contactId, position])
+  @@index([ownerId, address])
+  @@map("email_addresses")
 }

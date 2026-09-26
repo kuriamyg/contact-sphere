@@ -20,12 +20,12 @@ mattered.
 | [0002](0002-monorepo-and-toolchain.md)           | Monorepo, Node 24, npm workspaces, pinned framework majors | Accepted |
 | [0003](0003-hosting.md)                          | Hosting: Vercel + Render + Neon (Frankfurt)                | Accepted |
 | [0004](0004-single-user-multi-user-ready.md)     | Single-user first release, multi-user-ready data model     | Accepted |
-| [0005](0005-deletion-policy.md)                  | Archive, trash, then hard delete                           | Proposed |
+| [0005](0005-deletion-policy.md)                  | Archive, trash, then hard delete                           | Accepted |
 | [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                | Accepted |
-| [0007](0007-last-used.md)                        | Definition of "last used"                                  | Proposed |
+| [0007](0007-last-used.md)                        | Definition of "last used"                                  | Accepted |
 | [0008](0008-environments-and-isolation.md)       | Environments and isolation                                 | Accepted |
 | [0009](0009-backup-encryption.md)                | Encrypted local backups                                    | Proposed |
-| [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                           | Proposed |
+| [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                           | Accepted |
 | [0011](0011-public-source-code.md)               | Public source code, private data                           | Accepted |
 | [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL    | Accepted |
 | [0013](0013-two-factor-totp.md)                  | Two-factor sign-in with TOTP                               | Accepted |
