@@ -43,7 +43,8 @@ export type AuditAction =
   | 'group.exported'
   | 'contact.keep_in_touch_set'
   | 'follow_up.created'
-  | 'follow_up.deleted';
+  | 'follow_up.deleted'
+  | 'group.texted';
 
 export interface AuditEntry {
   actorUserId?: string | null;

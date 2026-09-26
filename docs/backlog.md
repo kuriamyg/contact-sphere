@@ -157,6 +157,22 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] 10c: Android app with consented two-way sync with the phone's
       address book (native; separate project)
 
+## Phase 11 — Reach
+
+- [x] 11a research: every messaging route costed per SMS and per 1,000
+      (docs/product/messaging-costs.md)
+- [x] Morning reminders by Web Push (free): devices API, daily Vercel Cron
+      → /cron/digest (CRON_SECRET) → API, once per Nairobi day, counts only
+- [x] Group texts from the owner's own phone: batched sms: links, live
+      SMS-part count, bundle/no-bundle estimate, MMS tip
+- [x] Provider adapter (Celcom/Advanta partner API), quote, monthly limit,
+      counts-only usage — wired, OFF until Phase 12 billing
+- [x] QR business card ("This is me", /card, .vcf) and share-any-contact QR
+- [ ] Owner action: choose an aggregator, get a sender ID, set SMS_* env
+      when paid plans launch
+- [ ] Email digest (Resend/Brevo free tier) — needs a sending domain
+- [ ] 11b: Swahili
+
 ## Phase 6a — Profile and polish
 
 - [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`

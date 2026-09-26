@@ -92,15 +92,15 @@ which cost us money (SMS/WhatsApp messages, storage) and deliver ongoing value.
 
 ### Next, in order (why this order: each step makes the next one valuable)
 
-| Phase               | What                                                                                                                                 | Why now                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| **7 Know-who**      | Tags (skills/services), area, "met through", notes search, saved searches                                                            | The everyday reason to open the app instead of the dialler |
-| **8 Communities**   | Groups with roles, WhatsApp-the-group, group export                                                                                  | Chama/church beachhead                                     |
-| **9 Remember**      | Important dates, keep-in-touch cadences, follow-ups, a Today screen, email digest                                                    | Makes the app proactive — the core paid value              |
-| **10 On the phone** | Installable PWA + offline; Android app with consented two-way phone sync                                                             | Removes "two address books" — the adoption unlock          |
-| **11 Reach**        | WhatsApp/SMS reminders, business card QR, Swahili                                                                                    | Where Kenyans are; the viral loop                          |
-| **12 Commercial**   | Open sign-up (phone OTP), plans, M-Pesa billing, ODPC registration, privacy policy, account deletion, encrypted backups with history | Required before charging                                   |
-| **13 Map**          | Relationship map (family tree, introductions)                                                                                        | Delight and differentiation once data is rich              |
+| Phase                                                                                 | What                                                                                                                                 | Why now                                                    |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **7 Know-who**                                                                        | Tags (skills/services), area, "met through", notes search, saved searches                                                            | The everyday reason to open the app instead of the dialler |
+| **8 Communities**                                                                     | Groups with roles, WhatsApp-the-group, group export                                                                                  | Chama/church beachhead                                     |
+| **9 Remember**                                                                        | Important dates, keep-in-touch cadences, follow-ups, a Today screen, email digest                                                    | Makes the app proactive — the core paid value              |
+| **10 On the phone**                                                                   | Installable PWA + offline; Android app with consented two-way phone sync                                                             | Removes "two address books" — the adoption unlock          |
+| **11 Reach** (11a live: push reminders, cheap group texts, QR card; 11b Swahili next) | WhatsApp/SMS reminders, business card QR, Swahili                                                                                    | Where Kenyans are; the viral loop                          |
+| **12 Commercial**                                                                     | Open sign-up (phone OTP), plans, M-Pesa billing, ODPC registration, privacy policy, account deletion, encrypted backups with history | Required before charging                                   |
+| **13 Map**                                                                            | Relationship map (family tree, introductions)                                                                                        | Delight and differentiation once data is rich              |
 
 ## 8. Risks to watch
 

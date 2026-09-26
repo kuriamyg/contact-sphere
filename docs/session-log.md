@@ -420,3 +420,18 @@ Tests: unit (op parsing and mapping), e2e (+4), browser flow 18/18
 (offline edits, reconnect sends 4 once, replay no duplicate, other
 account 409, other site 403, expired session → sign-in); earlier flows
 re-run green.
+
+## 2026-09-26 — Phase 11a: reach (reminders, cheap group texts, QR card)
+
+Owner asked for messaging far cheaper than Africa's Talking (~KES 0.80).
+Researched routes (docs/product/messaging-costs.md): own-phone Safaricom
+bundle ~KES 0.03/SMS (1,000 for KES 30/week; fair use 1,000/day, personal
+use) beats every aggregator (Celcom KES 0.25–0.60, Mobitech 0.35, Advanta
+0.30–0.80); WhatsApp API costs more (utility ~0.80, marketing ~5.20); Web
+Push is free for the owner's own reminders. Built: push reminders (daily
+cron, counts only), batched own-phone group texting with live SMS-part
+count and cost estimate, provider adapter (off until billing) with
+quotes/limits/counts-only usage, QR card. Migration `reach` (additive).
+Tests: unit (SMS parts, adapter batches, digest text, env), e2e 12 new,
+DB 2 new, web 6 new; browser flow 25/25 incl. decoding the QR as a camera
+would, cron auth, 412 px layout, no CSP violations.

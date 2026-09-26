@@ -95,3 +95,17 @@ export const ChevronRightIcon = (p: IconProps) => (
     <path d="m9 6 6 6-6 6" />
   </Svg>
 );
+export const BellIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" />
+    <path d="M10 21h4" />
+  </Svg>
+);
+export const QrIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+  </Svg>
+);

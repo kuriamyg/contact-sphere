@@ -5,6 +5,27 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Reach (Phase 11a)
+
+- **Morning reminders on your phone, free.** Profile → Morning reminders →
+  turn on. Each morning, if a follow-up, birthday or keep-in-touch is due,
+  the phone gets one notification (counts only, never names); tapping it
+  opens Today. No SMS, no cost. iPhone: add to Home Screen first.
+- **Text the whole group from your phone — the cheapest way.** Group →
+  Text everyone: write once, see how many SMS it costs as you type (an
+  emoji makes it 70 characters per SMS), and the estimate with a Safaricom
+  bundle (about KES 30 per 1,000) or without. Then open Messages in batches
+  of 10–100 with numbers and text filled in.
+- **Send through Contact Sphere** (built, switched off): one tap through a
+  cheap Kenyan SMS aggregator (Celcom/Advanta-style API, ~KES 0.25–0.60),
+  with a quote first and a monthly limit. It turns on with paid plans.
+- **QR business card.** Open your own contact → "This is me" → Profile →
+  Show my card: anyone scans it with their phone camera to save your
+  number. Any contact can be shared as a QR too. Only name, work, numbers
+  and emails go in the code.
+- Research: `docs/product/messaging-costs.md` compares every route with
+  costs per SMS and per 1,000 people.
+
 ### Added — Make changes with no data bundle (Phase 10b+)
 
 - With the offline copy switched on, you can now, with no data: add a new

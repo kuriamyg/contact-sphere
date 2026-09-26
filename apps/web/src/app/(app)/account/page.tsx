@@ -6,14 +6,17 @@ import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { TwoFactorSection } from '@/components/auth/two-factor-section';
 import { Avatar } from '@/components/avatar';
 import {
+  BellIcon,
   DownloadIcon,
   LogOutIcon,
+  QrIcon,
   ShieldIcon,
   UploadIcon,
   UserIcon,
 } from '@/components/icons';
 import { NameForm } from '@/components/profile/name-form';
 import { InstallApp } from '@/components/pwa/install-app';
+import { PhoneReminders } from '@/components/reach/phone-reminders';
 import {
   OfflineToggle,
   WipeOnSubmit,
@@ -21,6 +24,7 @@ import {
 import { requireUser } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
+import { getReachStatus } from '@/lib/reach';
 
 export const metadata: Metadata = { title: 'Profile · Contact Sphere' };
 
@@ -51,7 +55,10 @@ function CardTitle({
  */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const stats = await getContactStats();
+  const [stats, reach] = await Promise.all([
+    getContactStats(),
+    getReachStatus(),
+  ]);
   const name = user.displayName ?? user.email;
 
   return (
@@ -165,6 +172,38 @@ export default async function ProfilePage() {
           into Today, like any other app.
         </p>
         <InstallApp />
+      </section>
+
+      <section
+        aria-labelledby="reminders-heading"
+        className={`${card} space-y-3`}
+      >
+        <CardTitle id="reminders-heading" icon={<BellIcon />}>
+          Morning reminders
+        </CardTitle>
+        <p className="text-sm text-muted">
+          A free notification on this phone each morning when a follow-up,
+          birthday or keep-in-touch is due. No SMS, no cost.
+        </p>
+        {reach?.push.enabled && reach.push.publicKey ? (
+          <PhoneReminders publicKey={reach.push.publicKey} />
+        ) : (
+          <p className="text-sm text-muted">Not available right now.</p>
+        )}
+      </section>
+
+      <section aria-labelledby="card-heading" className={`${card} space-y-3`}>
+        <CardTitle id="card-heading" icon={<QrIcon />}>
+          Your QR business card
+        </CardTitle>
+        <p className="text-sm text-muted">
+          Let someone scan your card with their phone camera to save your number
+          — no typing, no mistakes.
+        </p>
+        <Link href="/card" className={button}>
+          <QrIcon className="size-4" />
+          Show my card
+        </Link>
       </section>
 
       <section

@@ -121,3 +121,27 @@ app's storage (IndexedDB) so it works with no data bundle.
   owner is refused (409).
 - Sign-out warns before discarding unsent changes; the sign-in page and a
   401 keep them for the same account only.
+
+## Reach (Phase 11)
+
+- **Push reminders.** A subscription is a capability URL at the browser
+  vendor (Google, Apple, Mozilla) plus the phone's keys; the payload is
+  encrypted to those keys (RFC 8291), so the vendor carries it without
+  reading it. Still, the notification appears on a locked screen, so the
+  text is counts only — never a name, number or note (tested). Endpoints
+  must be https (CHECK); at most 10 per owner; an endpoint moves with the
+  signed-in account and is dropped on 404/410 or 5 failures in a row.
+- **The morning job** needs no session: Vercel Cron calls `/cron/digest`
+  with `Bearer $CRON_SECRET` (constant-time compare; anything else 404),
+  which calls the API with the BFF secret like every request. It is
+  idempotent per Nairobi day (claimed atomically in `users.digest_sent_on`).
+- **Paid SMS** is off unless configured. When on: Kenyan mobiles only,
+  quote before send, per-owner monthly limit, throttled (5/min). The
+  message and numbers go to the aggregator and are never stored by us;
+  `sms_sends` keeps counts only and the app role can only insert/read it
+  (DB-tested). Aggregator keys live only in the API environment.
+- **QR card** contains only name, organisation, title, ≤3 numbers and ≤2
+  emails — never notes, tags, birthday or area (tested). "This is me" is
+  checked against owner and trash on every read.
+- **Own-phone group texts** leave the app entirely: the `sms:` link hands
+  numbers and text to the phone's Messages app; nothing is sent by us.

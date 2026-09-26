@@ -145,4 +145,86 @@ describe('loadEnv', () => {
       secretLooking,
     );
   });
+
+  describe('push and SMS', () => {
+    const PUB = 'B' + 'a'.repeat(86);
+    const PRIV = 'c'.repeat(43);
+    it('leaves both off when unset', () => {
+      const env = loadEnv(BASE);
+      expect(env.push).toBeUndefined();
+      expect(env.sms).toBeUndefined();
+    });
+
+    it('needs all three VAPID values, valid', () => {
+      expect(
+        loadEnv({
+          ...BASE,
+          VAPID_PUBLIC_KEY: PUB,
+          VAPID_PRIVATE_KEY: PRIV,
+          VAPID_SUBJECT: 'mailto:owner@example.com',
+        }).push,
+      ).toEqual({
+        publicKey: PUB,
+        privateKey: PRIV,
+        subject: 'mailto:owner@example.com',
+      });
+      expect(() => loadEnv({ ...BASE, VAPID_PUBLIC_KEY: PUB })).toThrow(
+        /set together/,
+      );
+      expect(() =>
+        loadEnv({
+          ...BASE,
+          VAPID_PUBLIC_KEY: 'short',
+          VAPID_PRIVATE_KEY: PRIV,
+          VAPID_SUBJECT: 'mailto:a@b.c',
+        }),
+      ).toThrow(/not valid/);
+      expect(() =>
+        loadEnv({
+          ...BASE,
+          VAPID_PUBLIC_KEY: PUB,
+          VAPID_PRIVATE_KEY: PRIV,
+          VAPID_SUBJECT: 'owner',
+        }),
+      ).toThrow(/mailto/);
+    });
+
+    it('parses a partner SMS provider and its price', () => {
+      expect(
+        loadEnv({
+          ...BASE,
+          SMS_PROVIDER: 'partner',
+          SMS_API_URL: 'https://sms.example/api/services',
+          SMS_API_KEY: 'k',
+          SMS_PARTNER_ID: '1',
+          SMS_SENDER_ID: 'CSPHERE',
+          SMS_MONTHLY_LIMIT: '1000',
+          SMS_PRICE_KES: '0.35',
+        }).sms,
+      ).toEqual({
+        provider: 'partner',
+        url: 'https://sms.example/api/services/',
+        apiKey: 'k',
+        partnerId: '1',
+        senderId: 'CSPHERE',
+        monthlyLimit: 1000,
+        priceCents: 35,
+      });
+      expect(() => loadEnv({ ...BASE, SMS_PROVIDER: 'partner' })).toThrow(
+        /SMS_API_URL/,
+      );
+      expect(() =>
+        loadEnv({ ...BASE, SMS_PROVIDER: 'log', SMS_PRICE_KES: 'cheap' }),
+      ).toThrow(/SMS_PRICE_KES/);
+      expect(() => loadEnv({ ...BASE, SMS_PROVIDER: 'twilio' })).toThrow(
+        /partner or log/,
+      );
+    });
+
+    it('refuses the log provider in production', () => {
+      expect(() => loadEnv({ ...PROD, SMS_PROVIDER: 'log' })).toThrow(
+        /not in production/,
+      );
+    });
+  });
 });
