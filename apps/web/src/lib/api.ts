@@ -63,19 +63,31 @@ export async function api<T>(
       'API_URL and API_SHARED_SECRET must be set on the web server.',
     );
   }
-  const res = await fetch(`${base}${path}`, {
-    method: init.method ?? 'GET',
-    cache: 'no-store',
-    headers: buildApiHeaders({
-      secret,
-      ip: await clientIp(),
-      token: init.auth === false ? undefined : await sessionToken(),
-      json: init.body !== undefined,
-    }),
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    // Render's free instance can take ~60 s to wake up.
-    signal: AbortSignal.timeout(65_000),
+  const headers = buildApiHeaders({
+    secret,
+    ip: await clientIp(),
+    token: init.auth === false ? undefined : await sessionToken(),
+    json: init.body !== undefined,
   });
+  let res: Response;
+  try {
+    res = await fetch(`${base}${path}`, {
+      method: init.method ?? 'GET',
+      cache: 'no-store',
+      headers,
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      // Render's free instance can take up to ~50 s to wake up. Must stay
+      // below `maxDuration` in app/layout.tsx so this, not the platform,
+      // ends a slow request.
+      signal: AbortSignal.timeout(50_000),
+    });
+  } catch (err) {
+    // Unreachable, reset or timed out. Report it as status 0 so every caller
+    // shows "try again" in place; a throw here would crash the whole page
+    // ("This page couldn't load") and lose what the person had on screen.
+    console.error(`API ${init.method ?? 'GET'} ${path} failed:`, err);
+    return { status: 0, data: null };
+  }
   if (res.status === 204) return { status: 204, data: null };
   const body: unknown = await res.json().catch(() => null);
   if (res.ok) return { status: res.status, data: body as T };
