@@ -20,7 +20,7 @@ export default function Home() {
     >
       <header className="space-y-3">
         <p className="text-sm font-medium tracking-wide text-muted uppercase">
-          Private · Phase 3 sign-in
+          Private · Contacts
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Contact Sphere

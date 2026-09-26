@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { logout } from '@/app/actions/auth';
+import { NavLink } from '@/components/nav-link';
 import { requireUser } from '@/lib/auth';
 
 /** Everything under (app) requires a signed-in user, checked with the API on each request. */
@@ -11,17 +12,19 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
       <header className="border-b border-border">
         <nav
           aria-label="Main"
-          className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3"
+          className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3"
         >
-          <Link href="/account" className="font-semibold">
+          <Link href="/contacts" className="font-semibold whitespace-nowrap">
             Contact Sphere
           </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-muted sm:inline">{user.email}</span>
+          <div className="flex items-center gap-1 text-sm sm:gap-3">
+            <NavLink href="/contacts">Contacts</NavLink>
+            <NavLink href="/account">Account</NavLink>
+            <span className="hidden text-muted md:inline">{user.email}</span>
             <form action={logout}>
               <button
                 type="submit"
-                className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+                className="rounded-lg border border-border px-3 py-1.5 whitespace-nowrap hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
               >
                 Sign out
               </button>

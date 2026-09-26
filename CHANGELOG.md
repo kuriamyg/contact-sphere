@@ -5,6 +5,23 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Contacts screens (Phase 4b)
+
+- Contacts list with search, sorting (name, recently opened, date saved)
+  and pages; Archived and Trash tabs; empty and no-results states.
+- Contact page with one-tap Call, SMS, WhatsApp and Email; birthday, notes.
+- New / edit form with any number of phone numbers and emails (first is
+  primary). If a save is refused, everything typed is kept.
+- Archive, move to trash, restore, delete for good, empty trash — with a
+  confirmation for the permanent ones.
+- Signing in now opens Contacts; Account is in the header.
+
+### Changed
+
+- The general API rate limit is 300 requests a minute per address (was
+  120); sign-in, setup and two-factor keep their strict 5 a minute.
+- Contact ids of any UUID version get a plain "not found".
+
 ### Added — Contacts API (Phase 4a; ADRs 0005, 0007, 0010 accepted)
 
 - Contacts with names, organisation, notes, birthday, phone numbers (kept

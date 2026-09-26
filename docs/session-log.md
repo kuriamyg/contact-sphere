@@ -259,3 +259,27 @@ disabling with a wrong password gives 401.
 (the owner has not set up yet); web `/login` 200 with per-request nonce CSP,
 HSTS and X-Frame-Options DENY; `/login/verify` with no challenge cookie →
 307 `/login`; signed-out `/account` → 307 `/login`.
+
+---
+
+## 2026-09-26 — Two-factor crash fixed (PR #18); Phase 4a deployed
+
+**PR #18.** The owner's first production enrolment crashed to "This page
+couldn't load": when the web server could not get an answer from the API,
+`api()` threw inside a Server Action. Reproduced locally; fixed so forms
+say "unavailable, try again" and keep their state, an unreachable API no
+longer looks like "signed out", and time limits are explicit (50 s / 60 s).
+The owner then enrolled two-factor successfully. Owner setup is closed
+(setup reports unavailable; the real token gets 409).
+
+**Phase 4a (PR #19, `2b49a22`).** ADRs 0005, 0007, 0010 accepted. Migration
+`contacts` applied to **staging first** (no drift), staging API deployed,
+then **22/22 live checks** against it (create with E.164 + unparsed
+number, five search forms, A–Z with accents, last used, save replaces
+lists, archive, trash with purge date, no edit in trash, restore, delete
+for good with cascade, other owner sees nothing and gets 404, no session
+401, audit without content). Then production migrated (no drift), API
+deployed, read-only checks: readiness ok, contacts refuse no-BFF (403),
+no/forged session (401); in the database, 12 CHECK constraints, both
+composite owner FKs, app role may manage contacts and still may not
+UPDATE the audit log.

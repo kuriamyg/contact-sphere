@@ -25,9 +25,11 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forEnv(env),
-        // A generous default for ordinary requests; sensitive endpoints set
-        // their own, much stricter limits.
-        ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
+        // A generous default for ordinary requests (each page view costs
+        // about three API calls: session, data, "last used"), so normal
+        // browsing never meets it. Sensitive endpoints set their own, much
+        // stricter limits (5/min).
+        ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
         PrismaModule,
         AuditModule,
         HealthModule,

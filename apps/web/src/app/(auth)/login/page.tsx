@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Sign in · Contact Sphere' };
 export default async function LoginPage() {
   // If the API is unreachable, still show the form: signing in will then
   // say the service is unavailable, which is more useful than an error page.
-  if (await currentUser().catch(() => null)) redirect('/account');
+  if (await currentUser().catch(() => null)) redirect('/contacts');
   const canSetUp = await setupAvailable();
   return (
     <>

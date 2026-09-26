@@ -20,7 +20,11 @@ import {
 } from './contacts.service';
 import { ContactInputDto, ListContactsQueryDto } from './dto/contact.dto';
 
-const Id = () => new ParseUUIDPipe({ version: '7' });
+/**
+ * Any well-formed UUID: ours are v7, but an id from anywhere else should get
+ * a plain 404 rather than a validation error.
+ */
+const Id = () => new ParseUUIDPipe();
 
 /**
  * The owner's contacts. Every route needs a session (global SessionGuard)
