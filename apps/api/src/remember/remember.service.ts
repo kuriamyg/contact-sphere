@@ -223,11 +223,28 @@ export class RememberService {
     });
   }
 
-  /** "I was in touch today." Not an edit; not audited (like last used). */
-  async contacted(ownerId: string, contactId: string): Promise<void> {
+  /**
+   * "I was in touch." Not an edit; not audited (like last used). `at` is
+   * when it happened, for ones recorded offline (up to 30 days back); the
+   * latest time wins, and never earlier than the contact was saved.
+   */
+  async contacted(
+    ownerId: string,
+    contactId: string,
+    at?: string,
+    now = new Date(),
+  ): Promise<void> {
+    const when = at ? new Date(at) : now;
+    if (
+      when.getTime() > now.getTime() + 5 * 60_000 ||
+      when.getTime() < now.getTime() - 30 * 86_400_000
+    ) {
+      throw new BadRequestException('at must be within the last 30 days');
+    }
     await this.requireLive(ownerId, contactId);
     await this.prisma.$executeRaw`
-      UPDATE contacts SET last_contacted_at = now()
+      UPDATE contacts
+      SET last_contacted_at = GREATEST(last_contacted_at, ${when}::timestamptz, created_at)
       WHERE id = ${contactId}::uuid AND owner_id = ${ownerId}::uuid`;
   }
 
@@ -236,7 +253,20 @@ export class RememberService {
     contactId: string,
     dueOn: string,
     note: string,
+    id?: string,
   ): Promise<{ id: string }> {
+    if (id) {
+      const existing = await this.prisma.followUp.findFirst({
+        where: { id },
+        select: { ownerId: true },
+      });
+      if (existing) {
+        if (existing.ownerId !== ownerId) {
+          throw new ConflictException('That id is taken.');
+        }
+        return { id };
+      }
+    }
     const d = new Date(`${dueOn}T00:00:00Z`);
     if (Number.isNaN(d.getTime()) || day(d) !== dueOn) {
       throw new BadRequestException('dueOn must be a real date');
@@ -264,7 +294,7 @@ export class RememberService {
         );
       }
       const f = await tx.followUp.create({
-        data: { ownerId, contactId, dueOn: d, note },
+        data: { ...(id ? { id } : {}), ownerId, contactId, dueOn: d, note },
         select: { id: true },
       });
       await this.audit.record(

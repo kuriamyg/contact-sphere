@@ -2,7 +2,14 @@
 
 import { useEffect } from 'react';
 
-import { isOn, readInfo, REFRESH_MS, syncNow, wipe } from '@/lib/offline-store';
+import {
+  isOn,
+  pendingCount,
+  readInfo,
+  REFRESH_MS,
+  syncNow,
+  wipeCopyOnly,
+} from '@/lib/offline-store';
 
 /**
  * Keeps this device's offline copy fresh while the app is open — only if
@@ -13,7 +20,14 @@ export function OfflineSync() {
     const refresh = async () => {
       if (!isOn() || !navigator.onLine) return;
       const info = await readInfo();
-      if (info && Date.now() - Date.parse(info.savedAt) < REFRESH_MS) return;
+      const waiting = await pendingCount();
+      if (
+        waiting === 0 &&
+        info &&
+        Date.now() - Date.parse(info.savedAt) < REFRESH_MS
+      ) {
+        return;
+      }
       await syncNow();
     };
     void refresh();
@@ -30,7 +44,7 @@ export function OfflineSync() {
  */
 export function OfflineGuard() {
   useEffect(() => {
-    wipe({ keepSwitch: true });
+    void wipeCopyOnly();
   }, []);
   return null;
 }

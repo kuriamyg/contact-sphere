@@ -17,6 +17,151 @@
   var info = null;
   var main = document.getElementById('main');
   var banner = document.getElementById('banner');
+  /** Changes made here, waiting to be sent: { ownerId, ops: [...] }. */
+  var queue = { ownerId: null, ops: [] };
+  var lastProblems = [];
+
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 15) | 64;
+    b[8] = (b[8] & 63) | 128;
+    var hex = Array.prototype.map
+      .call(b, function (x) {
+        return (x + 256).toString(16).slice(1);
+      })
+      .join('');
+    return (
+      hex.slice(0, 8) +
+      '-' +
+      hex.slice(8, 12) +
+      '-' +
+      hex.slice(12, 16) +
+      '-' +
+      hex.slice(16, 20) +
+      '-' +
+      hex.slice(20)
+    );
+  }
+
+  /** Saves the copy (with changes shown) and the queue, so a reload keeps them. */
+  function persist(cb) {
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(data, 'snapshot');
+      tx.objectStore('kv').put(queue, 'queue');
+      tx.oncomplete = function () {
+        db.close();
+        if (cb) cb();
+      };
+      tx.onerror = function () {
+        db.close();
+        if (cb) cb();
+      };
+    };
+    req.onerror = function () {
+      if (cb) cb();
+    };
+  }
+
+  function record(op) {
+    op.opId = uuid();
+    queue.ownerId = data.ownerId;
+    queue.ops.push(op);
+    persist();
+    updateBanner();
+  }
+
+  function rerender() {
+    route();
+  }
+  function markContacted(c) {
+    record({
+      type: 'contacted',
+      contactId: c.id,
+      at: new Date().toISOString(),
+    });
+    c.lastContactedOn = today();
+    persist();
+    rerender();
+  }
+  function followDone(f) {
+    record({ type: 'followup.done', followUpId: f.id });
+    data.followUps = data.followUps.filter(function (x) {
+      return x.id !== f.id;
+    });
+    persist();
+    rerender();
+  }
+  function addFollow(c, dueOn, note) {
+    var id = uuid();
+    record({
+      type: 'followup.add',
+      followUpId: id,
+      contactId: c.id,
+      dueOn: dueOn,
+      note: note,
+    });
+    data.followUps.push({ id: id, contactId: c.id, dueOn: dueOn, note: note });
+    data.followUps.sort(function (a, b) {
+      return a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : 0;
+    });
+    persist();
+    rerender();
+  }
+  function newContact(name, phone, note) {
+    var id = uuid();
+    var op = { type: 'contact.create', contactId: id, name: name };
+    if (phone) op.phone = phone;
+    if (note) op.note = note;
+    record(op);
+    data.contacts.push({
+      id: id,
+      name: name,
+      organization: null,
+      jobTitle: null,
+      nickname: null,
+      area: null,
+      metThrough: null,
+      tags: [],
+      birthday: null,
+      notes: note || null,
+      createdOn: today(),
+      keepInTouchDays: null,
+      lastContactedOn: null,
+      phones: phone ? [[phone, null, null]] : [],
+      emails: [],
+    });
+    data.contacts.sort(function (a, b) {
+      return fold(a.name) < fold(b.name) ? -1 : 1;
+    });
+    persist();
+    location.hash = '#/c/' + id;
+  }
+  function doneButton(label, onClick) {
+    var b = h(
+      'button',
+      { type: 'button', class: 'btn', 'aria-label': label },
+      'Done',
+    );
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function waitingNote() {
+    return h(
+      'p',
+      { class: 'pending small' },
+      'Waiting to send — saved on this phone, sent when you have data.',
+    );
+  }
+
+  function isPending(id) {
+    return queue.ops.some(function (o) {
+      return o.contactId === id || o.followUpId === id;
+    });
+  }
 
   // ---- tiny DOM helper: h('a', { href: '#' }, 'text', child) --------------
   function h(tag, attrs) {
@@ -169,7 +314,7 @@
     });
   }
   function dial(p) {
-    return p[1] || p[0];
+    return p[1] || String(p[0]).replace(/[^\d+]/g, '');
   }
   function callButtons(c) {
     var p = c.phones[0];
@@ -206,7 +351,8 @@
           h('span', { class: 'name' }, c.name),
           h('span', { class: 'sub' }, sub || ''),
         ),
-        extra || callButtons(c),
+        callButtons(c),
+        extra || null,
       ),
     );
   }
@@ -233,6 +379,7 @@
               p ? p[0] : c.emails[0] ? c.emails[0][0] : '',
               c.organization,
               c.tags.slice(0, 2).join(', '),
+              isPending(c.id) ? 'waiting to send' : '',
             ]
               .filter(Boolean)
               .join(' · '),
@@ -248,7 +395,17 @@
     }
     input.addEventListener('input', render);
     render();
-    show(h('h1', null, 'Contacts'), input, count, list);
+    show(
+      h(
+        'div',
+        { class: 'titlebar' },
+        h('h1', null, 'Contacts'),
+        h('a', { class: 'btn primary', href: '#/new' }, 'New contact'),
+      ),
+      input,
+      count,
+      list,
+    );
   }
 
   function contactScreen(id) {
@@ -418,9 +575,15 @@
                     h(
                       'span',
                       { class: 'sub' + (d < 0 ? ' late' : '') },
-                      fmtDay(f.dueOn) + ' · ' + rel(d),
+                      fmtDay(f.dueOn) +
+                        ' · ' +
+                        rel(d) +
+                        (isPending(f.id) ? ' · waiting to send' : ''),
                     ),
                   ),
+                  doneButton('Done: ' + f.note, function () {
+                    followDone(f);
+                  }),
                 ),
               );
             }),
@@ -428,11 +591,123 @@
         : null,
       c.notes ? h('h2', null, 'Notes') : null,
       c.notes ? h('p', { class: 'pre' }, c.notes) : null,
+      isPending(c.id) ? waitingNote() : null,
+      touchSection(c),
+      followForm(c),
       h(
         'p',
         { class: 'muted small' },
-        'To change this contact, open the app when you have data.',
+        'Editing details (name, numbers, skills) needs data.',
       ),
+    );
+  }
+
+  function touchSection(c) {
+    var b = h(
+      'button',
+      { type: 'button', class: 'btn' },
+      'I was in touch today',
+    );
+    b.addEventListener('click', function () {
+      markContacted(c);
+    });
+    return h(
+      'div',
+      { class: 'card' },
+      h(
+        'p',
+        { class: 'small muted' },
+        c.lastContactedOn
+          ? 'Last in touch: ' + fmtDay(c.lastContactedOn)
+          : 'Not marked as contacted yet',
+      ),
+      b,
+    );
+  }
+
+  function followForm(c) {
+    var date = h('input', {
+      type: 'date',
+      required: 'required',
+      'aria-label': 'Follow-up date',
+      value: today(),
+    });
+    var note = h('input', {
+      type: 'text',
+      required: 'required',
+      maxlength: '200',
+      placeholder: 'e.g. Ask about the harambee',
+      'aria-label': 'Follow-up note',
+    });
+    var form = h(
+      'form',
+      { class: 'stack' },
+      h('h2', null, 'Add a follow-up'),
+      date,
+      note,
+      h('button', { type: 'submit', class: 'btn primary' }, 'Add follow-up'),
+    );
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = note.value.trim().replace(/\s+/g, ' ');
+      if (!n || !/^\d{4}-\d{2}-\d{2}$/.test(date.value)) return;
+      addFollow(c, date.value, n.slice(0, 200));
+    });
+    return form;
+  }
+
+  function newScreen() {
+    var name = h('input', {
+      type: 'text',
+      required: 'required',
+      maxlength: '200',
+      'aria-label': 'Name',
+      placeholder: 'Name',
+    });
+    var phone = h('input', {
+      type: 'tel',
+      inputmode: 'tel',
+      maxlength: '64',
+      'aria-label': 'Phone number',
+      placeholder: 'Phone number',
+    });
+    var note = h('textarea', {
+      rows: '3',
+      maxlength: '2000',
+      'aria-label': 'Note',
+      placeholder: 'Note (optional)',
+    });
+    var form = h(
+      'form',
+      { class: 'stack' },
+      name,
+      phone,
+      note,
+      h('button', { type: 'submit', class: 'btn primary' }, 'Save contact'),
+    );
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = name.value.trim().replace(/\s+/g, ' ');
+      if (!n) return;
+      newContact(
+        n.slice(0, 200),
+        phone.value.trim().slice(0, 64),
+        note.value.trim().slice(0, 2000),
+      );
+    });
+    show(
+      h(
+        'p',
+        null,
+        h('a', { href: '#/contacts', class: 'muted small' }, '← Contacts'),
+      ),
+      h('h1', null, 'New contact'),
+      h(
+        'p',
+        { class: 'muted small' },
+        'Saved on this phone now; added to your account when you have data. Add more details later in the full app.',
+      ),
+      form,
     );
   }
 
@@ -484,7 +759,13 @@
           'ul',
           { class: 'list' },
           fu.map(function (x) {
-            return personRow(x.c, x.f.note + ' · ' + rel(x.d));
+            return personRow(
+              x.c,
+              x.f.note + ' · ' + rel(x.d),
+              doneButton('Done: ' + x.f.note, function () {
+                followDone(x.f);
+              }),
+            );
           }),
         ),
       );
@@ -500,6 +781,9 @@
               x.over === 0
                 ? 'due today'
                 : x.over + (x.over === 1 ? ' day' : ' days') + ' overdue',
+              doneButton('I was in touch with ' + x.c.name, function () {
+                markContacted(x.c);
+              }),
             );
           }),
         ),
@@ -655,7 +939,7 @@
     document.querySelectorAll('.top nav a').forEach(function (a) {
       var here =
         a.getAttribute('href').slice(2) ===
-        (parts[0] === 'c'
+        (parts[0] === 'c' || parts[0] === 'new'
           ? 'contacts'
           : parts[0] === 'g'
             ? 'groups'
@@ -663,7 +947,8 @@
       if (here) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
-    if (parts[0] === 'c') contactScreen(parts[1]);
+    if (parts[0] === 'new') newScreen();
+    else if (parts[0] === 'c') contactScreen(parts[1]);
     else if (parts[0] === 'contacts') contactsScreen('');
     else if (parts[0] === 'g') groupScreen(parts[1]);
     else if (parts[0] === 'groups') groupsScreen();
@@ -690,7 +975,11 @@
       var db = req.result,
         store = db.transaction('kv').objectStore('kv');
       var s = store.get('snapshot'),
-        i = store.get('info');
+        i = store.get('info'),
+        q = store.get('queue');
+      q.onsuccess = function () {
+        if (q.result && q.result.ops) queue = q.result;
+      };
       s.onsuccess = function () {
         i.onsuccess = function () {
           db.close();
@@ -708,17 +997,126 @@
     if (!snapshot || !snapshot.contacts) return noCopy();
     data = snapshot;
     info = meta;
+    // Queued changes from another account never show or send here.
+    if (queue.ownerId && queue.ownerId !== data.ownerId)
+      queue = { ownerId: null, ops: [] };
+    updateBanner();
+    window.addEventListener('hashchange', route);
+    route();
+    if (navigator.onLine) sendChanges();
+  });
+
+  function updateBanner() {
+    if (!data) return;
     banner.textContent =
       'No connection — your copy from ' +
       (info ? ago(info.savedAt) : 'earlier') +
       '. Calls and SMS use airtime.';
-    window.addEventListener('hashchange', route);
-    route();
-  });
+    if (queue.ops.length) {
+      banner.appendChild(
+        h(
+          'strong',
+          null,
+          ' ' +
+            queue.ops.length +
+            (queue.ops.length === 1 ? ' change' : ' changes') +
+            ' waiting to send.',
+        ),
+      );
+    }
+    lastProblems.forEach(function (m) {
+      banner.appendChild(h('span', { class: 'late' }, ' Not saved: ' + m));
+    });
+  }
 
-  // Back online: go back to the full app.
-  window.addEventListener('online', function () {
-    banner.textContent = 'You’re back online. ';
-    banner.appendChild(h('a', { href: '/today' }, 'Open the full app'));
-  });
+  /** Back online: send waiting changes, refresh the copy, offer the full app. */
+  var sending = false;
+  function sendChanges() {
+    if (sending || !data) return;
+    sending = true;
+    var sent = 0;
+    var go = queue.ops.length
+      ? fetch('/offline-sync', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ownerId: queue.ownerId, ops: queue.ops }),
+        }).then(function (r) {
+          if (r.status === 409) {
+            queue = { ownerId: null, ops: [] };
+            lastProblems = ['changes made by another account were discarded.'];
+            return;
+          }
+          if (!r.ok) throw new Error('send ' + r.status);
+          return r.json().then(function (body) {
+            var keep = {};
+            lastProblems = [];
+            body.results.forEach(function (x) {
+              if (x.status === 'retry') keep[x.opId] = true;
+              if (x.status === 'ok') sent++;
+              if (x.status === 'rejected')
+                lastProblems.push(x.message || 'a change was refused.');
+            });
+            queue.ops = queue.ops.filter(function (o) {
+              return keep[o.opId];
+            });
+          });
+        })
+      : Promise.resolve();
+    go.then(function () {
+      persist();
+      return fetch('/offline-data', { cache: 'no-store' });
+    })
+      .then(function (r) {
+        if (!r || !r.ok) return null;
+        return r.text().then(function (t) {
+          var fresh = JSON.parse(t);
+          if (fresh.ownerId !== data.ownerId) return;
+          data = fresh;
+          info = {
+            savedAt: new Date().toISOString(),
+            bytes: t.length,
+            contacts: fresh.contacts.length,
+            etag: r.headers.get('etag') || undefined,
+          };
+          var req = indexedDB.open(DB_NAME, 1);
+          req.onsuccess = function () {
+            var db = req.result,
+              tx = db.transaction('kv', 'readwrite');
+            tx.objectStore('kv').put(data, 'snapshot');
+            tx.objectStore('kv').put(info, 'info');
+            tx.oncomplete = function () {
+              db.close();
+            };
+          };
+        });
+      })
+      .catch(function () {
+        // Still offline, or the server is busy: try again next time.
+      })
+      .then(function () {
+        sending = false;
+        updateBanner();
+        if (navigator.onLine) {
+          banner.appendChild(document.createTextNode(' '));
+          if (sent)
+            banner.appendChild(
+              h(
+                'strong',
+                null,
+                'Sent ' + sent + (sent === 1 ? ' change. ' : ' changes. '),
+              ),
+            );
+          banner.appendChild(
+            h(
+              'a',
+              { href: '/today' },
+              'You’re back online — open the full app',
+            ),
+          );
+        }
+        route();
+      });
+  }
+
+  window.addEventListener('online', sendChanges);
 })();

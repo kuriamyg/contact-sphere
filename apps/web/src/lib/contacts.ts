@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { api } from './api';
-import { ServiceUnavailableError } from './auth';
+import { failedLoad } from './auth';
 import { type ListParams, toApiQuery } from './contact-params';
 
 /** Shapes returned by the API's /contacts routes (apps/api contacts.service). */
@@ -57,7 +57,7 @@ export interface ContactPage {
 export async function listContacts(p: ListParams): Promise<ContactPage> {
   const res = await api<ContactPage>(`/contacts?${toApiQuery(p)}`);
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }
@@ -69,7 +69,7 @@ export async function getContact(id: string): Promise<ContactDetail | null> {
   // 400 (an id the API will not accept) is as good as absent.
   if (res.status === 404 || res.status === 400) return null;
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }
@@ -139,7 +139,7 @@ export async function listDuplicates(): Promise<{
     '/contacts/duplicates',
   );
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }
@@ -177,7 +177,7 @@ export async function mergePreview(
   });
   if ([400, 404, 409].includes(res.status)) return null;
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }

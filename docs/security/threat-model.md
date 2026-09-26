@@ -108,3 +108,16 @@ app's storage (IndexedDB) so it works with no data bundle.
   never a signed-in page or API response.
 - **Snapshot endpoint** rate-limited (12/min) against scraping with a
   stolen session; answers are `no-store`.
+
+### Changes made offline (Phase 10b+)
+
+- Queued in the same device store; tied to the account that made them
+  (`ownerId`). `/offline-sync` refuses a different signed-in account
+  (409, the queue is then discarded) and any request whose `Origin` is not
+  the app's own (403) — a cross-site form cannot send JSON with our Origin.
+- Only four narrow operations exist (create contact, in touch, follow-up
+  add/done); each maps to an existing API call with its normal checks.
+- Device-made ids make replays harmless; an id already used by another
+  owner is refused (409).
+- Sign-out warns before discarding unsent changes; the sign-in page and a
+  401 keep them for the same account only.

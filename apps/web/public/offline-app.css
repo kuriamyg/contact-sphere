@@ -205,3 +205,45 @@ a.row {
 .card p {
   margin: 4px 0;
 }
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+.stack input,
+.stack textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+button.btn {
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.btn.primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+.pending {
+  color: var(--accent);
+  font-weight: 600;
+}
+.card .btn {
+  margin-top: 8px;
+}

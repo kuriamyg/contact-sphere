@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import {
   FLAG,
   isOn,
+  pendingCount,
   readInfo,
   type StoredCopy,
   syncNow,
@@ -27,12 +28,14 @@ export function OfflineToggle() {
   const [info, setInfo] = useState<StoredCopy | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [waiting, setWaiting] = useState(0);
 
   useEffect(() => {
     // Decided after mount: the server cannot see this device's storage.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOn(isOn());
     void readInfo().then(setInfo);
+    void pendingCount().then(setWaiting);
   }, []);
 
   if (on === null) return null;
@@ -69,10 +72,19 @@ export function OfflineToggle() {
     const r = await syncNow();
     if (r === 'saved') setInfo(await readInfo());
     else setError('Could not refresh now; your last copy is still there.');
+    setWaiting(await pendingCount());
     setBusy(false);
   };
 
   const turnOff = () => {
+    if (
+      waiting > 0 &&
+      !window.confirm(
+        `${waiting} change(s) made without data have not been sent yet. Delete them?`,
+      )
+    ) {
+      return;
+    }
     wipe();
     setOn(false);
     setInfo(null);
@@ -93,6 +105,12 @@ export function OfflineToggle() {
       ) : (
         <p className="text-sm text-muted">
           Off. Without data you only see a “You’re offline” page.
+        </p>
+      )}
+      {waiting > 0 && (
+        <p className="text-sm font-medium" role="status">
+          {waiting} {waiting === 1 ? 'change' : 'changes'} made without data
+          waiting to be sent.
         </p>
       )}
       {error && (
@@ -135,11 +153,27 @@ export function OfflineToggle() {
   );
 }
 
-/** Wipes the copy the moment a sign-out form is submitted. */
+/**
+ * Wipes the copy the moment a sign-out form is submitted — after warning if
+ * changes made without data have not been sent yet.
+ */
 export function WipeOnSubmit({ children }: { children: React.ReactNode }) {
+  const [waiting, setWaiting] = useState(0);
+  useEffect(() => {
+    void pendingCount().then(setWaiting);
+  }, []);
   return (
     <div
-      onSubmitCapture={() => {
+      onSubmitCapture={(e) => {
+        if (
+          waiting > 0 &&
+          !window.confirm(
+            `${waiting} change(s) made without data have not been sent yet. Sign out and lose them?`,
+          )
+        ) {
+          e.preventDefault();
+          return;
+        }
         wipe();
       }}
     >

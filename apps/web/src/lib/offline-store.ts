@@ -67,17 +67,14 @@ export async function readInfo(): Promise<StoredCopy | null> {
 }
 
 /**
- * Removes the copy — and the switch too, unless `keepSwitch` (the sign-in
- * page: the owner's choice for this device stays; the data does not).
- * Never throws.
+ * Removes everything: the copy, changes waiting to be sent, and the switch.
+ * Used when the owner signs out. Never throws.
  */
-export function wipe({ keepSwitch = false } = {}): void {
-  if (!keepSwitch) {
-    try {
-      localStorage.removeItem(FLAG);
-    } catch {
-      // Storage blocked: nothing was stored either.
-    }
+export function wipe(): void {
+  try {
+    localStorage.removeItem(FLAG);
+  } catch {
+    // Storage blocked: nothing was stored either.
   }
   try {
     indexedDB.deleteDatabase(DB_NAME);
@@ -86,18 +83,112 @@ export function wipe({ keepSwitch = false } = {}): void {
   }
 }
 
+/**
+ * The sign-in page and a 401: remove the copy, but keep the switch and any
+ * changes still waiting — they belong to one account and are sent only if
+ * that same account signs in again (the server checks).
+ */
+export async function wipeCopyOnly(): Promise<void> {
+  try {
+    const db = await open();
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete('snapshot');
+      tx.objectStore(STORE).delete('info');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+    db.close();
+  } catch {
+    // Nothing stored.
+  }
+}
+
+/** Changes made offline, waiting to be sent (written by offline-app.js). */
+export interface Queue {
+  ownerId: string;
+  ops: { opId: string }[];
+}
+
+async function get<T>(key: string): Promise<T | null> {
+  try {
+    const db = await open();
+    const v = await new Promise<T | null>((resolve) => {
+      const req = db.transaction(STORE).objectStore(STORE).get(key);
+      req.onsuccess = () => resolve((req.result as T) ?? null);
+      req.onerror = () => resolve(null);
+    });
+    db.close();
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+export async function pendingCount(): Promise<number> {
+  return (await get<Queue>('queue'))?.ops.length ?? 0;
+}
+
+export interface FlushResult {
+  sent: number;
+  rejected: string[];
+}
+
+/**
+ * Sends changes made offline. Keeps the ones to retry; drops the ones the
+ * server refused (and says why); drops all if another account is signed in.
+ */
+export async function flushQueue(): Promise<FlushResult> {
+  const queue = await get<Queue>('queue');
+  if (!queue || queue.ops.length === 0) return { sent: 0, rejected: [] };
+  try {
+    const res = await fetch('/offline-sync', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ownerId: queue.ownerId, ops: queue.ops }),
+    });
+    if (res.status === 409) {
+      await put('queue', { ownerId: queue.ownerId, ops: [] });
+      return {
+        sent: 0,
+        rejected: ['Changes made by another account were discarded.'],
+      };
+    }
+    if (!res.ok) return { sent: 0, rejected: [] };
+    const { results } = (await res.json()) as {
+      results: { opId: string; status: string; message?: string }[];
+    };
+    const keep = new Set(
+      results.filter((r) => r.status === 'retry').map((r) => r.opId),
+    );
+    await put('queue', {
+      ownerId: queue.ownerId,
+      ops: queue.ops.filter((o) => keep.has(o.opId)),
+    });
+    return {
+      sent: results.filter((r) => r.status === 'ok').length,
+      rejected: results
+        .filter((r) => r.status === 'rejected')
+        .map((r) => r.message ?? 'A change was not accepted.'),
+    };
+  } catch {
+    return { sent: 0, rejected: [] };
+  }
+}
+
 export type SyncResult = 'saved' | 'signed-out' | 'failed';
 
 /** Downloads a fresh copy and stores it. A 401 means signed out: wipe. */
 export async function syncNow(): Promise<SyncResult> {
   try {
+    await flushQueue();
     const prev = await readInfo();
     const res = await fetch('/offline-data', {
       cache: 'no-store',
       headers: prev?.etag ? { 'if-none-match': prev.etag } : {},
     });
     if (res.status === 401) {
-      wipe();
+      await wipeCopyOnly();
       return 'signed-out';
     }
     if (res.status === 304 && prev) {

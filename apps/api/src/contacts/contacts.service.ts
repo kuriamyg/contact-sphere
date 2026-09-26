@@ -170,29 +170,66 @@ export class ContactsService {
     return detailView(c);
   }
 
-  async create(ownerId: string, dto: ContactInputDto): Promise<ContactDetail> {
-    const data = contactData(dto);
-    const c = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.contact.create({
-        data: {
-          ...data,
-          ownerId,
-          phoneNumbers: { create: phoneRows(dto) },
-          emailAddresses: { create: emailRows(dto) },
-        },
+  /**
+   * Creates a contact. `id` (optional) is chosen by the owner's device for
+   * changes made offline: sending the same one again returns the contact
+   * already made instead of a second copy.
+   */
+  async create(
+    ownerId: string,
+    dto: ContactInputDto,
+    id?: string,
+  ): Promise<ContactDetail> {
+    if (id) {
+      const existing = await this.prisma.contact.findFirst({
+        where: { id },
         include: detailInclude,
       });
-      await this.audit.record(
-        'contact.created',
-        {
-          actorUserId: ownerId,
-          entityType: 'contact',
-          entityId: created.id,
-        },
-        tx,
-      );
-      return created;
-    });
+      if (existing) {
+        if (existing.ownerId !== ownerId) {
+          throw new ConflictException('That id is taken.');
+        }
+        return detailView(existing);
+      }
+    }
+    const data = contactData(dto);
+    const run = () =>
+      this.prisma.$transaction(async (tx) => {
+        const created = await tx.contact.create({
+          data: {
+            ...data,
+            ...(id ? { id } : {}),
+            ownerId,
+            phoneNumbers: { create: phoneRows(dto) },
+            emailAddresses: { create: emailRows(dto) },
+          },
+          include: detailInclude,
+        });
+        await this.audit.record(
+          'contact.created',
+          {
+            actorUserId: ownerId,
+            entityType: 'contact',
+            entityId: created.id,
+          },
+          tx,
+        );
+        return created;
+      });
+    let c;
+    try {
+      c = await run();
+    } catch (e) {
+      // The same offline change sent twice at once: the other one won.
+      if (
+        id &&
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        return this.create(ownerId, dto, id);
+      }
+      throw e;
+    }
     return detailView(c);
   }
 
