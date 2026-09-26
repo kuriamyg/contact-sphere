@@ -63,9 +63,12 @@ export default async function ProfilePage() {
             {user.displayName ?? 'Welcome'}
           </p>
           <p className="break-all text-muted">{user.email}</p>
-          <p className="text-sm text-muted">
-            Member since {formatDate(user.createdAt)}
-          </p>
+          {/* Absent only while an older API is still deploying. */}
+          {user.createdAt && (
+            <p className="text-sm text-muted">
+              Member since {formatDate(user.createdAt)}
+            </p>
+          )}
         </div>
         <p
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${
@@ -114,7 +117,7 @@ export default async function ProfilePage() {
         <CardTitle id="details-heading" icon={<UserIcon />}>
           Personal details
         </CardTitle>
-        <NameForm current={user.displayName} />
+        <NameForm current={user.displayName ?? null} />
         <div className="space-y-1">
           <p className="text-sm font-medium">Email</p>
           <p className="break-all text-muted">{user.email}</p>
