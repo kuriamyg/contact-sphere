@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Know who (Phase 7a)
+
+- Each contact can have skills and services ("plumber, boda boda"), an area
+  ("Kasarani") and how you met ("church").
+- Search looks at every word: "plumber kasarani" finds the plumber in
+  Kasarani. Notes, job title and organisation are searched too, and
+  accents do not matter.
+- Your skills and services appear as chips above the list, with counts;
+  tap one to see only those contacts. Tags on a contact open the same list.
+
 ### Added — Clean up duplicates (Phase 5b)
 
 - Contacts → Clean up lists contacts that may be the same person and why

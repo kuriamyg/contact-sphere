@@ -6,6 +6,7 @@ describe('parseListParams', () => {
   it('defaults everything', () => {
     expect(parseListParams({})).toEqual({
       q: '',
+      tag: '',
       sort: 'name-asc',
       view: 'active',
       page: 1,
@@ -20,8 +21,16 @@ describe('parseListParams', () => {
         page: '-3',
         q: ['a', 'b'],
       }),
-    ).toEqual({ q: 'a', sort: 'name-asc', view: 'active', page: 1 });
+    ).toEqual({ q: 'a', tag: '', sort: 'name-asc', view: 'active', page: 1 });
     expect(parseListParams({ page: '99999999' }).page).toBe(1);
+  });
+
+  it('tidies the tag filter and keeps it in links and the API query', () => {
+    const p = parseListParams({ tag: '  Boda  Boda ' });
+    expect(p.tag).toBe('boda boda');
+    expect(listHref(p)).toBe('/contacts?tag=boda+boda');
+    expect(toApiQuery(p)).toContain('tag=boda+boda');
+    expect(listHref(p, { tag: '' })).toBe('/contacts');
   });
 
   it('trims and caps the search text', () => {
@@ -32,7 +41,13 @@ describe('parseListParams', () => {
 describe('toApiQuery', () => {
   it('splits the sort into field and direction', () => {
     const qs = new URLSearchParams(
-      toApiQuery({ q: '0712', sort: 'lastUsed-desc', view: 'trash', page: 2 }),
+      toApiQuery({
+        q: '0712',
+        tag: '',
+        sort: 'lastUsed-desc',
+        view: 'trash',
+        page: 2,
+      }),
     );
     expect(Object.fromEntries(qs)).toEqual({
       q: '0712',

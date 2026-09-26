@@ -20,6 +20,7 @@ export interface ContactSummary {
   id: string;
   displayName: string;
   organization: string | null;
+  tags: string[];
   primaryPhone: Phone | null;
   primaryEmail: string | null;
   createdAt: string;
@@ -38,6 +39,8 @@ export interface ContactDetail extends Omit<
   jobTitle: string | null;
   notes: string | null;
   birthday: string | null;
+  area: string | null;
+  metThrough: string | null;
   updatedAt: string;
   purgeAt: string | null;
   phones: Phone[];
@@ -69,6 +72,17 @@ export async function getContact(id: string): Promise<ContactDetail | null> {
     throw new ServiceUnavailableError(res.status);
   }
   return res.data;
+}
+
+export interface TagCount {
+  tag: string;
+  count: number;
+}
+
+/** The owner's tags, most used first. Best effort: [] if unavailable. */
+export async function listTags(): Promise<TagCount[]> {
+  const res = await api<TagCount[]>('/contacts/tags');
+  return res.status === 200 && res.data ? res.data : [];
 }
 
 /**

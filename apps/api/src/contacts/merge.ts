@@ -12,6 +12,8 @@ export const MERGE_FIELDS = [
   'organization',
   'jobTitle',
   'birthday',
+  'area',
+  'metThrough',
 ] as const;
 export type MergeField = (typeof MERGE_FIELDS)[number];
 export type MergeChoices = Partial<Record<MergeField, 'keep' | 'merge'>>;
@@ -24,7 +26,11 @@ export interface MergeSide {
   organization: string | null;
   jobTitle: string | null;
   birthday: string | null;
+  area: string | null;
+  metThrough: string | null;
   notes: string | null;
+  /** Normalised (lower-case); merged as a union, keep's first. */
+  tags: string[];
   phones: {
     raw: string;
     e164: string | null;
@@ -80,6 +86,11 @@ export function mergeContacts(
   result.notes = uniqueNotes.length
     ? uniqueNotes.join('\n\n').slice(0, MAX_NOTES)
     : null;
+
+  result.tags = [...new Set([...keep.tags, ...other.tags])].slice(
+    0,
+    MAX_VALUES,
+  );
 
   const seenPhones = new Set(keep.phones.map(phoneKey));
   result.phones = [

@@ -8,7 +8,7 @@ import {
 import { AuditService } from '../audit/audit.service';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { sortKey } from './contact-names';
+import { searchText, sortKey } from './contact-names';
 import {
   type ContactDetail,
   type ContactSummary,
@@ -54,7 +54,10 @@ function toSide(c: ContactRow): MergeSide {
     organization: c.organization,
     jobTitle: c.jobTitle,
     birthday: c.birthday ? c.birthday.toISOString().slice(0, 10) : null,
+    area: c.area,
+    metThrough: c.metThrough,
     notes: c.notes,
+    tags: c.tags,
     phones: c.phoneNumbers.map((p) => ({
       raw: p.raw,
       e164: p.e164,
@@ -113,6 +116,7 @@ export class ContactsMergeService {
         id: r.id,
         displayName: r.displayName,
         organization: r.organization,
+        tags: r.tags,
         primaryPhone: r.phoneNumbers[0]
           ? {
               label: r.phoneNumbers[0].label,
@@ -271,9 +275,17 @@ export class ContactsMergeService {
           'Restore the kept contact from the trash first.',
         );
       }
-      const before = m.survivorBefore as unknown as MergeSide & {
-        createdAt: string;
-        lastUsedAt: string | null;
+      const snapshot = m.survivorBefore as unknown as Partial<MergeSide> &
+        Omit<MergeSide, 'area' | 'metThrough' | 'tags'> & {
+          createdAt: string;
+          lastUsedAt: string | null;
+        };
+      // Merges made before Phase 7 have no area, met-through or tags.
+      const before: typeof snapshot & MergeSide = {
+        ...snapshot,
+        area: snapshot.area ?? null,
+        metThrough: snapshot.metThrough ?? null,
+        tags: snapshot.tags ?? [],
       };
       await tx.phoneNumber.deleteMany({
         where: { contactId: m.survivorId, ownerId },
@@ -364,6 +376,10 @@ function scalarData(s: MergeSide) {
   return {
     displayName: s.displayName,
     sortName: sortKey(s.displayName),
+    searchText: searchText(s),
+    area: s.area,
+    metThrough: s.metThrough,
+    tags: s.tags,
     givenName: s.givenName,
     familyName: s.familyName,
     nickname: s.nickname,

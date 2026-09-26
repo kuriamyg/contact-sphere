@@ -8,7 +8,10 @@ const side = (over: Partial<MergeSide>): MergeSide => ({
   organization: null,
   jobTitle: null,
   birthday: null,
+  area: null,
+  metThrough: null,
   notes: null,
+  tags: [],
   phones: [],
   emails: [],
   ...over,
@@ -92,5 +95,14 @@ describe('merge', () => {
     );
     expect(r.notes).toBe('same');
     expect(r.phones).toHaveLength(20);
+  });
+
+  it('keeps every tag from both, without repeats', () => {
+    const r = mergeContacts(
+      side({ tags: ['plumber', 'church'] }),
+      side({ tags: ['church', 'electrician'], area: 'Kasarani' }),
+    );
+    expect(r.tags).toEqual(['plumber', 'church', 'electrician']);
+    expect(r.area).toBe('Kasarani');
   });
 });

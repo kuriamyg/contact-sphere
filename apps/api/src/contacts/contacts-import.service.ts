@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { deriveDisplayName, sortKey } from './contact-names';
+import { deriveDisplayName, searchText, sortKey } from './contact-names';
 import { normalisePhone } from './phone';
 import { uuidv7 } from './uuid';
 import { type ParsedCard, type ParseResult, parseVcf } from './vcard/parse';
@@ -34,6 +34,7 @@ interface Candidate {
     id: string;
     displayName: string;
     sortName: string;
+    searchText: string;
     givenName: string | null;
     familyName: string | null;
     nickname: string | null;
@@ -254,6 +255,7 @@ function candidate(card: ParsedCard): Candidate | null {
       id: uuidv7(),
       displayName,
       sortName: sortKey(displayName),
+      searchText: searchText({ ...card, displayName }),
       givenName: card.givenName ?? null,
       familyName: card.familyName ?? null,
       nickname: card.nickname ?? null,

@@ -107,6 +107,16 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       contact to the trash), undo for 30 days from a snapshot, "not the
       same person" remembered
 
+## Phase 7 — Know who
+
+- [x] 7a: skills/services tags (normalised, ≤ 20, CHECKs), area, met
+      through; word search across names, organisation, job, area,
+      met-through, tags, notes and emails (every word must match, accents
+      folded, `search_text` maintained by the API and backfilled); tag
+      filter and tag list with counts; merge keeps tags, area, met-through
+- [ ] 7b: saved searches; tags from .vcf CATEGORIES (skip Google's
+      system groups); rename or delete a tag everywhere
+
 ## Phase 6a — Profile and polish
 
 - [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`

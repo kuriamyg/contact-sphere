@@ -16,6 +16,8 @@ export type View = 'active' | 'archived' | 'trash';
 
 export interface ListParams {
   q: string;
+  /** One tag to filter by ("" for none). */
+  tag: string;
   sort: SortValue;
   view: View;
   page: number;
@@ -34,6 +36,7 @@ export function parseListParams(
   const page = Number.parseInt(first(sp.page), 10);
   return {
     q: first(sp.q).trim().slice(0, 100),
+    tag: first(sp.tag).trim().replace(/\s+/g, ' ').toLowerCase().slice(0, 40),
     sort: SORT_OPTIONS.some((o) => o.value === sort)
       ? (sort as SortValue)
       : 'name-asc',
@@ -52,6 +55,7 @@ export function toApiQuery(p: ListParams): string {
     pageSize: String(PAGE_SIZE),
   });
   if (p.q) qs.set('q', p.q);
+  if (p.tag) qs.set('tag', p.tag);
   return qs.toString();
 }
 
@@ -60,6 +64,7 @@ export function listHref(p: ListParams, change: Partial<ListParams> = {}) {
   const next = { ...p, ...change };
   const qs = new URLSearchParams();
   if (next.q) qs.set('q', next.q);
+  if (next.tag) qs.set('tag', next.tag);
   if (next.sort !== 'name-asc') qs.set('sort', next.sort);
   if (next.view !== 'active') qs.set('view', next.view);
   if (next.page !== 1) qs.set('page', String(next.page));

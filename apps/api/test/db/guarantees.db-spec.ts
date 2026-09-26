@@ -396,6 +396,33 @@ describe('contacts (ADRs 0004, 0005, 0010)', () => {
     );
   });
 
+  it('keep tags lower-case, never null and at most 20; area and met-through trimmed (Phase 7)', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const id = await insertContact(app, u);
+    const set = (sql: string, v: unknown) =>
+      sqlState(app.query(`UPDATE contacts SET ${sql} WHERE id = $1`, [id, v]));
+    await app.query(`UPDATE contacts SET tags = $2::varchar[] WHERE id = $1`, [
+      id,
+      ['plumber', 'boda boda'],
+    ]);
+    expect(await set('tags = $2::varchar[]', ['Plumber'])).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await set('tags = $2::varchar[]', null)).toBe(CHECK_VIOLATION);
+    expect(
+      await set(
+        'tags = $2::varchar[]',
+        Array.from({ length: 21 }, (_, i) => `t${i}`),
+      ),
+    ).toBe(CHECK_VIOLATION);
+    expect(await set('area = $2::varchar', ' Kasarani')).toBe(CHECK_VIOLATION);
+    expect(await set('area = $2::varchar', '')).toBe(CHECK_VIOLATION);
+    expect(await set('met_through = $2::varchar', 'church ')).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await set('search_text = $2::text', 'Ann')).toBe(CHECK_VIOLATION);
+  });
+
   it('refuses malformed phone numbers and duplicate positions', async () => {
     const u = await insertUser(app, 'ann@example.com');
     const c = await insertContact(app, u);

@@ -118,6 +118,14 @@ export class ContactsController {
     return this.merges.undoableMerges(a.userId, id);
   }
 
+  /** The owner's tags with how many contacts carry each, most used first. */
+  @Get('tags')
+  tags(
+    @CurrentAuth() a: AuthContext,
+  ): Promise<{ tag: string; count: number }[]> {
+    return this.contacts.tags(a.userId);
+  }
+
   @Get('stats')
   stats(
     @CurrentAuth() a: AuthContext,

@@ -13,7 +13,7 @@ import {
   type View,
 } from '@/lib/contact-params';
 import { indexLetter } from '@/lib/avatar';
-import { type ContactSummary, listContacts } from '@/lib/contacts';
+import { type ContactSummary, listContacts, listTags } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Contacts · Contact Sphere' };
@@ -34,7 +34,10 @@ export default async function ContactsPage({
 }: PageProps<'/contacts'>) {
   const sp = await searchParams;
   const p = parseListParams(sp);
-  const { items, total, page } = await listContacts(p);
+  const [{ items, total, page }, tags] = await Promise.all([
+    listContacts(p),
+    p.view === 'active' ? listTags() : Promise.resolve([]),
+  ]);
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -94,6 +97,7 @@ export default async function ContactsPage({
         {p.view !== 'active' && (
           <input type="hidden" name="view" value={p.view} />
         )}
+        {p.tag && <input type="hidden" name="tag" value={p.tag} />}
         <div className="space-y-1.5">
           <label htmlFor="q" className="block text-sm font-medium">
             Search
@@ -104,7 +108,7 @@ export default async function ContactsPage({
             type="search"
             defaultValue={p.q}
             maxLength={100}
-            placeholder="Name, number, email or organisation"
+            placeholder="Name, skill, area, number…"
             className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
           />
         </div>
@@ -114,6 +118,39 @@ export default async function ContactsPage({
         </button>
       </form>
 
+      {(tags.length > 0 || p.tag) && (
+        <nav
+          aria-label="Skills and services"
+          className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
+          {p.tag && (
+            <Link
+              href={listHref(p, { tag: '', page: 1 })}
+              aria-label={`Stop filtering by ${p.tag}`}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-background"
+            >
+              {p.tag}
+              <span aria-hidden="true">×</span>
+            </Link>
+          )}
+          {tags
+            .filter((t) => t.tag !== p.tag)
+            .slice(0, 15)
+            .map((t) => (
+              <Link
+                key={t.tag}
+                href={listHref(p, { tag: t.tag, page: 1 })}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+              >
+                {t.tag}
+                <span className="text-xs text-muted tabular-nums">
+                  {t.count}
+                </span>
+              </Link>
+            ))}
+        </nav>
+      )}
+
       {p.view === 'trash' && (
         <p className="text-sm text-muted">
           Contacts in the trash are deleted for good 30 days after they were
@@ -122,7 +159,7 @@ export default async function ContactsPage({
       )}
 
       {items.length === 0 ? (
-        <EmptyState view={p.view} q={p.q} />
+        <EmptyState view={p.view} q={p.q} tag={p.tag} />
       ) : (
         <>
           <p className="text-sm text-muted" aria-live="polite">
@@ -130,48 +167,51 @@ export default async function ContactsPage({
               ? `${total} ${total === 1 ? 'contact' : 'contacts'}`
               : `${from}–${to} of ${total}`}
             {p.q ? ` matching “${p.q}”` : ''}
+            {p.tag ? ` tagged “${p.tag}”` : ''}
           </p>
           <div className="space-y-4">
-            {groupByLetter(items, p.sort.startsWith('name') && !p.q).map(
-              ({ letter, rows }) => (
-                <section key={letter ?? 'all'} aria-label={letter ?? undefined}>
-                  {letter && (
-                    <h2 className="mb-1 px-1 text-sm font-semibold text-accent">
-                      {letter}
-                    </h2>
-                  )}
-                  <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
-                    {rows.map((c) => (
-                      <li key={c.id}>
-                        <Link
-                          href={`/contacts/${c.id}`}
-                          prefetch={false}
-                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface focus-visible:bg-surface focus-visible:outline-none sm:px-4"
-                        >
-                          <Avatar name={c.displayName} colourKey={c.id} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-medium">
-                              {c.displayName}
-                            </span>
-                            <span className="block truncate text-sm text-muted">
-                              {p.view === 'trash' && c.deletedAt
-                                ? `Deleted ${formatDate(c.deletedAt)}`
-                                : [
-                                    c.primaryPhone?.raw ?? c.primaryEmail,
-                                    c.organization,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(' · ')}
-                            </span>
+            {groupByLetter(
+              items,
+              p.sort.startsWith('name') && !p.q && !p.tag,
+            ).map(({ letter, rows }) => (
+              <section key={letter ?? 'all'} aria-label={letter ?? undefined}>
+                {letter && (
+                  <h2 className="mb-1 px-1 text-sm font-semibold text-accent">
+                    {letter}
+                  </h2>
+                )}
+                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+                  {rows.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/contacts/${c.id}`}
+                        prefetch={false}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface focus-visible:bg-surface focus-visible:outline-none sm:px-4"
+                      >
+                        <Avatar name={c.displayName} colourKey={c.id} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">
+                            {c.displayName}
                           </span>
-                          <ChevronRightIcon className="size-4 shrink-0 text-muted" />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ),
-            )}
+                          <span className="block truncate text-sm text-muted">
+                            {p.view === 'trash' && c.deletedAt
+                              ? `Deleted ${formatDate(c.deletedAt)}`
+                              : [
+                                  c.primaryPhone?.raw ?? c.primaryEmail,
+                                  c.organization,
+                                  (c.tags ?? []).slice(0, 2).join(', '),
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                          </span>
+                        </span>
+                        <ChevronRightIcon className="size-4 shrink-0 text-muted" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
           </div>
           {lastPage > 1 && (
             <nav
@@ -230,12 +270,16 @@ export default async function ContactsPage({
   );
 }
 
-function EmptyState({ view, q }: { view: View; q: string }) {
+function EmptyState({ view, q, tag }: { view: View; q: string; tag: string }) {
   let title: string;
   let body: string;
-  if (q) {
+  if (tag && !q) {
+    title = `No contacts tagged “${tag}”`;
+    body = 'Add skills and services when you edit a contact.';
+  } else if (q) {
     title = `No contacts match “${q}”`;
-    body = 'Try part of a name, a few digits of the number, or an email.';
+    body =
+      'Try part of a name, a skill, an area, a few digits of the number, or an email.';
   } else if (view === 'archived') {
     title = 'Nothing archived';
     body = 'Archive contacts you want to keep but not see every day.';
@@ -250,7 +294,7 @@ function EmptyState({ view, q }: { view: View; q: string }) {
     <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="mt-1 text-muted">{body}</p>
-      {!q && view === 'active' && (
+      {!q && !tag && view === 'active' && (
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link href="/contacts/import" className={primaryButton}>
             Import from a .vcf file

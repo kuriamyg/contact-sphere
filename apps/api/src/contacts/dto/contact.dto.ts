@@ -17,6 +17,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { MAX_TAG_LENGTH, MAX_TAGS } from '../contact-names';
+
 /** Per contact. Generous for real address books, bounded for abuse. */
 export const MAX_PHONES = 20;
 export const MAX_EMAILS = 20;
@@ -113,6 +115,28 @@ export class ContactInputDto {
   })
   birthday?: string;
 
+  /** Estate, town or stage: "Kasarani". */
+  @IsOptional()
+  @Transform(trimmed)
+  @IsString()
+  @MaxLength(100)
+  area?: string;
+
+  /** How the owner knows them: "church", "Wanjiru's wedding". */
+  @IsOptional()
+  @Transform(trimmed)
+  @IsString()
+  @MaxLength(200)
+  metThrough?: string;
+
+  /** What they do or offer. Normalised (lower-case, no repeats) on save. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_TAGS)
+  @IsString({ each: true })
+  @MaxLength(MAX_TAG_LENGTH, { each: true })
+  tags?: string[];
+
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(MAX_PHONES)
@@ -136,7 +160,11 @@ export type Order = (typeof ORDERS)[number];
 export type View = (typeof VIEWS)[number];
 
 export class ListContactsQueryDto {
-  /** Case-insensitive, partial: names, organisation, emails, phone digits. */
+  /**
+   * Every word must match somewhere: names, organisation, job, area,
+   * met-through, tags, notes or emails (partial, case- and
+   * accent-insensitive). A number matches phone digits.
+   */
   @IsOptional()
   @Transform(trimmed)
   @IsString()
@@ -169,6 +197,15 @@ export class ListContactsQueryDto {
   @Min(1)
   @Max(100)
   pageSize?: number;
+
+  /** Only contacts with exactly this tag. */
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsString()
+  @Length(1, MAX_TAG_LENGTH)
+  tag?: string;
 }
 
 /** Largest .vcf text accepted (photos are removed before upload). */
