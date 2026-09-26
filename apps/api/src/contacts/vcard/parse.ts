@@ -17,6 +17,8 @@ export interface ParsedCard {
   notes?: string;
   /** YYYY-MM-DD, only when the card has a full, plausible date. */
   birthday?: string;
+  /** Group names from CATEGORIES, as written (system groups removed). */
+  categories?: string[];
   phones: { raw: string; label?: string }[];
   emails: { address: string; label?: string }[];
 }
@@ -166,21 +168,46 @@ function unescapeText(s: string): string {
   );
 }
 
-/** Splits a structured value (N, ORG) on unescaped ';', then unescapes. */
-function components(raw: string): string[] {
+/**
+ * Splits a structured value (N, ORG) on unescaped ';' — or a list value
+ * (CATEGORIES) on unescaped ',' — then unescapes.
+ */
+function components(raw: string, sep = ';'): string[] {
   const parts: string[] = [];
   let cur = '';
   for (let i = 0; i < raw.length; i++) {
     if (raw[i] === '\\' && i + 1 < raw.length) {
       cur += raw[i] + raw[i + 1];
       i++;
-    } else if (raw[i] === ';') {
+    } else if (raw[i] === sep) {
       parts.push(cur);
       cur = '';
     } else cur += raw[i];
   }
   parts.push(cur);
   return parts.map((p) => unescapeText(p).trim());
+}
+
+/**
+ * Groups phones and Google add to every contact, which say nothing about
+ * the person: "My Contacts", "Starred", "Imported on 3/5", …
+ */
+const SYSTEM_GROUPS = new Set([
+  'mycontacts',
+  'my contacts',
+  'contacts',
+  'starred',
+  'starred in android',
+  'favorites',
+  'favourites',
+]);
+export function isSystemGroup(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return (
+    SYSTEM_GROUPS.has(n) ||
+    n.startsWith('system group:') ||
+    /^imported on\b/.test(n)
+  );
 }
 
 /** The property value as text, decoded. Null for binary (photos, logos). */
@@ -339,6 +366,15 @@ export function parseVcf(text: string): ParseResult {
               card.notes ? `${card.notes}\n${note}` : note,
               LIMITS.notes,
             );
+          }
+          break;
+        }
+        case 'CATEGORIES': {
+          const groups = components(v, ',')
+            .map((g) => tidy(g.replace(/^\*\s*/, '')))
+            .filter((g) => g && !isSystemGroup(g));
+          if (groups.length) {
+            card.categories = [...(card.categories ?? []), ...groups];
           }
           break;
         }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { emptyTrash } from '@/app/actions/contacts';
+import { saveSearch } from '@/app/actions/tags';
 import { Avatar } from '@/components/avatar';
 import { ChevronRightIcon } from '@/components/icons';
 import { Notice } from '@/components/contacts/notice';
@@ -13,7 +14,12 @@ import {
   type View,
 } from '@/lib/contact-params';
 import { indexLetter } from '@/lib/avatar';
-import { type ContactSummary, listContacts, listTags } from '@/lib/contacts';
+import {
+  type ContactSummary,
+  listContacts,
+  listSavedSearches,
+  listTags,
+} from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Contacts · Contact Sphere' };
@@ -34,10 +40,14 @@ export default async function ContactsPage({
 }: PageProps<'/contacts'>) {
   const sp = await searchParams;
   const p = parseListParams(sp);
-  const [{ items, total, page }, tags] = await Promise.all([
+  const active = p.view === 'active';
+  const [{ items, total, page }, tags, searches] = await Promise.all([
     listContacts(p),
-    p.view === 'active' ? listTags() : Promise.resolve([]),
+    active ? listTags() : Promise.resolve([]),
+    active ? listSavedSearches() : Promise.resolve([]),
   ]);
+  const chip =
+    'inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -118,6 +128,27 @@ export default async function ContactsPage({
         </button>
       </form>
 
+      {searches.length > 0 && (
+        <nav
+          aria-label="Saved searches"
+          className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
+          {searches.map((s) => (
+            <Link
+              key={s.id}
+              href={listHref(p, { q: s.query, tag: s.tag ?? '', page: 1 })}
+              aria-current={
+                s.query === p.q && (s.tag ?? '') === p.tag ? 'true' : undefined
+              }
+              className={`${chip} font-medium aria-[current]:border-accent aria-[current]:text-accent`}
+            >
+              <span aria-hidden="true">★</span>
+              {s.name}
+            </Link>
+          ))}
+        </nav>
+      )}
+
       {(tags.length > 0 || p.tag) && (
         <nav
           aria-label="Skills and services"
@@ -140,7 +171,7 @@ export default async function ContactsPage({
               <Link
                 key={t.tag}
                 href={listHref(p, { tag: t.tag, page: 1 })}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+                className={chip}
               >
                 {t.tag}
                 <span className="text-xs text-muted tabular-nums">
@@ -148,8 +179,44 @@ export default async function ContactsPage({
                 </span>
               </Link>
             ))}
+          {active && tags.length > 0 && (
+            <Link
+              href="/contacts/tags"
+              className="inline-flex shrink-0 items-center px-2 py-1.5 text-sm font-medium text-accent underline"
+            >
+              Manage
+            </Link>
+          )}
         </nav>
       )}
+
+      {active &&
+        (p.q || p.tag) &&
+        !searches.some((s) => s.query === p.q && (s.tag ?? '') === p.tag) && (
+          <details className="rounded-xl border border-border px-4 py-3">
+            <summary className="cursor-pointer text-sm font-medium">
+              Save this search
+            </summary>
+            <form action={saveSearch} className="mt-3 flex gap-2">
+              <input type="hidden" name="q" value={p.q} />
+              <input type="hidden" name="tag" value={p.tag} />
+              <label htmlFor="saved-name" className="sr-only">
+                Name for this search
+              </label>
+              <input
+                id="saved-name"
+                name="name"
+                required
+                maxLength={60}
+                defaultValue={[p.tag, p.q].filter(Boolean).join(' · ')}
+                className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+              />
+              <button type="submit" className={secondaryButton}>
+                Save
+              </button>
+            </form>
+          </details>
+        )}
 
       {p.view === 'trash' && (
         <p className="text-sm text-muted">

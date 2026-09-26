@@ -85,6 +85,19 @@ export async function listTags(): Promise<TagCount[]> {
   return res.status === 200 && res.data ? res.data : [];
 }
 
+export interface SavedSearch {
+  id: string;
+  name: string;
+  query: string;
+  tag: string | null;
+}
+
+/** Best effort: [] if unavailable, so the list still shows. */
+export async function listSavedSearches(): Promise<SavedSearch[]> {
+  const res = await api<SavedSearch[]>('/contacts/searches');
+  return res.status === 200 && Array.isArray(res.data) ? res.data : [];
+}
+
 /**
  * "Last used" (ADR 0007). Best effort: a failure here must never stop the
  * page from showing the contact.

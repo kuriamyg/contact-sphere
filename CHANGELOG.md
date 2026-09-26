@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Skills everywhere and saved searches (Phase 7b)
+
+- Contacts → Manage (next to the skill chips): rename a skill or remove it
+  from every contact at once. Renaming to an existing skill joins them.
+- Save a search (words, a skill, or both) and tap it any time from the
+  row of ★ chips above your list.
+- Importing a .vcf now brings your phone's groups and labels in as skills
+  (not the ones every contact has, like "My Contacts" or "Starred").
+  Exports include skills, so phones see them as groups.
+
 ### Added — Know who (Phase 7a)
 
 - Each contact can have skills and services ("plumber, boda boda"), an area

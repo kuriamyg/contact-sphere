@@ -26,6 +26,10 @@ import {
   type MergePreview,
 } from './contacts-merge.service';
 import {
+  type SavedSearchView,
+  ContactsTagsService,
+} from './contacts-tags.service';
+import {
   type ContactDetail,
   type ContactPage,
   ContactsService,
@@ -36,6 +40,9 @@ import {
   ImportVcfDto,
   ListContactsQueryDto,
   MergeDto,
+  RenameTagDto,
+  SavedSearchDto,
+  TagDto,
 } from './dto/contact.dto';
 
 /** Imports parse up to megabytes of text: a few a minute is plenty. */
@@ -57,6 +64,7 @@ export class ContactsController {
     private readonly contacts: ContactsService,
     private readonly vcf: ContactsImportService,
     private readonly merges: ContactsMergeService,
+    private readonly tagOps: ContactsTagsService,
   ) {}
 
   /** Possible duplicates, with reasons. Changes nothing. */
@@ -124,6 +132,48 @@ export class ContactsController {
     @CurrentAuth() a: AuthContext,
   ): Promise<{ tag: string; count: number }[]> {
     return this.contacts.tags(a.userId);
+  }
+
+  /** Renames a tag on every contact (merging into an existing one). */
+  @Post('tags/rename')
+  @HttpCode(HttpStatus.OK)
+  renameTag(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: RenameTagDto,
+  ): Promise<{ updated: number }> {
+    return this.tagOps.rename(a.userId, dto.from, dto.to);
+  }
+
+  /** Removes a tag from every contact; the contacts stay. */
+  @Post('tags/delete')
+  @HttpCode(HttpStatus.OK)
+  deleteTag(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: TagDto,
+  ): Promise<{ updated: number }> {
+    return this.tagOps.remove(a.userId, dto.tag);
+  }
+
+  @Get('searches')
+  searches(@CurrentAuth() a: AuthContext): Promise<SavedSearchView[]> {
+    return this.tagOps.listSearches(a.userId);
+  }
+
+  @Post('searches')
+  saveSearch(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: SavedSearchDto,
+  ): Promise<SavedSearchView> {
+    return this.tagOps.saveSearch(a.userId, dto);
+  }
+
+  @Delete('searches/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteSearch(
+    @CurrentAuth() a: AuthContext,
+    @Param('id', Id()) id: string,
+  ): Promise<void> {
+    return this.tagOps.deleteSearch(a.userId, id);
   }
 
   @Get('stats')
