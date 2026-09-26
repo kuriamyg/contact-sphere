@@ -30,8 +30,8 @@ export default function ErrorPage({
         Can’t reach Contact Sphere right now
       </h1>
       <p className="text-muted">
-        The service may be starting up, which can take up to a minute. Nothing
-        was changed — try again in a moment.
+        The service may be starting up (up to a minute) or busy. Nothing was
+        changed — try again in a moment.
       </p>
       <button
         type="button"

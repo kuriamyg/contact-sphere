@@ -102,7 +102,7 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
     redirect('/login/verify');
   }
   await startSession(res.data);
-  redirect('/account');
+  redirect('/contacts');
 }
 
 /** Second sign-in step: a code from the authenticator app, or a recovery code. */
@@ -124,7 +124,7 @@ export async function verifyMfa(
   }
   await endMfaChallenge();
   await startSession(res.data);
-  redirect('/account');
+  redirect('/contacts');
 }
 
 export async function setup(_: FormState, form: FormData): Promise<FormState> {
@@ -139,7 +139,7 @@ export async function setup(_: FormState, form: FormData): Promise<FormState> {
   });
   if (res.status !== 201 || !res.data) return failure(res.status, res.message);
   await startSession(res.data);
-  redirect('/account');
+  redirect('/contacts');
 }
 
 export async function logout(): Promise<void> {

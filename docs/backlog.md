@@ -85,8 +85,12 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       sort by name / date saved / last used; pagination; audit by id only
 - [x] Tests: unit (phones, names), DB guarantees as the app role, API e2e
       including cross-owner isolation
-- [ ] Web: list, search, sort, detail with call/SMS/WhatsApp/email, create
-      and edit, archive and trash views (Phase 4b)
+- [x] Deployed 4a: staging (22/22 live checks) then production (read-only
+      checks; schema, grants and constraints verified)
+- [x] Web: list, search, sort, pages; detail with call/SMS/WhatsApp/email;
+      create and edit (refused forms keep what was typed); archive, trash,
+      restore, delete for good, empty trash (Phase 4b)
+- [x] Browser flow (41 checks, phone size) and 360 px layout checks
 - [ ] Account deletion (ADR 0005 §4) — with Settings, later
 
 ## Later phases

@@ -54,7 +54,11 @@ export function buildApiHeaders(opts: {
 
 export async function api<T>(
   path: string,
-  init: { method?: 'GET' | 'POST'; body?: unknown; auth?: boolean } = {},
+  init: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    body?: unknown;
+    auth?: boolean;
+  } = {},
 ): Promise<ApiResult<T>> {
   const base = process.env.API_URL?.replace(/\/+$/, '');
   const secret = process.env.API_SHARED_SECRET;

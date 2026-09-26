@@ -117,6 +117,10 @@ describe('access', () => {
 
   it('rejects malformed ids and unknown fields', async () => {
     await api('get', '/contacts/not-a-uuid').expect(400);
+    // A well-formed id of another UUID version is simply not found.
+    await api('get', '/contacts/5c920f5f-e23e-4139-b39c-fca162b89f84').expect(
+      404,
+    );
     await api('post', '/contacts')
       .send({ givenName: 'A', isAdmin: true })
       .expect(400);
