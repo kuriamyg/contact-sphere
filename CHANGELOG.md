@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Profile and a more polished app (Phase 6a)
+
+- Profile page (tap your avatar, top right): avatar with a ring, your name
+  (new), email, member since, two-factor status, contact counts; then
+  Personal details, Security (two-factor, change password), Your data
+  (export/import) and Sign out (this device, or everywhere).
+- Contacts show initials avatars in a steady colour; the list is grouped
+  A–Z when sorted by name; a contact opens with big one-tap Call, SMS,
+  WhatsApp and Email buttons.
+- Brand colour, logo mark and icons; the header stays at the top.
+- Product strategy and roadmap: `docs/product/strategy.md`.
+
 ### Added — Import and export .vcf (Phase 5a)
 
 - Import contacts from a phone or address-book export (.vcf): see what

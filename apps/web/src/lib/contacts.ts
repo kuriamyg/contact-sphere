@@ -81,3 +81,15 @@ export async function markUsed(id: string): Promise<void> {
 
 export const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export interface ContactStats {
+  active: number;
+  archived: number;
+  trash: number;
+}
+
+/** How many contacts are in each list, or null if the API cannot say. */
+export async function getContactStats(): Promise<ContactStats | null> {
+  const res = await api<ContactStats>('/contacts/stats');
+  return res.status === 200 ? res.data : null;
+}

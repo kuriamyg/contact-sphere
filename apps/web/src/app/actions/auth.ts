@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import QRCode from 'qrcode';
@@ -225,4 +226,19 @@ export async function disableTotp(
   });
   if (res.status !== 204) return failure(res.status, res.message);
   return { success: 'Two-factor is off.' };
+}
+
+export async function updateProfile(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const res = await api('/auth/profile', {
+    method: 'POST',
+    body: { displayName: field(form, 'displayName') },
+  });
+  if (res.status === 401) redirect('/login');
+  if (res.status !== 200) return failure(res.status, res.message);
+  // The header shows the name too: refresh everything under the app layout.
+  revalidatePath('/', 'layout');
+  return { success: 'Saved.' };
 }

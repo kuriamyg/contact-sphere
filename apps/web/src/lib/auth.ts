@@ -7,6 +7,8 @@ import { api, sessionToken } from './api';
 export interface CurrentUser {
   id: string;
   email: string;
+  displayName: string | null;
+  createdAt: string;
   totpEnabled: boolean;
   recoveryCodesLeft: number;
 }

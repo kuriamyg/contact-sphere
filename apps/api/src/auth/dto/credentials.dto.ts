@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Length, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 import { PASSWORD_MAX } from '../auth.constants';
 
@@ -42,4 +48,17 @@ export class ChangePasswordDto {
   @IsString()
   @Length(1, PASSWORD_MAX)
   newPassword!: string;
+}
+
+export class ProfileDto {
+  /** Blank or absent clears the name. */
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value;
+    const t = value.trim().replace(/\s+/g, ' ');
+    return t === '' ? undefined : t;
+  })
+  @IsString()
+  @MaxLength(100)
+  displayName?: string;
 }

@@ -104,7 +104,18 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       (choose survivor, keep all numbers/emails, transaction, audit,
       merged-away record to the trash for 30 days)
 
+## Phase 6a — Profile and polish
+
+- [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`
+- [x] Profile page: avatar ring, stats, personal details, security, data,
+      sign out / sign out everywhere; header avatar
+- [x] Contact avatars, A–Z sections, one-tap actions with icons
+- [x] CSP: allow exactly `display:none` (React streaming) via hash
+- [x] Strategy and re-ordered roadmap: docs/product/strategy.md
+
 ## Later phases
+
+See `docs/product/strategy.md` §7 for the current order.
 
 See `PROJECT_CONTEXT.md` §12. Open evaluation: graph library for Phase 7
 (candidates: Cytoscape.js, Sigma.js + Graphology, React Flow — compare on
