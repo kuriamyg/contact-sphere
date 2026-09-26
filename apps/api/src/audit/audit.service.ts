@@ -40,7 +40,10 @@ export type AuditAction =
   | 'group.deleted'
   | 'group.members_added'
   | 'group.member_removed'
-  | 'group.exported';
+  | 'group.exported'
+  | 'contact.keep_in_touch_set'
+  | 'follow_up.created'
+  | 'follow_up.deleted';
 
 export interface AuditEntry {
   actorUserId?: string | null;

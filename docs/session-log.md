@@ -362,3 +362,19 @@ contact's groups, .vcf export, owner isolation, audit ids/counts only),
 database guarantees (kinds, unique names, no cross-owner members, roles
 lower-case, cascade); browser flow 25/25 incl. SMS link, clipboard,
 download, 360 px.
+
+**Phase 8 deployed (PR #26, `7fc83f6`).** Migration `communities` applied
+to staging and production before merging (no drift); both APIs deployed.
+Staging **17/17** live; production read-only **9/9** (403/401 refusals,
+signed-out redirects, 6 CHECKs, grants, 464 contacts untouched).
+
+## 2026-09-26 — Phase 9: Today
+
+Keep-in-touch cadences, follow-ups and the Today screen (migration
+`remember`). Tests: unit (Nairobi day, birthdays incl. 29 Feb, overdue
+maths), e2e (birthdays window and archived excluded, cadences and
+"contacted" not an edit, follow-ups window/done/delete, bad dates, trash,
+owner isolation, audit without notes), database CHECKs; browser flow
+20/20. Found and fixed before shipping: at 412 px the header (now with
+Today) overflowed; the app name now shows from 640 px, and the browser
+flow checks 412 px too.

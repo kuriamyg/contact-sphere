@@ -5,6 +5,17 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Today: remember people (Phase 9)
+
+- **Today** (first in the header): follow-ups that are due, people you
+  meant to keep in touch with, and birthdays in the next two weeks — each
+  with call, WhatsApp (a ready "Happy birthday" message) and Done.
+- On a contact: choose how often to keep in touch (every week … every
+  year), tap "I was in touch today", and add dated follow-ups with a note.
+  Done follow-ups stay in the contact's history.
+- The app name in the header shows on wider screens only, so the header
+  fits every phone.
+
 ### Added — Groups (Phase 8)
 
 - Groups (in the header): your chama, church, family, work, estate or

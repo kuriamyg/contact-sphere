@@ -24,9 +24,10 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
             >
               CS
             </span>
-            <span className="hidden min-[380px]:inline">Contact Sphere</span>
+            <span className="hidden sm:inline">Contact Sphere</span>
           </Link>
           <div className="flex items-center gap-1 text-sm sm:gap-2">
+            <NavLink href="/today">Today</NavLink>
             <NavLink href="/contacts">Contacts</NavLink>
             <NavLink href="/groups">Groups</NavLink>
             <Link

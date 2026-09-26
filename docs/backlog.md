@@ -129,6 +129,15 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Later: free-plan limit (3 groups) with billing (Phase 12); shared,
       consented member directories (Community plan)
 
+## Phase 9 — Remember
+
+- [x] Keep-in-touch cadences (7…365 days, CHECK) and "in touch today"
+      (not an edit; never from call logs); follow-ups (dated note, done
+      kept); Today: follow-ups due within 7 days, overdue keep-in-touch,
+      birthdays within 14 days (29 Feb → 28 Feb); Nairobi days
+- [ ] Reminders sent by email/WhatsApp/SMS (Phase 11 channels);
+      anniversaries and other dates
+
 ## Phase 6a — Profile and polish
 
 - [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`
