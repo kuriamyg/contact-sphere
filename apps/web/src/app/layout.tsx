@@ -15,6 +15,15 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+/**
+ * How long Vercel lets one request (page or Server Action) run. Stated, not
+ * left to the plan default, which can be as short as 10 s: shorter than
+ * Render's free instance takes to wake, so the platform would kill the
+ * request and show a generic crash page. lib/api.ts gives up at 50 s, so
+ * our own "try again" message always arrives before this limit.
+ */
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: 'Contact Sphere',
   description: 'A private, privacy-first contact manager.',

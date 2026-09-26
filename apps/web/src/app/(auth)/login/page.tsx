@@ -8,7 +8,9 @@ import { currentUser, setupAvailable } from '@/lib/auth';
 export const metadata: Metadata = { title: 'Sign in · Contact Sphere' };
 
 export default async function LoginPage() {
-  if (await currentUser()) redirect('/account');
+  // If the API is unreachable, still show the form: signing in will then
+  // say the service is unavailable, which is more useful than an error page.
+  if (await currentUser().catch(() => null)) redirect('/account');
   const canSetUp = await setupAvailable();
   return (
     <>

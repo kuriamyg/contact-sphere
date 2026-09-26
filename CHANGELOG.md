@@ -13,6 +13,12 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ### Fixed
 
+- If the API is slow or unreachable (e.g. Render's free instance waking), a
+  form now says "The service is unavailable. Try again shortly." and keeps
+  what was on screen, instead of crashing to "This page couldn't load". A
+  signed-in person is no longer sent to the sign-in page when the API is
+  merely unavailable; they see a "can't reach" page with Try again. Request
+  time limits are now explicit (API call 50 s, Vercel function 60 s).
 - Sign-out and the two-factor step now really remove their `__Host-`/
   `__Secure-` cookies (a plain delete lacks `Secure`, which browsers
   require to touch those cookies).
