@@ -87,20 +87,20 @@ which cost us money (SMS/WhatsApp messages, storage) and deliver ongoing value.
 | 3 Authentication | Owner setup, sessions, rate limits, CSP, TOTP two-factor with recovery codes |
 | 4 Contacts       | Create/edit, E.164 numbers (KE default), search, sort, archive, 30-day trash |
 | 5a Import/export | `.vcf` 2.1/3.0/4.0 import with preview and repeat-skipping; export           |
+| 6a Profile       | Profile page with avatar ring, name, stats, security, sign-out; polish       |
+| 5b Clean-up      | Duplicates with reasons, review, safe merge, undo for 30 days                |
 
 ### Next, in order (why this order: each step makes the next one valuable)
 
-| Phase                   | What                                                                                                                                 | Why now                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| **6a Profile & polish** | Profile page with avatar ring, name, stats, security, sign-out; avatars and letter groups in lists; icons; brand colour              | The app must look trustworthy before anyone else sees it    |
-| **5b Clean-up**         | Duplicate review with reasons, safe reversible merge                                                                                 | First "wow" after import; clean data powers everything else |
-| **7 Know-who**          | Tags (skills/services), area, "met through", notes search, saved searches                                                            | The everyday reason to open the app instead of the dialler  |
-| **8 Communities**       | Groups with roles, WhatsApp-the-group, group export                                                                                  | Chama/church beachhead                                      |
-| **9 Remember**          | Important dates, keep-in-touch cadences, follow-ups, a Today screen, email digest                                                    | Makes the app proactive — the core paid value               |
-| **10 On the phone**     | Installable PWA + offline; Android app with consented two-way phone sync                                                             | Removes "two address books" — the adoption unlock           |
-| **11 Reach**            | WhatsApp/SMS reminders, business card QR, Swahili                                                                                    | Where Kenyans are; the viral loop                           |
-| **12 Commercial**       | Open sign-up (phone OTP), plans, M-Pesa billing, ODPC registration, privacy policy, account deletion, encrypted backups with history | Required before charging                                    |
-| **13 Map**              | Relationship map (family tree, introductions)                                                                                        | Delight and differentiation once data is rich               |
+| Phase               | What                                                                                                                                 | Why now                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **7 Know-who**      | Tags (skills/services), area, "met through", notes search, saved searches                                                            | The everyday reason to open the app instead of the dialler |
+| **8 Communities**   | Groups with roles, WhatsApp-the-group, group export                                                                                  | Chama/church beachhead                                     |
+| **9 Remember**      | Important dates, keep-in-touch cadences, follow-ups, a Today screen, email digest                                                    | Makes the app proactive — the core paid value              |
+| **10 On the phone** | Installable PWA + offline; Android app with consented two-way phone sync                                                             | Removes "two address books" — the adoption unlock          |
+| **11 Reach**        | WhatsApp/SMS reminders, business card QR, Swahili                                                                                    | Where Kenyans are; the viral loop                          |
+| **12 Commercial**   | Open sign-up (phone OTP), plans, M-Pesa billing, ODPC registration, privacy policy, account deletion, encrypted backups with history | Required before charging                                   |
+| **13 Map**          | Relationship map (family tree, introductions)                                                                                        | Delight and differentiation once data is rich              |
 
 ## 8. Risks to watch
 

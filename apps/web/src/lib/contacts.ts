@@ -93,3 +93,76 @@ export async function getContactStats(): Promise<ContactStats | null> {
   const res = await api<ContactStats>('/contacts/stats');
   return res.status === 200 ? res.data : null;
 }
+
+export type DuplicateReason =
+  'same_phone' | 'same_email' | 'same_name' | 'similar_name';
+
+export interface DuplicatePair {
+  a: ContactSummary;
+  b: ContactSummary;
+  reasons: DuplicateReason[];
+  confidence: 'high' | 'medium';
+}
+
+export async function listDuplicates(): Promise<{
+  pairs: DuplicatePair[];
+  total: number;
+}> {
+  const res = await api<{ pairs: DuplicatePair[]; total: number }>(
+    '/contacts/duplicates',
+  );
+  if (res.status !== 200 || !res.data) {
+    throw new ServiceUnavailableError(res.status);
+  }
+  return res.data;
+}
+
+export type MergeField =
+  | 'displayName'
+  | 'givenName'
+  | 'familyName'
+  | 'nickname'
+  | 'organization'
+  | 'jobTitle'
+  | 'birthday';
+
+export interface MergePreview {
+  keep: ContactDetail;
+  merge: ContactDetail;
+  conflicts: { field: MergeField; keep: string; merge: string }[];
+  result: {
+    phones: { raw: string }[];
+    emails: { address: string }[];
+  };
+}
+
+/** Null when either contact is gone, trashed or not the owner's. */
+export async function mergePreview(
+  keepId: string,
+  mergeId: string,
+): Promise<MergePreview | null> {
+  if (!UUID.test(keepId) || !UUID.test(mergeId) || keepId === mergeId) {
+    return null;
+  }
+  const res = await api<MergePreview>('/contacts/merge/preview', {
+    method: 'POST',
+    body: { keepId, mergeId },
+  });
+  if ([400, 404, 409].includes(res.status)) return null;
+  if (res.status !== 200 || !res.data) {
+    throw new ServiceUnavailableError(res.status);
+  }
+  return res.data;
+}
+
+export interface UndoableMerge {
+  id: string;
+  mergedName: string;
+  createdAt: string;
+}
+
+/** Merges into this contact that can still be undone (best effort). */
+export async function undoableMerges(id: string): Promise<UndoableMerge[]> {
+  const res = await api<UndoableMerge[]>(`/contacts/${id}/merges`);
+  return res.status === 200 && res.data ? res.data : [];
+}

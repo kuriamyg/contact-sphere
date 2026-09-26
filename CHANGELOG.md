@@ -5,6 +5,17 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Clean up duplicates (Phase 5b)
+
+- Contacts → Clean up lists contacts that may be the same person and why
+  (same number, same email, same name, similar name), most likely first.
+- Review a pair side by side, choose which one to keep and, where they
+  differ, which name, organisation, birthday and so on to keep. Nothing is
+  lost: every number and email from both is kept, notes are joined.
+- The other contact goes to the trash. Undo from the kept contact's page
+  puts both back exactly as they were (for 30 days).
+- "Not the same person" hides a pair for good.
+
 ### Added — Profile and a more polished app (Phase 6a)
 
 - Profile page (tap your avatar, top right): avatar with a ring, your name

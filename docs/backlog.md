@@ -100,9 +100,12 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       skipped (idempotent), photos stripped in the browser, up to 5,000
       contacts per file; .vcf export (vCard 3.0) of everything not in the
       trash; audit with counts only
-- [ ] 5b: duplicate candidates with reasons, review screen, safe merge
-      (choose survivor, keep all numbers/emails, transaction, audit,
-      merged-away record to the trash for 30 days)
+- [x] 5b: duplicate candidates with reasons (same number, same email, same
+      name, similar name; shared lines ignored), review screen with
+      per-field choices, safe merge (choose survivor, union of numbers and
+      emails, notes joined, one transaction, audit with ids only, merged
+      contact to the trash), undo for 30 days from a snapshot, "not the
+      same person" remembered
 
 ## Phase 6a — Profile and polish
 

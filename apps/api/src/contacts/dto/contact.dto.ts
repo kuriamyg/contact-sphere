@@ -5,7 +5,9 @@ import {
   IsEmail,
   IsIn,
   IsInt,
+  IsObject,
   IsOptional,
+  IsUUID,
   IsString,
   Length,
   Matches,
@@ -176,4 +178,31 @@ export class ImportVcfDto {
   @IsString()
   @Length(1, MAX_VCF_CHARS)
   vcf!: string;
+}
+
+export class ContactPairDto {
+  @IsUUID()
+  keepId!: string;
+
+  @IsUUID()
+  mergeId!: string;
+}
+
+export class MergeChoicesDto {
+  @IsOptional() @IsIn(['keep', 'merge']) displayName?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) givenName?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) familyName?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) nickname?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) organization?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) jobTitle?: 'keep' | 'merge';
+  @IsOptional() @IsIn(['keep', 'merge']) birthday?: 'keep' | 'merge';
+}
+
+export class MergeDto extends ContactPairDto {
+  /** Per conflicting field: keep the kept contact's value, or take the other. */
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => MergeChoicesDto)
+  choices?: MergeChoicesDto;
 }

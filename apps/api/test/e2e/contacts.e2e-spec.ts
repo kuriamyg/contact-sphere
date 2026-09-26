@@ -696,3 +696,268 @@ describe('profile and counts (Phase 6a)', () => {
     });
   });
 });
+
+describe('duplicates and safe merge (Phase 5b)', () => {
+  type Pair = {
+    a: { id: string; displayName: string };
+    b: { id: string; displayName: string };
+    reasons: string[];
+    confidence: string;
+  };
+  const dupes = async (as = token) =>
+    (await api('get', '/contacts/duplicates', as).expect(200)).body as {
+      pairs: Pair[];
+      total: number;
+    };
+
+  it('suggests pairs with reasons, and never touches data by looking', async () => {
+    await create({
+      displayName: 'Ann Wanjiru',
+      phones: [{ raw: '0712 345 678' }],
+    });
+    await create({
+      displayName: 'Mama Njeri',
+      phones: [{ raw: '+254712345678' }],
+    });
+    await create({ displayName: 'Wanjiru Ann' });
+    await create({ displayName: 'Bob', emails: [{ address: 'bob@x.co' }] });
+    await create({ displayName: 'Robert', emails: [{ address: 'BOB@x.co' }] });
+    const { pairs } = await dupes();
+    const described = pairs
+      .map(
+        (p) =>
+          `${[p.a.displayName, p.b.displayName].sort().join(' + ')}: ${p.reasons.join(',')} (${p.confidence})`,
+      )
+      .sort();
+    expect(described).toEqual([
+      'Ann Wanjiru + Mama Njeri: same_phone (high)',
+      'Ann Wanjiru + Wanjiru Ann: similar_name (medium)',
+      'Bob + Robert: same_email (high)',
+    ]);
+    expect((await list()).body.total).toBe(5);
+  });
+
+  it('“not duplicates” hides a pair for good', async () => {
+    const a = (
+      await create({ displayName: 'Kim', phones: [{ raw: '0711111111' }] })
+    ).body;
+    const b = (
+      await create({
+        displayName: 'Kim Office',
+        phones: [{ raw: '0711111111' }],
+      })
+    ).body;
+    expect((await dupes()).total).toBe(1);
+    await api('post', '/contacts/duplicates/dismiss')
+      .send({ keepId: b.id, mergeId: a.id })
+      .expect(204);
+    await api('post', '/contacts/duplicates/dismiss')
+      .send({ keepId: a.id, mergeId: b.id })
+      .expect(204); // idempotent, either order
+    expect((await dupes()).total).toBe(0);
+  });
+
+  it('previews conflicts, merges in one step keeping everything, and can be undone exactly', async () => {
+    const keep = (
+      await create({
+        givenName: 'Ann',
+        familyName: 'Wanjiru',
+        organization: 'Safaricom',
+        notes: 'Met at church',
+        phones: [{ raw: '0712 345 678', label: 'mobile' }],
+        emails: [{ address: 'ann@x.co' }],
+      })
+    ).body;
+    const other = (
+      await create({
+        displayName: 'Mama Njeri',
+        organization: 'KCB',
+        birthday: '1990-04-12',
+        notes: 'Likes tea',
+        phones: [
+          { raw: '+254712345678' },
+          { raw: '0733 111 222', label: 'work' },
+        ],
+        emails: [{ address: 'njeri@y.co' }],
+      })
+    ).body;
+
+    const preview = await api('post', '/contacts/merge/preview')
+      .send({ keepId: keep.id, mergeId: other.id })
+      .expect(200);
+    expect(preview.body.conflicts).toEqual([
+      { field: 'displayName', keep: 'Ann Wanjiru', merge: 'Mama Njeri' },
+      { field: 'organization', keep: 'Safaricom', merge: 'KCB' },
+    ]);
+    expect((await list()).body.total).toBe(2); // preview changed nothing
+
+    const merged = await api('post', '/contacts/merge')
+      .send({
+        keepId: keep.id,
+        mergeId: other.id,
+        choices: { organization: 'merge' },
+      })
+      .expect(201);
+    const after = (await api('get', `/contacts/${keep.id}`).expect(200))
+      .body as {
+      phones: { raw: string }[];
+      emails: { address: string }[];
+    };
+    expect(after).toMatchObject({
+      displayName: 'Ann Wanjiru',
+      organization: 'KCB',
+      birthday: '1990-04-12',
+      notes: 'Met at church\n\nLikes tea',
+    });
+    expect(after.phones.map((p) => p.raw)).toEqual([
+      '0712 345 678',
+      '0733 111 222',
+    ]);
+    expect(after.emails.map((e) => e.address)).toEqual([
+      'ann@x.co',
+      'njeri@y.co',
+    ]);
+    // The other contact is in the trash, and the merge is undoable.
+    expect(names(await list('?view=trash'))).toEqual(['Mama Njeri']);
+    const undoable = (
+      await api('get', `/contacts/${keep.id}/merges`).expect(200)
+    ).body;
+    expect(undoable).toEqual([
+      {
+        id: merged.body.mergeRecordId,
+        mergedName: 'Mama Njeri',
+        createdAt: expect.any(String),
+      },
+    ]);
+
+    await api(
+      'post',
+      `/contacts/merges/${merged.body.mergeRecordId as string}/undo`,
+    ).expect(200);
+    const restored = (await api('get', `/contacts/${keep.id}`).expect(200))
+      .body;
+    expect(restored).toMatchObject({
+      displayName: 'Ann Wanjiru',
+      organization: 'Safaricom',
+      birthday: null,
+      notes: 'Met at church',
+      createdAt: keep.createdAt,
+    });
+    expect(restored.phones).toHaveLength(1);
+    expect(restored.emails).toHaveLength(1);
+    expect(names(await list()).sort()).toEqual(['Ann Wanjiru', 'Mama Njeri']);
+    await api(
+      'post',
+      `/contacts/merges/${merged.body.mergeRecordId as string}/undo`,
+    ).expect(409);
+    expect(
+      (await api('get', `/contacts/${keep.id}/merges`).expect(200)).body,
+    ).toEqual([]);
+  });
+
+  it('refuses unsafe merges', async () => {
+    const a = (await create({ displayName: 'A' })).body;
+    const b = (await create({ displayName: 'B' })).body;
+    await api('post', '/contacts/merge')
+      .send({ keepId: a.id, mergeId: a.id })
+      .expect(400);
+    await api('post', '/contacts/merge')
+      .send({ keepId: a.id, mergeId: b.id, choices: { notes: 'merge' } })
+      .expect(400); // notes are always combined, never chosen
+    await api('post', '/contacts/merge')
+      .send({ keepId: a.id, mergeId: b.id, choices: { organization: 'other' } })
+      .expect(400);
+    await api('delete', `/contacts/${b.id}`).expect(204);
+    await api('post', '/contacts/merge')
+      .send({ keepId: a.id, mergeId: b.id })
+      .expect(409);
+  });
+
+  it('cannot undo once the merged contact was restored from the trash', async () => {
+    const a = (
+      await create({ displayName: 'A', phones: [{ raw: '0711000000' }] })
+    ).body;
+    const b = (
+      await create({ displayName: 'B', phones: [{ raw: '0711000000' }] })
+    ).body;
+    const m = (
+      await api('post', '/contacts/merge')
+        .send({ keepId: a.id, mergeId: b.id })
+        .expect(201)
+    ).body;
+    await api('post', `/contacts/${b.id}/restore`).expect(204);
+    await api(
+      'post',
+      `/contacts/merges/${m.mergeRecordId as string}/undo`,
+    ).expect(409);
+  });
+
+  it('never shows or merges another owner’s contacts', async () => {
+    const mine = (
+      await create({ displayName: 'Ann', phones: [{ raw: '0712345678' }] })
+    ).body;
+    const other = await secondUser();
+    const theirs = (
+      await create(
+        { displayName: 'Ann', phones: [{ raw: '0712345678' }] },
+        other,
+      )
+    ).body;
+    expect((await dupes()).total).toBe(0);
+    expect((await dupes(other)).total).toBe(0);
+    await api('post', '/contacts/merge')
+      .send({ keepId: mine.id, mergeId: theirs.id })
+      .expect(404);
+    await api('post', '/contacts/merge/preview')
+      .send({ keepId: mine.id, mergeId: theirs.id })
+      .expect(404);
+    await api('post', '/contacts/duplicates/dismiss')
+      .send({ keepId: mine.id, mergeId: theirs.id })
+      .expect(404);
+    const second = (
+      await create({ displayName: 'Ann 2', phones: [{ raw: '0712345678' }] })
+    ).body as { id: string };
+    const m = (
+      await api('post', '/contacts/merge')
+        .send({ keepId: mine.id, mergeId: second.id })
+        .expect(201)
+    ).body;
+    await api(
+      'post',
+      `/contacts/merges/${m.mergeRecordId as string}/undo`,
+      other,
+    ).expect(404);
+  });
+
+  it('audits merges by id only', async () => {
+    const a = (
+      await create({
+        displayName: 'Secretname',
+        phones: [{ raw: '0712 000 111' }],
+      })
+    ).body;
+    const b = (
+      await create({
+        displayName: 'Othername',
+        phones: [{ raw: '0712000111' }],
+      })
+    ).body;
+    const m = (
+      await api('post', '/contacts/merge')
+        .send({ keepId: a.id, mergeId: b.id })
+        .expect(201)
+    ).body;
+    await api(
+      'post',
+      `/contacts/merges/${m.mergeRecordId as string}/undo`,
+    ).expect(200);
+    const { rows } = await owner.query<{ action: string }>(
+      "SELECT action, metadata FROM audit_logs WHERE action IN ('contact.merged','contact.merge_undone') ORDER BY created_at",
+    );
+    expect(rows.map((r) => r.action)).toEqual([
+      'contact.merged',
+      'contact.merge_undone',
+    ]);
+    expect(JSON.stringify(rows)).not.toMatch(/Secretname|Othername|0712/);
+  });
+});

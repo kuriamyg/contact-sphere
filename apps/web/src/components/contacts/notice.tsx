@@ -16,6 +16,18 @@ const NOTICES: Record<string, { success?: string; error?: string }> = {
   restored: { success: 'Restored.' },
   deleted: { success: 'Deleted for good.' },
   emptied: { success: 'Trash emptied. Those contacts are deleted for good.' },
+  merged: {
+    success:
+      'Merged. The other contact is in the trash; you can undo below for 30 days.',
+  },
+  merge_undone: {
+    success: 'Merge undone. Both contacts are back as they were.',
+  },
+  dismissed: { success: 'Got it — that pair will not be suggested again.' },
+  undo_failed: {
+    error:
+      'That merge can no longer be undone (the other contact was restored or deleted).',
+  },
   failed: { error: 'That did not work. Nothing was changed — try again.' },
 };
 
