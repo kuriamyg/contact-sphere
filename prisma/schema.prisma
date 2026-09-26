@@ -27,6 +27,8 @@ model User {
   /// scattering across it, and ids reveal no row count.
   id            String    @id @default(uuid(7)) @db.Uuid
   email         String    @unique @db.VarChar(254)
+  /// How the app greets the owner ("Kuria"). Optional; trimmed, never blank.
+  displayName   String?   @map("display_name") @db.VarChar(100)
   /// argon2id, in PHC string format (algorithm, parameters and salt are
   /// inside the string). Never the password itself. ADR 0006.
   passwordHash  String    @map("password_hash") @db.VarChar(255)

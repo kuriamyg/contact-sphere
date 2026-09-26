@@ -9,7 +9,14 @@ import {
   trashContact,
   unarchiveContact,
 } from '@/app/actions/contacts';
+import { Avatar } from '@/components/avatar';
 import { Notice } from '@/components/contacts/notice';
+import {
+  MailIcon,
+  MessageIcon,
+  PhoneIcon,
+  WhatsAppIcon,
+} from '@/components/icons';
 import { getContact, markUsed, type Phone } from '@/lib/contacts';
 import {
   formatBirthday,
@@ -20,8 +27,6 @@ import {
 
 export const metadata: Metadata = { title: 'Contact · Contact Sphere' };
 
-const action =
-  'inline-flex items-center rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 const button =
   'rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
@@ -37,6 +42,7 @@ export default async function ContactPage({
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
 
   const subtitle = [c.jobTitle, c.organization].filter(Boolean).join(' · ');
+  const primary = c.phones[0];
 
   return (
     <article className="max-w-xl space-y-8">
@@ -84,14 +90,51 @@ export default async function ContactPage({
         </div>
       )}
 
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight break-words">
-          {c.displayName}
-        </h1>
-        {c.nickname && <p className="text-muted">“{c.nickname}”</p>}
-        {subtitle && <p className="text-muted">{subtitle}</p>}
-        {c.archivedAt && !c.deletedAt && (
-          <p className="text-sm text-muted">Archived</p>
+      <header className="flex flex-col items-center gap-3 text-center">
+        <Avatar name={c.displayName} colourKey={c.id} size="lg" />
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight break-words">
+            {c.displayName}
+          </h1>
+          {c.nickname && <p className="text-muted">“{c.nickname}”</p>}
+          {subtitle && <p className="text-muted">{subtitle}</p>}
+          {c.archivedAt && !c.deletedAt && (
+            <p className="text-sm text-muted">Archived</p>
+          )}
+        </div>
+        {!c.deletedAt && (primary || c.emails[0]) && (
+          <div className="flex flex-wrap justify-center gap-3 pt-1">
+            {primary && (
+              <>
+                <QuickAction
+                  href={`tel:${primary.e164 ?? primary.raw}`}
+                  label="Call"
+                >
+                  <PhoneIcon />
+                </QuickAction>
+                <QuickAction
+                  href={`sms:${primary.e164 ?? primary.raw}`}
+                  label="SMS"
+                >
+                  <MessageIcon />
+                </QuickAction>
+                {primary.e164 && (
+                  <QuickAction
+                    href={whatsappHref(primary.e164)}
+                    label="WhatsApp"
+                    external
+                  >
+                    <WhatsAppIcon />
+                  </QuickAction>
+                )}
+              </>
+            )}
+            {c.emails[0] && (
+              <QuickAction href={`mailto:${c.emails[0].address}`} label="Email">
+                <MailIcon />
+              </QuickAction>
+            )}
+          </div>
         )}
       </header>
 
@@ -131,9 +174,12 @@ export default async function ContactPage({
                     <span className="ml-2 text-sm text-muted">{e.label}</span>
                   )}
                 </span>
-                <a href={`mailto:${e.address}`} className={action}>
-                  Email
-                </a>
+                <IconAction
+                  href={`mailto:${e.address}`}
+                  label={`Email ${e.address}`}
+                >
+                  <MailIcon className="size-4" />
+                </IconAction>
               </li>
             ))}
           </ul>
@@ -195,39 +241,88 @@ export default async function ContactPage({
   );
 }
 
-/** A number with one-tap actions. WhatsApp needs a parsed (E.164) number. */
+/** A number with compact one-tap actions, each labelled with the number. */
 function PhoneRow({ phone, primary }: { phone: Phone; primary: boolean }) {
   const dial = phone.e164 ?? phone.raw;
   return (
-    <li className="space-y-2">
-      <p>
-        <span className="text-lg">{phone.raw}</span>
+    <li className="flex items-center justify-between gap-3">
+      <p className="min-w-0">
+        <span className="block text-lg break-all">{phone.raw}</span>
         {(phone.label || primary) && (
-          <span className="ml-2 text-sm text-muted">
+          <span className="text-sm text-muted">
             {[phone.label, primary ? 'primary' : null]
               .filter(Boolean)
               .join(' · ')}
           </span>
         )}
       </p>
-      <div className="flex flex-wrap gap-2">
-        <a href={`tel:${dial}`} className={action}>
-          Call
-        </a>
-        <a href={`sms:${dial}`} className={action}>
-          SMS
-        </a>
+      <div className="flex shrink-0 gap-1.5">
+        <IconAction href={`tel:${dial}`} label={`Call ${phone.raw}`}>
+          <PhoneIcon className="size-4" />
+        </IconAction>
+        <IconAction href={`sms:${dial}`} label={`SMS ${phone.raw}`}>
+          <MessageIcon className="size-4" />
+        </IconAction>
         {phone.e164 && (
-          <a
+          <IconAction
             href={whatsappHref(phone.e164)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={action}
+            label={`WhatsApp ${phone.raw}`}
+            external
           >
-            WhatsApp
-          </a>
+            <WhatsAppIcon className="size-4" />
+          </IconAction>
         )}
       </div>
     </li>
+  );
+}
+
+function IconAction({
+  href,
+  label,
+  external = false,
+  children,
+}: {
+  href: string;
+  label: string;
+  external?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title={label}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="inline-flex size-10 items-center justify-center rounded-full border border-border text-muted hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+    >
+      {children}
+    </a>
+  );
+}
+
+/** A round one-tap action (call, SMS, WhatsApp, email) with its label. */
+function QuickAction({
+  href,
+  label,
+  external = false,
+  children,
+}: {
+  href: string;
+  label: string;
+  external?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="group flex w-16 flex-col items-center gap-1 text-xs font-medium focus-visible:outline-none"
+    >
+      <span className="inline-flex size-12 items-center justify-center rounded-full bg-accent-soft text-accent transition-colors group-hover:bg-accent group-hover:text-background group-focus-visible:ring-2 group-focus-visible:ring-accent group-focus-visible:ring-offset-2">
+        {children}
+      </span>
+      {label}
+    </a>
   );
 }

@@ -134,6 +134,24 @@ export class ContactsService {
     };
   }
 
+  /** How many contacts are in each list (for the profile page). */
+  async stats(
+    ownerId: string,
+  ): Promise<{ active: number; archived: number; trash: number }> {
+    const [active, archived, trash] = await this.prisma.$transaction([
+      this.prisma.contact.count({
+        where: { ownerId, deletedAt: null, archivedAt: null },
+      }),
+      this.prisma.contact.count({
+        where: { ownerId, deletedAt: null, archivedAt: { not: null } },
+      }),
+      this.prisma.contact.count({
+        where: { ownerId, deletedAt: { not: null } },
+      }),
+    ]);
+    return { active, archived, trash };
+  }
+
   async get(ownerId: string, id: string): Promise<ContactDetail> {
     const c = await this.prisma.contact.findFirst({
       where: { id, ownerId },

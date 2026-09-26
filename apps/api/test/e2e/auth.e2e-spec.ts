@@ -112,6 +112,8 @@ describe('first-account setup', () => {
     expect(me.body).toEqual({
       id: expect.any(String),
       email: EMAIL,
+      displayName: null,
+      createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       totpEnabled: false,
       recoveryCodesLeft: 0,
     });

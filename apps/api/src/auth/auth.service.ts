@@ -44,6 +44,9 @@ export interface MfaRequired {
 export interface Me {
   id: string;
   email: string;
+  displayName: string | null;
+  /** When the account was created (ISO 8601). */
+  createdAt: string;
   totpEnabled: boolean;
   recoveryCodesLeft: number;
 }
@@ -235,7 +238,13 @@ export class AuthService {
   async me(userId: string): Promise<Me> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, totpEnabledAt: true },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+        totpEnabledAt: true,
+      },
     });
     // A session whose user vanished cannot happen (cascade), but never
     // answer "who am I" with nothing.
@@ -243,11 +252,29 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      displayName: user.displayName,
+      createdAt: user.createdAt.toISOString(),
       totpEnabled: user.totpEnabledAt !== null,
       recoveryCodesLeft: user.totpEnabledAt
         ? await this.totp.remainingRecoveryCodes(userId)
         : 0,
     };
+  }
+
+  /** Sets (or, with an empty name, clears) how the app greets the owner. */
+  async updateProfile(userId: string, displayName?: string): Promise<Me> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { displayName: displayName ?? null },
+      });
+      await this.audit.record(
+        'auth.profile_updated',
+        { actorUserId: userId, entityType: 'user', entityId: userId },
+        tx,
+      );
+    });
+    return this.me(userId);
   }
 
   /** Changes the password and signs out every OTHER session. */

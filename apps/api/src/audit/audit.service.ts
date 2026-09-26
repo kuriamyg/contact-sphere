@@ -16,6 +16,7 @@ export type AuditAction =
   | 'auth.totp_enabled'
   | 'auth.totp_disabled'
   | 'auth.recovery_code_used'
+  | 'auth.profile_updated'
   | 'contact.created'
   | 'contact.updated'
   | 'contact.archived'

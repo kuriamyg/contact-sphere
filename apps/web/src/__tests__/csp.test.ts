@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCsp, newNonce } from '@/lib/csp';
+import { buildCsp, DISPLAY_NONE_HASH, newNonce } from '@/lib/csp';
 
 describe('buildCsp', () => {
   it('allows only nonce-carrying scripts in production', () => {
@@ -11,6 +11,24 @@ describe('buildCsp', () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain('upgrade-insecure-requests');
+  });
+
+  it('allows exactly one inline style attribute: display:none', async () => {
+    const csp = buildCsp('n', false);
+    const style = csp.split('; ').find((d) => d.startsWith('style-src'));
+    expect(style).toBe(
+      `style-src 'self' 'nonce-n' 'unsafe-hashes' '${DISPLAY_NONE_HASH}'`,
+    );
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode('display:none'),
+    );
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    expect(DISPLAY_NONE_HASH).toBe(`sha256-${b64}`);
+    // 'unsafe-hashes' never reaches scripts.
+    expect(
+      csp.split('; ').find((d) => d.startsWith('script-src')),
+    ).not.toContain('unsafe-hashes');
   });
 
   it('adds unsafe-eval only in development (React debugging)', () => {

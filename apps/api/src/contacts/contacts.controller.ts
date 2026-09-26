@@ -51,6 +51,13 @@ export class ContactsController {
     private readonly vcf: ContactsImportService,
   ) {}
 
+  @Get('stats')
+  stats(
+    @CurrentAuth() a: AuthContext,
+  ): Promise<{ active: number; archived: number; trash: number }> {
+    return this.contacts.stats(a.userId);
+  }
+
   /** What importing this .vcf would do. Changes nothing. */
   @Throttle(IMPORT_LIMIT)
   @Post('import/preview')

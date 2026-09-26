@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { emptyTrash } from '@/app/actions/contacts';
+import { Avatar } from '@/components/avatar';
+import { ChevronRightIcon } from '@/components/icons';
 import { Notice } from '@/components/contacts/notice';
 import { SortSelect } from '@/components/contacts/sort-select';
 import {
@@ -10,7 +12,8 @@ import {
   parseListParams,
   type View,
 } from '@/lib/contact-params';
-import { listContacts } from '@/lib/contacts';
+import { indexLetter } from '@/lib/avatar';
+import { type ContactSummary, listContacts } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Contacts · Contact Sphere' };
@@ -125,33 +128,48 @@ export default async function ContactsPage({
               : `${from}–${to} of ${total}`}
             {p.q ? ` matching “${p.q}”` : ''}
           </p>
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
-            {items.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/contacts/${c.id}`}
-                  prefetch={false}
-                  className="flex flex-col gap-0.5 px-4 py-3 hover:bg-surface focus-visible:bg-surface focus-visible:outline-none sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">
-                      {c.displayName}
-                    </span>
-                    {c.organization && (
-                      <span className="block truncate text-sm text-muted">
-                        {c.organization}
-                      </span>
-                    )}
-                  </span>
-                  <span className="shrink-0 text-sm text-muted">
-                    {p.view === 'trash' && c.deletedAt
-                      ? `Deleted ${formatDate(c.deletedAt)}`
-                      : (c.primaryPhone?.raw ?? c.primaryEmail ?? '')}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-4">
+            {groupByLetter(items, p.sort.startsWith('name') && !p.q).map(
+              ({ letter, rows }) => (
+                <section key={letter ?? 'all'} aria-label={letter ?? undefined}>
+                  {letter && (
+                    <h2 className="mb-1 px-1 text-sm font-semibold text-accent">
+                      {letter}
+                    </h2>
+                  )}
+                  <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+                    {rows.map((c) => (
+                      <li key={c.id}>
+                        <Link
+                          href={`/contacts/${c.id}`}
+                          prefetch={false}
+                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface focus-visible:bg-surface focus-visible:outline-none sm:px-4"
+                        >
+                          <Avatar name={c.displayName} colourKey={c.id} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">
+                              {c.displayName}
+                            </span>
+                            <span className="block truncate text-sm text-muted">
+                              {p.view === 'trash' && c.deletedAt
+                                ? `Deleted ${formatDate(c.deletedAt)}`
+                                : [
+                                    c.primaryPhone?.raw ?? c.primaryEmail,
+                                    c.organization,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                            </span>
+                          </span>
+                          <ChevronRightIcon className="size-4 shrink-0 text-muted" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ),
+            )}
+          </div>
           {lastPage > 1 && (
             <nav
               aria-label="Pages"
@@ -241,4 +259,20 @@ function EmptyState({ view, q }: { view: View; q: string }) {
       )}
     </div>
   );
+}
+
+/** A–Z sections when sorted by name; one untitled section otherwise. */
+function groupByLetter(
+  items: ContactSummary[],
+  byLetter: boolean,
+): { letter: string | null; rows: ContactSummary[] }[] {
+  if (!byLetter) return [{ letter: null, rows: items }];
+  const groups: { letter: string; rows: ContactSummary[] }[] = [];
+  for (const c of items) {
+    const letter = indexLetter(c.displayName);
+    const last = groups[groups.length - 1];
+    if (last?.letter === letter) last.rows.push(c);
+    else groups.push({ letter, rows: [c] });
+  }
+  return groups;
 }

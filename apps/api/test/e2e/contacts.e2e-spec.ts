@@ -635,3 +635,64 @@ describe('.vcf import and export (Phase 5)', () => {
     expect(JSON.stringify(rows)).not.toMatch(/Secretname|0712/);
   });
 });
+
+describe('profile and counts (Phase 6a)', () => {
+  it('sets, tidies and clears the display name; audits without it', async () => {
+    const set = await api('post', '/auth/profile')
+      .send({ displayName: '  Kuria   Mwangi ' })
+      .expect(200);
+    expect(set.body).toMatchObject({
+      email: 'owner@example.com',
+      displayName: 'Kuria Mwangi',
+    });
+    expect((await api('get', '/auth/me').expect(200)).body.displayName).toBe(
+      'Kuria Mwangi',
+    );
+    const cleared = await api('post', '/auth/profile')
+      .send({ displayName: '   ' })
+      .expect(200);
+    expect(cleared.body.displayName).toBeNull();
+    await api('post', '/auth/profile')
+      .send({ displayName: 'x'.repeat(101) })
+      .expect(400);
+    await api('post', '/auth/profile')
+      .send({ displayName: 'A', email: 'evil@example.com' })
+      .expect(400);
+    const { rows } = await owner.query(
+      "SELECT metadata FROM audit_logs WHERE action = 'auth.profile_updated'",
+    );
+    expect(rows).toHaveLength(2);
+    expect(JSON.stringify(rows)).not.toContain('Kuria');
+  });
+
+  it('only changes the signed-in owner’s own profile', async () => {
+    const other = await secondUser();
+    await api('post', '/auth/profile', other)
+      .send({ displayName: 'Other' })
+      .expect(200);
+    expect(
+      (await api('get', '/auth/me').expect(200)).body.displayName,
+    ).toBeNull();
+  });
+
+  it('counts contacts in each list, per owner', async () => {
+    const a = (await create({ displayName: 'A' })).body.id as string;
+    const b = (await create({ displayName: 'B' })).body.id as string;
+    await create({ displayName: 'C' });
+    await api('post', `/contacts/${a}/archive`).expect(204);
+    await api('delete', `/contacts/${b}`).expect(204);
+    expect((await api('get', '/contacts/stats').expect(200)).body).toEqual({
+      active: 1,
+      archived: 1,
+      trash: 1,
+    });
+    const other = await secondUser();
+    expect(
+      (await api('get', '/contacts/stats', other).expect(200)).body,
+    ).toEqual({
+      active: 0,
+      archived: 0,
+      trash: 0,
+    });
+  });
+});

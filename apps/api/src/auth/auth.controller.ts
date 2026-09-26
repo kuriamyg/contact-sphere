@@ -15,7 +15,12 @@ import {
   type SessionResult,
 } from './auth.service';
 import { type AuthContext, CurrentAuth, Public } from './decorators';
-import { ChangePasswordDto, LoginDto, SetupDto } from './dto/credentials.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  ProfileDto,
+  SetupDto,
+} from './dto/credentials.dto';
 import { MfaLoginDto, TotpCodeDto, TotpDisableDto } from './dto/totp.dto';
 import { TotpService } from './totp.service';
 
@@ -102,6 +107,15 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   logoutAll(@CurrentAuth() a: AuthContext): Promise<void> {
     return this.auth.logoutAll(a.userId);
+  }
+
+  @Post('profile')
+  @HttpCode(HttpStatus.OK)
+  updateProfile(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: ProfileDto,
+  ): Promise<Me> {
+    return this.auth.updateProfile(a.userId, dto.displayName);
   }
 
   @Get('me')

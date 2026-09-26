@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { logout } from '@/app/actions/auth';
+import { Avatar } from '@/components/avatar';
 import { NavLink } from '@/components/nav-link';
 import { requireUser } from '@/lib/auth';
 
@@ -9,26 +9,35 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const user = await requireUser();
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-border">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
         <nav
           aria-label="Main"
-          className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3"
+          className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-2.5"
         >
-          <Link href="/contacts" className="font-semibold whitespace-nowrap">
-            Contact Sphere
+          <Link
+            href="/contacts"
+            className="flex items-center gap-2 font-semibold whitespace-nowrap"
+          >
+            <span
+              aria-hidden="true"
+              className="inline-flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-background"
+            >
+              CS
+            </span>
+            <span className="hidden min-[380px]:inline">Contact Sphere</span>
           </Link>
-          <div className="flex items-center gap-1 text-sm sm:gap-3">
+          <div className="flex items-center gap-1 text-sm sm:gap-2">
             <NavLink href="/contacts">Contacts</NavLink>
-            <NavLink href="/account">Account</NavLink>
-            <span className="hidden text-muted md:inline">{user.email}</span>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="rounded-lg border border-border px-3 py-1.5 whitespace-nowrap hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
-              >
-                Sign out
-              </button>
-            </form>
+            <Link
+              href="/account"
+              aria-label={`Profile and settings for ${user.displayName ?? user.email}`}
+              className="rounded-full focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+            >
+              <Avatar
+                name={user.displayName ?? user.email}
+                colourKey={user.id}
+              />
+            </Link>
           </div>
         </nav>
       </header>
