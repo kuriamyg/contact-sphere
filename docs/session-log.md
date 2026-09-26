@@ -226,3 +226,36 @@ The full browser flow (18/18: setup, cookie flags, cookie unreadable by
 JavaScript, password change signing out another device, sign out,
 sign out everywhere, 360 px, zero CSP violations) ran against the same
 commit locally; the owner's own production setup is the final live step.
+
+---
+
+## 2026-09-26 — Two-factor sign-in (PR #16) deployed and verified
+
+PR #16 (`f24c073`) on `main`: every signal green (verify, Vercel-parity
+build, dependency audit, Vercel status) and the Vercel production
+deployment READY.
+
+**Order used:** `TOTP_ENCRYPTION_KEY` on both Render services (a
+different key per environment) → merge → migrate **staging**
+(`totp_two_factor`, no drift) → staging API live → verify staging →
+migrate **production** (no drift, 3/3 migrations) → production API deploy
+→ verify production. This time staging went first, as the documented order
+requires.
+
+**Staging, live (14/14), from a Vercel Sandbox in fra1**, against a
+staging-only test owner: setup; TOTP enrolment returns a secret and
+`otpauth://` URI; the secret is stored as a `v1:` AES-256-GCM envelope and
+the plaintext does not appear in the database; a wrong enable code gives 400;
+enabling returns 10 recovery codes; `/auth/me` reports `totpEnabled`; a
+password-only sign-in returns `mfaRequired` and no session; a wrong code
+gives 401; a right code (next time step) gives a session; the same code
+replayed on a fresh challenge gives 401; a recovery code signs in once, and
+the second use gives 401; recovery codes are stored only as SHA-256 hashes;
+disabling with a wrong password gives 401.
+
+**Production, live, read-only (10/10):** health 200; readiness ok
+(database ok); no BFF secret → 403; no session → 401 on `/auth/me` and
+`/auth/totp/setup`; unknown MFA challenge → 401; setup still available
+(the owner has not set up yet); web `/login` 200 with per-request nonce CSP,
+HSTS and X-Frame-Options DENY; `/login/verify` with no challenge cookie →
+307 `/login`; signed-out `/account` → 307 `/login`.
