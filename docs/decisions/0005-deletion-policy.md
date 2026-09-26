@@ -1,8 +1,8 @@
 # 0005 — Archive, trash, then hard delete
 
-**Status:** Proposed · decide at Phase 4
+**Status:** Accepted · 2026-09-26 (Phase 4; owner delegated "continue shipping")
 
-## Proposal
+## Decision
 
 1. **Archive** — hidden from lists and search, kept indefinitely, one-click
    restore. For contacts you no longer use but want to keep.
@@ -21,7 +21,18 @@ must mean it. Immediate hard delete makes mistakes (and accidental merges)
 unrecoverable. The 30-day trash is the usual compromise (Gmail, Google
 Contacts).
 
-## Open questions
+## Implementation notes
 
-Are merged-away records kept in trash so a merge can be undone (handoff §5
-"recovery or reversible behaviour")? Recommended: yes, for 30 days.
+- A contact can be archived and trashed independently; the trash wins
+  (it is hidden from both the main and archived lists). A trashed contact
+  cannot be edited or archived until it is restored.
+- Render's free plan has no scheduler, so the API purges expired trash on
+  ordinary traffic (the contact list), at most once an hour per process,
+  and records `contact.trash_purged` with a count only.
+- Permanent delete of one contact is only possible from the trash.
+- Account deletion is not built yet (a later phase); its rule above stands.
+
+## Merges (Phase 5)
+
+Merged-away records go to the trash for 30 days, so a merge can be undone
+(handoff §5, "recovery or reversible behaviour").

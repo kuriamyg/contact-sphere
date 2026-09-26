@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Contacts API (Phase 4a; ADRs 0005, 0007, 0010 accepted)
+
+- Contacts with names, organisation, notes, birthday, phone numbers (kept
+  as typed and as E.164; Kenyan by default) and email addresses.
+- Search by name, organisation, email or any part of a number (0712, 712,
+  +254712 all match); sort by name, date saved or last used; pages.
+- Archive; delete to a 30-day trash; restore; delete for good; empty trash.
+  Expired trash is removed automatically.
+
 ### Added — Two-factor sign-in (ADR 0013)
 
 - TOTP with an authenticator app: QR/`otpauth://` enrolment, 10 one-time
