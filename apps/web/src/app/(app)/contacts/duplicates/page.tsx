@@ -72,7 +72,7 @@ export default async function DuplicatesPage({
                 <Link
                   href={`/contacts/duplicates/review?keep=${p.a.id}&merge=${p.b.id}`}
                   prefetch={false}
-                  className="block space-y-3 rounded-xl border border-border p-4 hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+                  className="block space-y-3 rounded-xl border border-border p-4 bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
                 >
                   <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
                     <span

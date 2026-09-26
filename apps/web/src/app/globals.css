@@ -1,29 +1,102 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens. Every colour the UI uses is defined here once, for light and
- * dark, so contrast can be checked in one place (target: WCAG 2.2 AA).
+ * Aurora design system (docs/product/design.md).
+ *
+ * Every colour the UI uses is a token defined here once, for light and dark,
+ * so contrast is checked in one place (target: WCAG 2.2 AA).
+ *
+ * Theme choice: <html data-theme="auto|light|dark"> (cookie cs-theme, set
+ * from the profile menu). "auto" follows the phone. The dark tokens appear
+ * twice — for "dark", and for "auto" on a phone set to dark — because CSS
+ * cannot share one block across a media query; keep the two identical.
  */
+
+/* Tailwind's dark: variant follows the same rule as the tokens. */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme='auto'], [data-theme='auto'] *) {
+      @slot;
+    }
+  }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --muted: #475569;
-  --surface: #f8fafc;
-  --border: #e2e8f0;
-  /* Brand: a deep Kenyan green. Used sparingly — rings, highlights, focus. */
+  color-scheme: light;
+  /* Warm ivory, not plain white. */
+  --background: #fbf8f2;
+  --foreground: #14161c;
+  --muted: #555b68;
+  /* Cards and fields sit on white. */
+  --surface: #ffffff;
+  --surface-hover: #f4f0e7;
+  --border: rgba(20, 22, 28, 0.1);
+  /* Brand: a deep Kenyan green, with a violet second accent. */
   --accent: #047857;
-  --accent-soft: #ecfdf5;
+  --accent-soft: #e3f6ec;
+  --violet: #6d28d9;
+  --primary-from: #10b981;
+  --primary-to: #047857;
+  --on-primary: #ffffff;
+  --primary-glow: rgba(4, 120, 87, 0.28);
+  --card-shadow:
+    0 1px 2px rgba(20, 22, 28, 0.04), 0 10px 28px rgba(20, 22, 28, 0.06);
+  --bar: rgba(255, 255, 255, 0.92);
+  --glow-a: rgba(16, 185, 129, 0.16);
+  --glow-b: rgba(167, 139, 250, 0.16);
+  --glow-c: rgba(56, 189, 248, 0);
+  --stars: 0;
+}
+
+/* The galaxy: near-black with green and violet nebulae and a few stars. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #04050a;
+  --foreground: #e8ecf4;
+  --muted: #a5adbd;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #34d399;
+  --accent-soft: rgba(52, 211, 153, 0.13);
+  --violet: #c4b5fd;
+  --primary-from: #34d399;
+  --primary-to: #10b981;
+  --on-primary: #03261b;
+  --primary-glow: rgba(16, 185, 129, 0.35);
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --bar: rgba(12, 14, 24, 0.86);
+  --glow-a: rgba(52, 211, 153, 0.2);
+  --glow-b: rgba(139, 92, 246, 0.2);
+  --glow-c: rgba(56, 189, 248, 0.07);
+  --stars: 1;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0d12;
-    --foreground: #e5e7eb;
-    --muted: #9ca3af;
-    --surface: #11141b;
-    --border: #1f2430;
+  :root[data-theme='auto'] {
+    color-scheme: dark;
+    --background: #04050a;
+    --foreground: #e8ecf4;
+    --muted: #a5adbd;
+    --surface: rgba(255, 255, 255, 0.045);
+    --surface-hover: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.1);
     --accent: #34d399;
-    --accent-soft: #052e22;
+    --accent-soft: rgba(52, 211, 153, 0.13);
+    --violet: #c4b5fd;
+    --primary-from: #34d399;
+    --primary-to: #10b981;
+    --on-primary: #03261b;
+    --primary-glow: rgba(16, 185, 129, 0.35);
+    --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --bar: rgba(12, 14, 24, 0.86);
+    --glow-a: rgba(52, 211, 153, 0.2);
+    --glow-b: rgba(139, 92, 246, 0.2);
+    --glow-c: rgba(56, 189, 248, 0.07);
+    --stars: 1;
   }
 }
 
@@ -32,17 +105,140 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-violet: var(--violet);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+  /* Softer, more modern corners everywhere. */
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.375rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
+  letter-spacing: -0.015em;
+}
+
+/*
+ * The backdrop, behind everything: soft glows in light, a starfield with
+ * nebulae in dark. Pure CSS, fixed, never intercepts a tap.
+ */
+.cosmos {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38rem 26rem at 10% -8%, var(--glow-a), transparent 70%),
+    radial-gradient(32rem 26rem at 105% 6%, var(--glow-b), transparent 70%),
+    radial-gradient(30rem 22rem at 40% 95%, var(--glow-c), transparent 70%);
+}
+.cosmos::before,
+.cosmos::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--stars);
+  background-repeat: repeat;
+}
+.cosmos::before {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(
+      1px 1px at 72% 9%,
+      rgba(255, 255, 255, 0.7) 50%,
+      transparent 51%
+    ),
+    radial-gradient(1.5px 1.5px at 88% 34%, #c4b5fd 50%, transparent 51%),
+    radial-gradient(
+      1px 1px at 35% 62%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 58% 44%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 51%
+    ),
+    radial-gradient(1.5px 1.5px at 22% 86%, #a7f3d0 50%, transparent 51%),
+    radial-gradient(
+      1px 1px at 91% 78%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 51%
+    );
+  background-size: 420px 420px;
+}
+.cosmos::after {
+  background-image:
+    radial-gradient(
+      1px 1px at 5% 40%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      2px 2px at 47% 12%,
+      rgba(255, 255, 255, 0.9) 40%,
+      transparent 60%
+    ),
+    radial-gradient(
+      1px 1px at 66% 71%,
+      rgba(196, 181, 253, 0.8) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 83% 55%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 51%
+    );
+  background-size: 690px 690px;
+}
+
+/*
+ * In the components layer, so a utility on the same element (a hover, a
+ * solid background) still wins.
+ */
+@layer components {
+  /* The one primary button style: a lit green gradient. */
+  .btn-primary {
+    background-image: linear-gradient(
+      180deg,
+      var(--primary-from),
+      var(--primary-to)
+    );
+    color: var(--on-primary);
+    font-weight: 700;
+    box-shadow:
+      0 8px 22px var(--primary-glow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition:
+      filter 0.15s,
+      transform 0.15s;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.06);
+  }
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  /* A raised card: white on ivory, glass in the galaxy. */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+  }
 }
 
 /* Animations must never be forced on people who asked the OS for less. */

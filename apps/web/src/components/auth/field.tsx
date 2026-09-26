@@ -19,7 +19,7 @@ export function Field({ label, name, hint, id, ...input }: FieldProps) {
         id={inputId}
         name={name}
         aria-describedby={hintId}
-        className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
         {...input}
       />
       {hint && (
@@ -75,7 +75,7 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       aria-busy={pending}
-      className="w-full rounded-lg bg-foreground px-4 py-2.5 text-base font-medium text-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
+      className="w-full rounded-lg btn-primary px-4 py-2.5 text-base font-medium transition-opacity focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
     >
       {pending ? pendingText : children}
     </button>

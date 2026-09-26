@@ -26,13 +26,13 @@ export function NameForm({ current }: { current: string | null }) {
             maxLength={100}
             autoComplete="name"
             placeholder="e.g. Kuria Mwangi"
-            className="block min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+            className="block min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
           />
           <button
             type="submit"
             disabled={pending}
             aria-busy={pending}
-            className="shrink-0 rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
+            className="shrink-0 rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
           >
             {pending ? 'Saving…' : 'Save'}
           </button>

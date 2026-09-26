@@ -95,11 +95,30 @@ type Today = {
     everyDays: number;
   }[];
   birthdays: { displayName: string; daysAway: number; turning: number }[];
+  setup: { contacts: number; birthdays: number; keepInTouch: number };
 };
 const today = async (as = token) =>
   (await api('get', '/remember/today', as).expect(200)).body as Today;
 
 describe('remember: keep in touch, follow-ups, today (Phase 9)', () => {
+  it('counts what is set up, for the getting-started checklist', async () => {
+    expect((await today()).setup).toEqual({
+      contacts: 0,
+      birthdays: 0,
+      keepInTouch: 0,
+    });
+    const a = await mk({ displayName: 'Ann', birthday: birthdayIn(40) });
+    await mk({ displayName: 'Ben' });
+    await api('put', `/remember/contacts/${a}/keep-in-touch`)
+      .send({ days: 30 })
+      .expect(204);
+    expect((await today()).setup).toEqual({
+      contacts: 2,
+      birthdays: 1,
+      keepInTouch: 1,
+    });
+  });
+
   it('lists birthdays in the next 14 days, soonest first, with the age', async () => {
     await mk({ displayName: 'Today Tess', birthday: birthdayIn(0, 40) });
     await mk({ displayName: 'Soon Sam', birthday: birthdayIn(5) });

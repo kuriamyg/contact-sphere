@@ -11,6 +11,13 @@
 (function () {
   'use strict';
 
+  // The theme chosen in the app (cookie cs-theme): auto, light or dark.
+  var themeMatch = /(?:^|; )cs-theme=(auto|light|dark)/.exec(document.cookie);
+  document.documentElement.setAttribute(
+    'data-theme',
+    themeMatch ? themeMatch[1] : 'auto',
+  );
+
   var DB_NAME = 'cs-offline';
   var FLAG = 'cs-offline';
   var data = null;

@@ -14,7 +14,7 @@ export function SortSelect({ value }: { value: SortValue }) {
         name="sort"
         defaultValue={value}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
       >
         {SORT_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

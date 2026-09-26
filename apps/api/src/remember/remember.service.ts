@@ -24,6 +24,8 @@ type Phone = { raw: string; e164: string | null } | null;
 
 export interface TodayView {
   today: string;
+  /** For the getting-started checklist when nothing is due. */
+  setup: { contacts: number; birthdays: number; keepInTouch: number };
   followUps: {
     id: string;
     contactId: string;
@@ -91,7 +93,7 @@ export class RememberService {
 
   async today(ownerId: string, now = new Date()): Promise<TodayView> {
     const today = nairobiToday(now);
-    const [followUps, cadenced, birthdays] = await Promise.all([
+    const [followUps, cadenced, birthdays, contacts] = await Promise.all([
       this.prisma.followUp.findMany({
         where: {
           ownerId,
@@ -113,9 +115,15 @@ export class RememberService {
         where: { ownerId, ...active, birthday: { not: null } },
         include: primaryPhone,
       }),
+      this.prisma.contact.count({ where: { ownerId, ...active } }),
     ]);
     return {
       today,
+      setup: {
+        contacts,
+        birthdays: birthdays.length,
+        keepInTouch: cadenced.length,
+      },
       followUps: followUps.map((f) => ({
         id: f.id,
         contactId: f.contactId,

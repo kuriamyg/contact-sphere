@@ -435,3 +435,15 @@ quotes/limits/counts-only usage, QR card. Migration `reach` (additive).
 Tests: unit (SMS parts, adapter batches, digest text, env), e2e 12 new,
 DB 2 new, web 6 new; browser flow 25/25 incl. decoding the QR as a camera
 would, cron auth, 412 px layout, no CSP violations.
+
+## 2026-09-27 — Aurora redesign
+
+Owner reviewed three directions on a design canvas and chose Aurora, the
+galaxy-orbit icon and a bottom bar (docs/product/design.md). Built: tokens
+for light and galaxy dark, Auto/Light/Dark switch (cookie, server-rendered,
+no flash), profile dropdown, bottom bar, new Today (greeting, counts,
+spotlight, quick actions, empty-state checklist from new `setup` counts on
+`GET /remember/today`), icons re-rendered inside the maskable safe zone,
+offline app re-themed. `currentUser()` now cached per request. Browser flow
+26/26 (themes persist across reload, menu closes on Escape/outside, search
+focus, 412 px, desktop header, no CSP violations).

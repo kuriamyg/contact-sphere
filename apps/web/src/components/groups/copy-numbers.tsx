@@ -20,7 +20,7 @@ export function CopyNumbers({ numbers }: { numbers: string[] }) {
           setState('failed');
         }
       }}
-      className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+      className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
     >
       <span aria-live="polite">
         {state === 'copied'

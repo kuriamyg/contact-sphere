@@ -1,24 +1,37 @@
 :root {
-  --bg: #ffffff;
-  --fg: #111827;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --surface: #f3f4f6;
+  --bg: #fbf8f2;
+  --fg: #14161c;
+  --muted: #555b68;
+  --border: rgba(20, 22, 28, 0.1);
+  --surface: #ffffff;
   --accent: #047857;
-  --accent-soft: #ecfdf5;
+  --accent-soft: #e3f6ec;
   --danger: #b91c1c;
-  color-scheme: light dark;
+  color-scheme: light;
+}
+/* Aurora galaxy dark, the same tokens as the signed-in app (globals.css). */
+:root[data-theme='dark'] {
+  --bg: #04050a;
+  --fg: #e8ecf4;
+  --muted: #a5adbd;
+  --border: rgba(255, 255, 255, 0.1);
+  --surface: rgba(255, 255, 255, 0.045);
+  --accent: #34d399;
+  --accent-soft: rgba(52, 211, 153, 0.13);
+  --danger: #fca5a5;
+  color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0d12;
-    --fg: #e5e7eb;
-    --muted: #9ca3af;
-    --border: #1f2937;
-    --surface: #111827;
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    --bg: #04050a;
+    --fg: #e8ecf4;
+    --muted: #a5adbd;
+    --border: rgba(255, 255, 255, 0.1);
+    --surface: rgba(255, 255, 255, 0.045);
     --accent: #34d399;
-    --accent-soft: #064e3b;
+    --accent-soft: rgba(52, 211, 153, 0.13);
     --danger: #fca5a5;
+    color-scheme: dark;
   }
 }
 * {

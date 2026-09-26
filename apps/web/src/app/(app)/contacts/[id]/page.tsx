@@ -47,7 +47,7 @@ import {
 export const metadata: Metadata = { title: 'Contact · Contact Sphere' };
 
 const button =
-  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 export default async function ContactPage({
   params,
@@ -272,7 +272,7 @@ export default async function ContactPage({
                 <li key={g.id}>
                   <Link
                     href={`/groups/${g.id}`}
-                    className="inline-block rounded-full border border-border px-3 py-1 text-sm hover:bg-surface"
+                    className="inline-block rounded-full border border-border px-3 py-1 text-sm bg-surface hover:bg-surface-hover"
                   >
                     {g.name}
                     {g.role && <span className="text-muted"> · {g.role}</span>}
@@ -294,7 +294,7 @@ export default async function ContactPage({
                 <select
                   id="groupId"
                   name="groupId"
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+                  className="rounded-lg border border-border bg-surface px-3 py-2 text-base"
                 >
                   {joinable.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -310,7 +310,7 @@ export default async function ContactPage({
                   name="role"
                   maxLength={40}
                   placeholder="Role (optional)"
-                  className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-base"
+                  className="w-40 rounded-lg border border-border bg-surface px-3 py-2 text-base"
                 />
                 <button type="submit" className={button}>
                   Add
@@ -326,7 +326,7 @@ export default async function ContactPage({
           <h2 id="touch" className="text-sm font-semibold text-muted uppercase">
             Stay in touch
           </h2>
-          <div className="space-y-3 rounded-xl border border-border p-4">
+          <div className="space-y-3 rounded-xl card p-4">
             <p className="text-sm">
               {reminders.lastContactedAt
                 ? `Last in touch ${formatDate(reminders.lastContactedAt)}`
@@ -353,7 +353,7 @@ export default async function ContactPage({
                   id="days"
                   name="days"
                   defaultValue={reminders.keepInTouchDays ?? ''}
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+                  className="rounded-lg border border-border bg-surface px-3 py-2 text-base"
                 >
                   <option value="">No reminder</option>
                   {CADENCES.map((k) => (
@@ -379,7 +379,7 @@ export default async function ContactPage({
           <div className="space-y-2">
             <h3 className="font-medium">Follow-ups</h3>
             {reminders.followUps.length > 0 && (
-              <ul className="divide-y divide-border rounded-xl border border-border">
+              <ul className="divide-y divide-border rounded-xl card">
                 {reminders.followUps.map((f) => (
                   <li
                     key={f.id}
@@ -435,7 +435,7 @@ export default async function ContactPage({
                 type="date"
                 required
                 min="2000-01-01"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-base"
               />
               <label htmlFor="note" className="sr-only">
                 Follow-up note
@@ -446,7 +446,7 @@ export default async function ContactPage({
                 required
                 maxLength={200}
                 placeholder="e.g. Ask about the harambee"
-                className="min-w-0 flex-1 basis-48 rounded-lg border border-border bg-background px-3 py-2 text-base"
+                className="min-w-0 flex-1 basis-48 rounded-lg border border-border bg-surface px-3 py-2 text-base"
               />
               <button type="submit" className={button}>
                 Add follow-up
@@ -484,7 +484,7 @@ export default async function ContactPage({
       {merges.length > 0 && (
         <section
           aria-labelledby="merges"
-          className="space-y-3 rounded-xl border border-border p-4"
+          className="space-y-3 rounded-xl card p-4"
         >
           <h2 id="merges" className="font-semibold">
             Merged contacts
@@ -617,7 +617,7 @@ function IconAction({
       aria-label={label}
       title={label}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="inline-flex size-10 items-center justify-center rounded-full border border-border text-muted hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+      className="inline-flex size-10 items-center justify-center rounded-full border border-border text-muted bg-surface hover:bg-surface-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
     >
       {children}
     </a>

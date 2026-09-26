@@ -5,6 +5,24 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — New look: Aurora
+
+- A new design across the app: a galaxy-dark theme (near-black with soft
+  green and violet glows and a few stars) and a warm, professional light
+  theme; new fonts, softer corners, glass cards and lit green buttons.
+- **Choose your theme**: tap your avatar → Appearance → Auto (follows your
+  phone), Light or Dark. It is remembered on the device.
+- **Bottom bar on phones**: Today, Contacts, Groups, Search — where your
+  thumb reaches.
+- **Profile menu** under your avatar: profile, QR card, reminders, tags,
+  duplicates, import/export, appearance and sign out in one place.
+- **Today** greets you, shows how many people to reach, puts the most
+  important one first with big Call/WhatsApp buttons, and adds quick
+  actions. With nothing due it says you're all caught up and shows a short
+  getting-started checklist.
+- **New app icon** (galaxy orbit), sized to the phone's safe zone so it no
+  longer looks too big on the home screen. Re-install the app to see it.
+
 ### Added — Reach (Phase 11a)
 
 - **Morning reminders on your phone, free.** Profile → Morning reminders →

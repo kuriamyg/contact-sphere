@@ -91,7 +91,7 @@ export function OfflineToggle() {
   };
 
   const button =
-    'rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
+    'rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
 
   return (
     <div className="space-y-3">
@@ -143,7 +143,7 @@ export function OfflineToggle() {
             type="button"
             onClick={turnOn}
             disabled={busy}
-            className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
+            className="rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
           >
             {busy ? 'Saving…' : 'Keep a copy on this phone'}
           </button>

@@ -14,7 +14,7 @@
  * the icon — never a signed-in page and never any contact. Every other
  * request, and every form submission, goes straight to the network.
  */
-const CACHE = 'cs-offline-v2';
+const CACHE = 'cs-offline-v3';
 const OFFLINE_URL = '/offline.html';
 const FILES = [
   OFFLINE_URL,

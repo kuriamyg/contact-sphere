@@ -12,9 +12,9 @@ import { getGroup, ROLE_SUGGESTIONS } from '@/lib/groups';
 export const metadata: Metadata = { title: 'Add members · Contact Sphere' };
 
 const input =
-  'block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
 const button =
-  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 /** Pick contacts to add: search, tick, optionally give them one role. */
 export default async function AddMembersPage({
@@ -80,7 +80,7 @@ export default async function AddMembersPage({
               Tick who to add ({total} {total === 1 ? 'contact' : 'contacts'}
               {q ? ` matching “${q}”` : ''})
             </legend>
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <ul className="divide-y divide-border rounded-xl card">
               {items.map((c) => {
                 const member = inGroup.has(c.id);
                 return (
@@ -159,7 +159,7 @@ export default async function AddMembersPage({
           </div>
           <button
             type="submit"
-            className="w-full rounded-lg bg-foreground px-4 py-3 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="w-full rounded-lg btn-primary px-4 py-3 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             Add to {g.name}
           </button>

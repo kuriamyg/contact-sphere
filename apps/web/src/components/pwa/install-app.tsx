@@ -57,7 +57,7 @@ export function InstallApp() {
           if (outcome === 'accepted') setState('installed');
           setPrompt(null);
         }}
-        className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="inline-flex items-center gap-2 rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Install on this phone
       </button>

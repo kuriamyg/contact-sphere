@@ -31,7 +31,7 @@ async function registration(): Promise<ServiceWorkerRegistration | null> {
 }
 
 const button =
-  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
+  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
 
 /**
  * "Morning reminders on this phone" (Web Push). Free for the owner: no SMS,

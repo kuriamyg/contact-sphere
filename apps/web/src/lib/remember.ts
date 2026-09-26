@@ -8,6 +8,8 @@ type Phone = { raw: string; e164: string | null } | null;
 
 export interface TodayView {
   today: string;
+  /** Missing from an older API while it deploys. */
+  setup?: { contacts: number; birthdays: number; keepInTouch: number };
   followUps: {
     id: string;
     contactId: string;

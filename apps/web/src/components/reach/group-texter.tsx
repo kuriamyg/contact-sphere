@@ -10,8 +10,8 @@ import {
 import { batches, BATCH_SIZES, smsHref, smsSize } from '@/lib/sms-size';
 
 const button =
-  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
-const box = 'space-y-3 rounded-2xl border border-border p-4 sm:p-5';
+  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
+const box = 'space-y-3 rounded-2xl card p-4 sm:p-5';
 
 /** Safaricom's weekly bundle: 1,000 SMS for KES 30 (dial *188#). */
 const BUNDLE_SMS = 1000;
@@ -103,7 +103,7 @@ export function GroupTexter({
           maxLength={900}
           rows={5}
           placeholder="Habari! Our meeting is on Saturday at 3pm…"
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
         />
         <p className="text-sm text-muted" aria-live="polite">
           {s.length} characters · {parts} SMS each ·{' '}

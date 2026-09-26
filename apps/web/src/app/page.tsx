@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 
 import { ApiStatusBadge } from '@/components/api-status-badge';
+import { OrbitMark } from '@/components/brand/orbit-mark';
 import { checkApiHealth } from '@/lib/api-health';
 
 async function ApiStatus() {
@@ -19,6 +20,7 @@ export default function Home() {
       className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-10 px-4 py-16 sm:px-6"
     >
       <header className="space-y-3">
+        <OrbitMark className="size-16" />
         <p className="text-sm font-medium tracking-wide text-muted uppercase">
           Private · Contacts
         </p>
@@ -33,14 +35,14 @@ export default function Home() {
 
       <Link
         href="/login"
-        className="self-start rounded-lg bg-foreground px-5 py-2.5 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="self-start rounded-lg btn-primary px-5 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Sign in
       </Link>
 
       <section
         aria-labelledby="status-heading"
-        className="rounded-2xl border border-border bg-surface p-6"
+        className="card rounded-2xl p-6"
       >
         <h2 id="status-heading" className="text-base font-semibold">
           System status
