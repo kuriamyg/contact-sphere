@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -599,5 +599,55 @@ describe('groups (Phase 8)', () => {
       'SELECT count(*)::int AS n FROM group_members',
     );
     expect(rows[0]).toEqual({ n: 0 });
+  });
+});
+
+describe('keep in touch and follow-ups (Phase 9)', () => {
+  const contact = async (owner: string) =>
+    (
+      await app.query<{ id: string }>(
+        `INSERT INTO contacts (id, owner_id, display_name, sort_name, updated_at)
+         VALUES (gen_random_uuid(), $1, 'Ann', 'ann', now()) RETURNING id`,
+        [owner],
+      )
+    ).rows[0].id;
+  const followUp = (
+    owner: string,
+    c: string,
+    note: string,
+    due = '2026-10-01',
+  ) =>
+    app.query(
+      `INSERT INTO follow_ups (id, owner_id, contact_id, due_on, note)
+       VALUES (gen_random_uuid(), $1, $2, $3::date, $4::varchar)`,
+      [owner, c, due, note],
+    );
+
+  it('allow only the offered keep-in-touch cadences', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const c = await contact(u);
+    await app.query(
+      'UPDATE contacts SET keep_in_touch_days = 30 WHERE id = $1',
+      [c],
+    );
+    expect(
+      await sqlState(
+        app.query('UPDATE contacts SET keep_in_touch_days = 10 WHERE id = $1', [
+          c,
+        ]),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+
+  it('keep notes tidy and dates plausible, and never cross owners', async () => {
+    const a = await insertUser(app, 'ann@example.com');
+    const b = await insertUser(app, 'bob@example.com');
+    const c = await contact(a);
+    await followUp(a, c, 'Call about the harambee');
+    expect(await sqlState(followUp(a, c, ' padded'))).toBe(CHECK_VIOLATION);
+    expect(await sqlState(followUp(a, c, 'x', '1990-01-01'))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(followUp(b, c, 'x'))).toBe('23503');
   });
 });

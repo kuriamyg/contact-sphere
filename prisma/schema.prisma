@@ -169,6 +169,12 @@ model Contact {
   /// inferred from call logs.
   lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(3)
   archivedAt   DateTime? @map("archived_at") @db.Timestamptz(3)
+  /// "Keep in touch every N days" (7, 14, 30, 60, 90, 180 or 365; CHECK).
+  /// Null = no reminder. Phase 9.
+  keepInTouchDays Int?      @map("keep_in_touch_days") @db.SmallInt
+  /// When the owner last said they were in touch ("contacted today").
+  /// Never inferred from call logs (ADR 0007). Not an edit.
+  lastContactedAt DateTime? @map("last_contacted_at") @db.Timestamptz(3)
   /// Set = in the trash. Hard-deleted 30 days later (ADR 0005).
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
 
@@ -180,6 +186,7 @@ model Contact {
   mergesKept     ContactMerge[]       @relation("MergeSurvivor")
   mergesAbsorbed ContactMerge[]       @relation("MergeMerged")
   memberships    GroupMember[]
+  followUps      FollowUp[]
 
   /// Lets child rows reference (id, owner_id) together, so a phone number
   /// can never belong to one owner while its contact belongs to another.
@@ -189,6 +196,7 @@ model Contact {
   @@index([ownerId, lastUsedAt])
   @@index([ownerId, deletedAt])
   @@index([tags], type: Gin)
+  @@index([ownerId, keepInTouchDays])
   @@map("contacts")
 }
 
@@ -329,4 +337,24 @@ model GroupMember {
   @@id([groupId, contactId])
   @@index([ownerId, contactId])
   @@map("group_members")
+}
+
+/// "Follow up with this person on this day" — a dated note (Phase 9).
+/// Done ones are kept (done_at) so the contact's history stays readable.
+model FollowUp {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  ownerId   String    @map("owner_id") @db.Uuid
+  contactId String    @map("contact_id") @db.Uuid
+  /// A calendar day in Nairobi time.
+  dueOn     DateTime  @map("due_on") @db.Date
+  /// e.g. "Ask about the harambee". The owner's own data; never audited.
+  note      String    @db.VarChar(200)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  doneAt    DateTime? @map("done_at") @db.Timestamptz(3)
+
+  contact Contact @relation(fields: [contactId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@index([ownerId, doneAt, dueOn])
+  @@index([contactId])
+  @@map("follow_ups")
 }

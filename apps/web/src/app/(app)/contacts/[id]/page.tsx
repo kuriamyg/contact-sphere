@@ -11,6 +11,13 @@ import {
 } from '@/app/actions/contacts';
 import { addToGroup } from '@/app/actions/groups';
 import { undoMerge } from '@/app/actions/merge';
+import {
+  addFollowUp,
+  deleteFollowUp,
+  followUpDone,
+  markContacted,
+  setKeepInTouch,
+} from '@/app/actions/remember';
 import { Avatar } from '@/components/avatar';
 import { Notice } from '@/components/contacts/notice';
 import {
@@ -26,10 +33,12 @@ import {
   undoableMerges,
 } from '@/lib/contacts';
 import { groupsForContact, listGroupsQuietly } from '@/lib/groups';
+import { CADENCES, relativeDay, remindersFor } from '@/lib/remember';
 import {
   formatBirthday,
   formatDate,
   formatDateTime,
+  formatDay,
   whatsappHref,
 } from '@/lib/format';
 
@@ -48,13 +57,15 @@ export default async function ContactPage({
   if (!c) notFound();
   // Opening a contact is what "last used" means (ADR 0007).
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
-  const [merges, groups, allGroups] = c.deletedAt
-    ? [[], [], []]
+  const [merges, groups, allGroups, reminders] = c.deletedAt
+    ? [[], [], [], null]
     : await Promise.all([
         undoableMerges(c.id),
         groupsForContact(c.id),
         listGroupsQuietly(),
+        remindersFor(c.id),
       ]);
+  const back = `/contacts/${c.id}`;
   const joinable = allGroups.filter((g) => !groups.some((x) => x.id === g.id));
 
   // Absent only while an older API is still deploying.
@@ -305,6 +316,141 @@ export default async function ContactPage({
               </form>
             </details>
           )}
+        </section>
+      )}
+
+      {reminders && (
+        <section aria-labelledby="touch" className="space-y-4">
+          <h2 id="touch" className="text-sm font-semibold text-muted uppercase">
+            Stay in touch
+          </h2>
+          <div className="space-y-3 rounded-xl border border-border p-4">
+            <p className="text-sm">
+              {reminders.lastContactedAt
+                ? `Last in touch ${formatDate(reminders.lastContactedAt)}`
+                : 'Not marked as contacted yet'}
+              {reminders.due &&
+                (reminders.due.overdueDays >= 0 ? (
+                  <strong className="text-red-700 dark:text-red-300">
+                    {' · '}
+                    {reminders.due.overdueDays === 0
+                      ? 'due today'
+                      : `${reminders.due.overdueDays} days overdue`}
+                  </strong>
+                ) : (
+                  ` · next ${relativeDay(-reminders.due.overdueDays)}`
+                ))}
+            </p>
+            <div className="flex flex-wrap items-end gap-2">
+              <form action={setKeepInTouch} className="flex gap-2">
+                <input type="hidden" name="contactId" value={c.id} />
+                <label htmlFor="days" className="sr-only">
+                  Keep in touch
+                </label>
+                <select
+                  id="days"
+                  name="days"
+                  defaultValue={reminders.keepInTouchDays ?? ''}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+                >
+                  <option value="">No reminder</option>
+                  {CADENCES.map((k) => (
+                    <option key={k.days} value={k.days}>
+                      {k.label}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className={button}>
+                  Save
+                </button>
+              </form>
+              <form action={markContacted}>
+                <input type="hidden" name="contactId" value={c.id} />
+                <input type="hidden" name="back" value={back} />
+                <button type="submit" className={button}>
+                  I was in touch today
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-medium">Follow-ups</h3>
+            {reminders.followUps.length > 0 && (
+              <ul className="divide-y divide-border rounded-xl border border-border">
+                {reminders.followUps.map((f) => (
+                  <li
+                    key={f.id}
+                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
+                  >
+                    <span
+                      className={`min-w-0 ${f.doneAt ? 'text-muted line-through' : ''}`}
+                    >
+                      <span className="block break-words">{f.note}</span>
+                      <span className="block text-sm text-muted">
+                        {formatDay(f.dueOn)}
+                        {f.doneAt && ' · done'}
+                      </span>
+                    </span>
+                    <span className="flex gap-2">
+                      {!f.doneAt && (
+                        <form action={followUpDone}>
+                          <input type="hidden" name="id" value={f.id} />
+                          <input type="hidden" name="back" value={back} />
+                          <button
+                            type="submit"
+                            aria-label={`Done: ${f.note}`}
+                            className={button}
+                          >
+                            Done
+                          </button>
+                        </form>
+                      )}
+                      <form action={deleteFollowUp}>
+                        <input type="hidden" name="id" value={f.id} />
+                        <input type="hidden" name="back" value={back} />
+                        <button
+                          type="submit"
+                          aria-label={`Delete follow-up: ${f.note}`}
+                          className={button}
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form action={addFollowUp} className="flex flex-wrap gap-2">
+              <input type="hidden" name="contactId" value={c.id} />
+              <label htmlFor="dueOn" className="sr-only">
+                Follow-up date
+              </label>
+              <input
+                id="dueOn"
+                name="dueOn"
+                type="date"
+                required
+                min="2000-01-01"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-base"
+              />
+              <label htmlFor="note" className="sr-only">
+                Follow-up note
+              </label>
+              <input
+                id="note"
+                name="note"
+                required
+                maxLength={200}
+                placeholder="e.g. Ask about the harambee"
+                className="min-w-0 flex-1 basis-48 rounded-lg border border-border bg-background px-3 py-2 text-base"
+              />
+              <button type="submit" className={button}>
+                Add follow-up
+              </button>
+            </form>
+          </div>
         </section>
       )}
 

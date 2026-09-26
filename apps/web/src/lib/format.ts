@@ -27,5 +27,17 @@ export const formatBirthday = (ymd: string) =>
   }).format(new Date(`${ymd}T00:00:00Z`));
 
 /** Digits for a wa.me link: only for numbers that parsed to E.164. */
-export const whatsappHref = (e164: string) =>
-  `https://wa.me/${e164.replace(/\D/g, '')}`;
+export const whatsappHref = (e164: string, text?: string) =>
+  `https://wa.me/${e164.replace(/\D/g, '')}${
+    text ? `?text=${encodeURIComponent(text)}` : ''
+  }`;
+
+/** A calendar day ("2026-10-03") as "Sat, 3 Oct". */
+export function formatDay(day: string): string {
+  return new Intl.DateTimeFormat('en-KE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(`${day}T00:00:00Z`));
+}

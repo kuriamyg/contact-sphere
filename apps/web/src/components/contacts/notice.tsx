@@ -51,6 +51,12 @@ const NOTICES: Record<string, { success?: string; error?: string }> = {
   },
   role_saved: { success: 'Role saved.' },
   added_to_group: { success: 'Added to the group.' },
+  contacted: { success: 'Noted — you were in touch today.' },
+  cadence_saved: { success: 'Keep-in-touch reminder saved.' },
+  follow_up_added: { success: 'Follow-up added. It shows on Today when due.' },
+  follow_up_invalid: { error: 'Give the follow-up a real date and a note.' },
+  follow_up_done: { success: 'Follow-up done.' },
+  follow_up_deleted: { success: 'Follow-up deleted.' },
   failed: { error: 'That did not work. Nothing was changed — try again.' },
 };
 
