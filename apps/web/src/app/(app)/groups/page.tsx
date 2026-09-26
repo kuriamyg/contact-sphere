@@ -9,7 +9,7 @@ import { GROUP_KINDS, kindLabel, listGroups } from '@/lib/groups';
 export const metadata: Metadata = { title: 'Groups · Contact Sphere' };
 
 const input =
-  'block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
 
 export default async function GroupsPage({
   searchParams,
@@ -34,7 +34,7 @@ export default async function GroupsPage({
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl card">
           {groups.map((g) => (
             <li key={g.id}>
               <Link
@@ -55,10 +55,7 @@ export default async function GroupsPage({
         </ul>
       )}
 
-      <details
-        className="rounded-xl border border-border p-4"
-        open={groups.length === 0}
-      >
+      <details className="rounded-xl card p-4" open={groups.length === 0}>
         <summary className="cursor-pointer font-medium">New group</summary>
         <form action={createGroup} className="mt-4 space-y-4">
           <div className="space-y-1.5">
@@ -105,7 +102,7 @@ export default async function GroupsPage({
           </div>
           <button
             type="submit"
-            className="w-full rounded-lg bg-foreground px-4 py-2.5 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="w-full rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             Create group
           </button>

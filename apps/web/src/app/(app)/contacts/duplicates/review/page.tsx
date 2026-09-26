@@ -120,10 +120,7 @@ export default async function ReviewPage({
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Choose what to keep</h2>
             {p.conflicts.map((c) => (
-              <fieldset
-                key={c.field}
-                className="space-y-2 rounded-xl border border-border p-4"
-              >
+              <fieldset key={c.field} className="space-y-2 rounded-xl card p-4">
                 <legend className="px-1 text-sm font-medium">
                   {FIELD_LABEL[c.field]}
                 </legend>
@@ -164,7 +161,7 @@ export default async function ReviewPage({
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-foreground px-4 py-3 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="w-full rounded-lg btn-primary px-4 py-3 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           Merge into {p.keep.displayName}
         </button>
@@ -175,7 +172,7 @@ export default async function ReviewPage({
         <input type="hidden" name="mergeId" value={p.merge.id} />
         <button
           type="submit"
-          className="w-full rounded-lg border border-border px-4 py-3 font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+          className="w-full rounded-lg border border-border px-4 py-3 font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
         >
           Not the same person
         </button>

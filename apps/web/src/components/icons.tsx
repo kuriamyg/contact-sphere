@@ -109,3 +109,19 @@ export const QrIcon = (p: IconProps) => (
     <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
   </Svg>
 );
+export const TagIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" />
+    <circle cx="8" cy="8" r="1.5" />
+  </Svg>
+);
+export const MergeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7h16M4 12h10M4 17h6" />
+  </Svg>
+);
+export const CheckIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 12l5 5L20 7" />
+  </Svg>
+);

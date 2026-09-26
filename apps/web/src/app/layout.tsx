@@ -1,19 +1,23 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Manrope, Sora } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { connection } from 'next/server';
 import './globals.css';
 
 import { RegisterServiceWorker } from '@/components/pwa/register-sw';
+import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
 // next/font downloads these at build time and serves them from our own
 // origin, so visitors' browsers never contact Google.
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Aurora type: Sora for headings, Manrope for everything else.
+const heading = Sora({
+  variable: '--font-heading',
   subsets: ['latin'],
+  weight: ['500', '600', '700'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const body = Manrope({
+  variable: '--font-body',
   subsets: ['latin'],
 });
 
@@ -47,8 +51,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
+    { media: '(prefers-color-scheme: light)', color: '#fbf8f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#04050a' },
   ],
 };
 
@@ -56,12 +60,15 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
   // Every page renders per request, so each gets its own CSP nonce
   // (src/proxy.ts). A page built once at deploy time could not carry one.
   await connection();
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme={theme}
+      className={`${heading.variable} ${body.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <div aria-hidden="true" className="cosmos" />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded-md focus:bg-foreground focus:px-3 focus:py-2 focus:text-background"

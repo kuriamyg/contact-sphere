@@ -157,6 +157,13 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] 10c: Android app with consented two-way sync with the phone's
       address book (native; separate project)
 
+## Design — Aurora
+
+- [x] Aurora light + galaxy dark, Auto/Light/Dark switch, profile menu,
+      bottom bar, new Today, galaxy-orbit icon (docs/product/design.md)
+- [ ] Restyle remaining secondary screens in detail (import wizard,
+      duplicates review) — tokens already apply
+
 ## Phase 11 — Reach
 
 - [x] 11a research: every messaging route costed per SMS and per 1,000

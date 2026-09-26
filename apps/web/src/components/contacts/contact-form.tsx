@@ -9,9 +9,9 @@ import type { ContactFormValues } from '@/lib/contact-form';
 
 const MAX_ROWS = 20;
 const inputClass =
-  'block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
 const smallButton =
-  'rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-50';
+  'rounded-lg border border-border px-3 py-2 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-50';
 
 type Row = { key: number; value: string; label: string };
 
@@ -178,7 +178,7 @@ function Fields({ v }: { v: ContactFormValues }) {
           defaultValue={v.jobTitle}
         />
       </div>
-      <fieldset className="space-y-4 rounded-xl border border-border p-4">
+      <fieldset className="space-y-4 rounded-xl card p-4">
         <legend className="px-1 text-sm font-semibold">
           Who they are to you
         </legend>

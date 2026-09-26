@@ -9,7 +9,7 @@ import { cardQr, getCard } from '@/lib/reach';
 export const metadata: Metadata = { title: 'My card · Contact Sphere' };
 
 const button =
-  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 /** The owner's own business card as a QR code. */
 export default async function CardPage() {

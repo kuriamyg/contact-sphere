@@ -28,9 +28,9 @@ import { getReachStatus } from '@/lib/reach';
 
 export const metadata: Metadata = { title: 'Profile · Contact Sphere' };
 
-const card = 'rounded-2xl border border-border p-5 sm:p-6';
+const card = 'rounded-2xl card p-5 sm:p-6';
 const button =
-  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 function CardTitle({
   id,
@@ -97,7 +97,7 @@ export default async function ProfilePage() {
         {stats && (
           <ul
             aria-label="Your contacts"
-            className="grid w-full grid-cols-3 divide-x divide-border rounded-xl border border-border bg-background"
+            className="grid w-full grid-cols-3 divide-x divide-border rounded-xl card bg-background"
           >
             {(
               [

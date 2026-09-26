@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 
 import { api, sessionToken } from './api';
 
@@ -36,15 +37,16 @@ export function failedLoad(status: number): never {
  * The signed-in user, or null. Always asks the API — the cookie alone proves
  * nothing. Only a 401 means "signed out": any other failure is the service
  * being unavailable, and treating that as signed out would send a signed-in
- * person to the sign-in page for no reason.
+ * person to the sign-in page for no reason. Asked once per request: the
+ * layout and the page share the answer.
  */
-export async function currentUser(): Promise<CurrentUser | null> {
+export const currentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!(await sessionToken())) return null;
   const res = await api<CurrentUser>('/auth/me');
   if (res.status === 200 && res.data) return res.data;
   if (res.status === 401) return null;
   throw new ServiceUnavailableError(res.status);
-}
+});
 
 /** For protected pages: the user, or a redirect to sign-in. */
 export async function requireUser(): Promise<CurrentUser> {

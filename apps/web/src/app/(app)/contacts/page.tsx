@@ -6,6 +6,7 @@ import { saveSearch } from '@/app/actions/tags';
 import { Avatar } from '@/components/avatar';
 import { ChevronRightIcon } from '@/components/icons';
 import { Notice } from '@/components/contacts/notice';
+import { FocusSearch } from '@/components/contacts/focus-search';
 import { SortSelect } from '@/components/contacts/sort-select';
 import {
   listHref,
@@ -31,9 +32,9 @@ const VIEWS: { view: View; label: string }[] = [
 ];
 
 const primaryButton =
-  'rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none';
+  'rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none';
 const secondaryButton =
-  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 export default async function ContactsPage({
   searchParams,
@@ -47,7 +48,7 @@ export default async function ContactsPage({
     active ? listSavedSearches() : Promise.resolve([]),
   ]);
   const chip =
-    'inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+    'inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -75,6 +76,7 @@ export default async function ContactsPage({
       </header>
 
       <Notice code={sp.done} />
+      <FocusSearch when={sp.find === '1'} />
 
       <nav
         aria-label="Contact lists"
@@ -119,7 +121,7 @@ export default async function ContactsPage({
             defaultValue={p.q}
             maxLength={100}
             placeholder="Name, skill, area, number…"
-            className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+            className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
           />
         </div>
         <SortSelect value={p.sort} />
@@ -193,7 +195,7 @@ export default async function ContactsPage({
       {active &&
         (p.q || p.tag) &&
         !searches.some((s) => s.query === p.q && (s.tag ?? '') === p.tag) && (
-          <details className="rounded-xl border border-border px-4 py-3">
+          <details className="rounded-xl card px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium">
               Save this search
             </summary>
@@ -209,7 +211,7 @@ export default async function ContactsPage({
                 required
                 maxLength={60}
                 defaultValue={[p.tag, p.q].filter(Boolean).join(' · ')}
-                className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+                className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
               <button type="submit" className={secondaryButton}>
                 Save
@@ -247,7 +249,7 @@ export default async function ContactsPage({
                     {letter}
                   </h2>
                 )}
-                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+                <ul className="divide-y divide-border overflow-hidden rounded-xl card">
                   {rows.map((c) => (
                     <li key={c.id}>
                       <Link

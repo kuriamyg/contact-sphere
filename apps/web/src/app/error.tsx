@@ -42,7 +42,7 @@ export default function ErrorPage({
             reset();
           })
         }
-        className="rounded-lg bg-foreground px-4 py-2.5 font-medium text-background focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+        className="rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
       >
         Try again
       </button>

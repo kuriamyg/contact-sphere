@@ -13,7 +13,7 @@ import {
 import { Field, FormMessage, SubmitButton } from './field';
 
 const buttonClass =
-  'rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
+  'rounded-lg border border-border px-4 py-2 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:opacity-60';
 
 /** Groups a base32 secret in fours so it can be typed without mistakes. */
 function grouped(secret: string): string {

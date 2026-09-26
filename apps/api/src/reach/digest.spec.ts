@@ -3,6 +3,7 @@ import { digestText } from './reach.service';
 
 const base: TodayView = {
   today: '2026-09-26',
+  setup: { contacts: 0, birthdays: 0, keepInTouch: 0 },
   followUps: [],
   keepInTouch: [],
   birthdays: [],

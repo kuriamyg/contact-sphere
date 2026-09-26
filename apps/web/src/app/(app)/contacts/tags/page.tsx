@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 };
 
 const button =
-  'rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'rounded-lg border border-border px-3 py-2 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 const input =
-  'block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
 
 const searchHref = (q: string, tag: string | null) => {
   const qs = new URLSearchParams();
@@ -52,7 +52,7 @@ export default async function TagsPage({
               Renaming or removing changes every contact that has it. Renaming
               to a skill that already exists joins the two.
             </p>
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <ul className="divide-y divide-border rounded-xl card">
               {tags.map((t) => (
                 <li key={t.tag} className="space-y-2 px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
@@ -128,7 +128,7 @@ export default async function TagsPage({
             search”.
           </p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <ul className="divide-y divide-border rounded-xl card">
             {searches.map((s) => (
               <li
                 key={s.id}

@@ -17,8 +17,8 @@ export function NavLink({
     <Link
       href={href}
       aria-current={current ? 'page' : undefined}
-      className={`rounded-lg px-3 py-1.5 hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none ${
-        current ? 'font-medium text-foreground' : 'text-muted'
+      className={`rounded-lg px-3 py-1.5 hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${
+        current ? 'bg-accent-soft font-semibold text-foreground' : 'text-muted'
       }`}
     >
       {children}

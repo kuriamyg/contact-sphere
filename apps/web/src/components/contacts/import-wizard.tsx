@@ -16,9 +16,9 @@ import {
 } from '@/lib/vcf-file';
 
 const primary =
-  'rounded-lg bg-foreground px-4 py-2.5 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60';
+  'rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60';
 const secondary =
-  'rounded-lg border border-border px-4 py-2.5 font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'rounded-lg border border-border px-4 py-2.5 font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 
 type Stage =
   | { name: 'choose' }
@@ -131,7 +131,7 @@ export function ImportWizard() {
         <Skipped plan={p} />
         <Warnings plan={p} />
         {p.preview.length > 0 && (
-          <details className="rounded-xl border border-border">
+          <details className="rounded-xl card">
             <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
               See who will be added
             </summary>
@@ -184,7 +184,7 @@ export function ImportWizard() {
       <FormMessage error={error} />
       <label
         htmlFor="vcf"
-        className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center hover:bg-surface focus-within:ring-2 focus-within:ring-foreground/40"
+        className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center bg-surface hover:bg-surface-hover focus-within:ring-2 focus-within:ring-foreground/40"
       >
         <span className="font-medium">
           {pending ? 'Reading the file…' : 'Choose a .vcf file'}

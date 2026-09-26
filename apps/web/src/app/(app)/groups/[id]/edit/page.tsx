@@ -9,7 +9,7 @@ import { getGroup, GROUP_KINDS } from '@/lib/groups';
 export const metadata: Metadata = { title: 'Edit group · Contact Sphere' };
 
 const input =
-  'block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
 
 export default async function EditGroupPage({
   params,
@@ -70,7 +70,7 @@ export default async function EditGroupPage({
         </div>
         <button
           type="submit"
-          className="w-full rounded-lg bg-foreground px-4 py-2.5 font-medium text-background hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="w-full rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           Save
         </button>

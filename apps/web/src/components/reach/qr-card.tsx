@@ -8,7 +8,7 @@ export function QrCard({ card, qr }: { card: CardInput; qr: string }) {
     ...card.emails.slice(0, 2).map((e) => e.address),
   ].filter(Boolean);
   return (
-    <figure className="mx-auto w-full max-w-xs space-y-3 rounded-2xl border border-border bg-white p-4 text-center text-black">
+    <figure className="mx-auto w-full max-w-xs space-y-3 rounded-2xl card bg-white p-4 text-center text-black">
       {/* Always black on white: phone cameras read that best, even in dark mode. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

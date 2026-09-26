@@ -19,9 +19,9 @@ import { getGroup, kindLabel, ROLE_SUGGESTIONS } from '@/lib/groups';
 export const metadata: Metadata = { title: 'Group · Contact Sphere' };
 
 const button =
-  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
 const icon =
-  'inline-flex size-10 items-center justify-center rounded-full border border-border text-muted hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
+  'inline-flex size-10 items-center justify-center rounded-full border border-border text-muted bg-surface hover:bg-surface-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
 
 export default async function GroupPage({
   params,
@@ -94,7 +94,7 @@ export default async function GroupPage({
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="divide-y divide-border rounded-xl card">
           {g.members.map((m) => {
             const dial = m.phone?.e164 ?? m.phone?.raw;
             return (
@@ -163,7 +163,7 @@ export default async function GroupPage({
                         maxLength={40}
                         defaultValue={m.role ?? ''}
                         placeholder="e.g. treasurer"
-                        className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+                        className="w-40 rounded-lg border border-border bg-surface px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                       />
                       <button type="submit" className={button}>
                         Save
