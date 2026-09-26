@@ -14,6 +14,10 @@ import {
 } from '@/components/icons';
 import { NameForm } from '@/components/profile/name-form';
 import { InstallApp } from '@/components/pwa/install-app';
+import {
+  OfflineToggle,
+  WipeOnSubmit,
+} from '@/components/offline/offline-toggle';
 import { requireUser } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
@@ -163,6 +167,22 @@ export default async function ProfilePage() {
         <InstallApp />
       </section>
 
+      <section
+        aria-labelledby="offline-heading"
+        className={`${card} space-y-3`}
+      >
+        <CardTitle id="offline-heading" icon={<DownloadIcon />}>
+          Use it without data
+        </CardTitle>
+        <p className="text-sm text-muted">
+          Keep a copy of your contacts, groups and Today on this phone. With no
+          data bundle you can still search, open a contact, and call or SMS
+          (that uses airtime, like your phone book). Adding or changing things
+          and WhatsApp still need data. Signing out deletes the copy.
+        </p>
+        <OfflineToggle />
+      </section>
+
       <section aria-labelledby="data-heading" className={`${card} space-y-4`}>
         <CardTitle id="data-heading" icon={<DownloadIcon />}>
           Your data
@@ -190,25 +210,29 @@ export default async function ProfilePage() {
         <CardTitle id="sessions-heading" icon={<LogOutIcon />}>
           Sign out
         </CardTitle>
-        <form action={logout}>
-          <button type="submit" className={`${button} w-full justify-center`}>
-            <LogOutIcon className="size-4" />
-            Sign out of this device
-          </button>
-        </form>
+        <WipeOnSubmit>
+          <form action={logout}>
+            <button type="submit" className={`${button} w-full justify-center`}>
+              <LogOutIcon className="size-4" />
+              Sign out of this device
+            </button>
+          </form>
+        </WipeOnSubmit>
         <div className="space-y-2 border-t border-border pt-4">
           <p className="text-sm text-muted">
             Lost a phone, or signed in somewhere you shouldn’t have? This signs
             out every device, including this one.
           </p>
-          <form action={logoutEverywhere}>
-            <button
-              type="submit"
-              className="w-full rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
-            >
-              Sign out everywhere
-            </button>
-          </form>
+          <WipeOnSubmit>
+            <form action={logoutEverywhere}>
+              <button
+                type="submit"
+                className="w-full rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
+              >
+                Sign out everywhere
+              </button>
+            </form>
+          </WipeOnSubmit>
         </div>
       </section>
     </div>

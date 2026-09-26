@@ -389,3 +389,19 @@ Web-only change (no API or database change). Manifest, icons (rendered
 with Chromium), offline-page service worker, install help. Browser flow
 16/16 including a real offline test: only `/offline` and one icon are
 ever cached; signed-in pages are never stored.
+
+**Phase 10a deployed (PR #28, `6854180`).** Web only. Production checks
+from a Vercel sandbox: manifest, four icons, offline page, `sw.js`
+no-cache, CSP `worker-src`/`manifest-src`, manifest and Apple icon linked,
+signed-out redirects.
+
+## 2026-09-26 — Phase 10b: works with no data bundle
+
+The owner asked what really works offline. Answer measured with 464
+contacts: before 10b, nothing but an offline page; page weights 5–15 KB
+(gzip), app code ~180 KB once. 10b adds an opt-in offline copy (~16 KB
+gzip for 465 contacts; ETag makes unchanged checks 304). Tests: e2e
+(snapshot contents, archived/trashed/done excluded, owner isolation,
+401); browser flows offline 22/22 (real network cut: Today, search by
+name/skill/number, contact, call/SMS links, group SMS, deep link, hostile
+name inert, sign-out wipes, no CSP violations) and install 16/16.

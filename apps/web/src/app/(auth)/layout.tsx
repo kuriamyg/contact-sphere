@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { OfflineGuard } from '@/components/offline/offline-sync';
+
 export default function AuthLayout({ children }: LayoutProps<'/'>) {
   return (
     <main
@@ -10,6 +12,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
         ← Contact Sphere
       </Link>
       {children}
+      <OfflineGuard />
     </main>
   );
 }

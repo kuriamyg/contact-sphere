@@ -1,21 +1,29 @@
 /*
- * Contact Sphere service worker (Phase 10a).
+ * Contact Sphere service worker (Phases 10a–b).
  *
- * It does one thing: when a page cannot be loaded because the device is
- * offline, it shows a friendly offline page instead of the browser's error.
+ * When a page cannot be loaded because the device is offline, it shows the
+ * offline app (public/offline.html), which reads the copy of the owner's
+ * contacts that the signed-in app saved on this device — if the owner
+ * switched that on.
  *
- * Privacy: it never stores contacts or any signed-in page. Only the offline
- * page and the app icon are cached. Everything else — including every form
- * submission — goes straight to the network, untouched.
+ * Privacy: the worker itself caches only the offline app's own files and
+ * the icon — never a signed-in page and never any contact. Every other
+ * request, and every form submission, goes straight to the network.
  */
-const CACHE = 'cs-offline-v1';
-const OFFLINE_URL = '/offline';
+const CACHE = 'cs-offline-v2';
+const OFFLINE_URL = '/offline.html';
+const FILES = [
+  OFFLINE_URL,
+  '/offline-app.js',
+  '/offline-app.css',
+  '/icons/icon-192.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll([OFFLINE_URL, '/icons/icon-192.png']))
+      .then((cache) => cache.addAll(FILES))
       .then(() => self.skipWaiting()),
   );
 });
@@ -35,7 +43,20 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  if (req.method !== 'GET' || req.mode !== 'navigate') return;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  // The offline app's own files, whenever they are asked for.
+  if (
+    url.origin === self.location.origin &&
+    FILES.includes(url.pathname) &&
+    url.pathname !== OFFLINE_URL
+  ) {
+    event.respondWith(
+      caches.match(url.pathname).then((hit) => hit || fetch(req)),
+    );
+    return;
+  }
+  if (req.mode !== 'navigate') return;
   event.respondWith(
     fetch(req).catch(() =>
       caches.match(OFFLINE_URL).then(

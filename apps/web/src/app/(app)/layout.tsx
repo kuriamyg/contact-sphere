@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Avatar } from '@/components/avatar';
 import { NavLink } from '@/components/nav-link';
+import { OfflineSync } from '@/components/offline/offline-sync';
 import { requireUser } from '@/lib/auth';
 
 /** Everything under (app) requires a signed-in user, checked with the API on each request. */
@@ -9,6 +10,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const user = await requireUser();
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <OfflineSync />
       <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
         <nav
           aria-label="Main"

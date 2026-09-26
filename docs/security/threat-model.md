@@ -86,3 +86,25 @@ parties_ who never signed up; this belongs in the privacy policy.
 - Neon `production` branch cannot be protected on the current plan.
 - 2FA on provider accounts is an owner action and cannot be verified from
   code.
+
+## Offline copy on the device (Phase 10b)
+
+The owner may choose to keep a copy of their contacts in the installed
+app's storage (IndexedDB) so it works with no data bundle.
+
+- **Opt-in, per device**, explained on the Profile page; off by default.
+- **Who can read it:** anyone who can use the unlocked phone and open the
+  app — the same exposure as the phone's own address book. The phone's
+  screen lock is the protection. We do not add encryption with a key kept
+  in the same browser: it would not stop that attacker, and a passcode
+  would defeat the purpose for people out of data. Revisit if needed.
+- **Wiped:** on sign-out (at submit, before the request), whenever the
+  server answers 401 (e.g. after "sign out everywhere" elsewhere), and on
+  every visit to the sign-in pages.
+- **Offline app:** static files under a strict CSP (`script-src 'self'`,
+  no inline code); all text inserted with `textContent` (tested with a
+  hostile contact name). Read-only: it never writes to the server.
+- **Service worker** caches only the offline app's files and the icon,
+  never a signed-in page or API response.
+- **Snapshot endpoint** rate-limited (12/min) against scraping with a
+  stolen session; answers are `no-store`.

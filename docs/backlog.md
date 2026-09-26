@@ -144,8 +144,12 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       shortcuts), icons incl. maskable and Apple, a service worker that
       only serves an offline page (no personal data cached; CSP
       `worker-src`/`manifest-src 'self'`), install help on Profile
-- [ ] 10b: offline reading of contacts — needs an encrypted, signed-out-
-      wipes local store; design first (threat model)
+- [x] 10b: offline copy (opt-in, per device): GET /sync/snapshot (active
+      contacts, groups, open follow-ups; 12/min); /offline-data with ETag
+      (304 when unchanged); IndexedDB; offline app in plain files with a
+      strict CSP (textContent only); wiped on sign-out, 401 and sign-in
+      page. Read-only offline
+- [ ] 10b+: add/edit offline with a queue and conflict handling
 - [ ] 10c: Android app with consented two-way sync with the phone's
       address book (native; separate project)
 
