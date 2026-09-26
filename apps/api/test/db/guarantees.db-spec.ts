@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -649,5 +649,51 @@ describe('keep in touch and follow-ups (Phase 9)', () => {
       CHECK_VIOLATION,
     );
     expect(await sqlState(followUp(b, c, 'x'))).toBe('23503');
+  });
+});
+
+describe('reach (Phase 11)', () => {
+  const device = (owner: string, endpoint: string, p256dh = 'k') =>
+    app.query(
+      `INSERT INTO push_subscriptions (id, owner_id, endpoint, p256dh, auth)
+       VALUES (gen_random_uuid(), $1, $2, $3, 'a')`,
+      [owner, endpoint, p256dh],
+    );
+  const send = (owner: string, recipients: number, accepted: number) =>
+    app.query(
+      `INSERT INTO sms_sends (id, owner_id, recipients, segments, accepted, provider)
+       VALUES (gen_random_uuid(), $1, $2, 1, $3, 'partner') RETURNING id`,
+      [owner, recipients, accepted],
+    );
+
+  it('push endpoints are https, keyed, and one row each', async () => {
+    const a = await insertUser(app, 'ann@example.com');
+    await device(a, 'https://push.example/1');
+    expect(await sqlState(device(a, 'https://push.example/1'))).toBe(
+      UNIQUE_VIOLATION,
+    );
+    expect(await sqlState(device(a, 'http://push.example/2'))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(device(a, 'https://push.example/3', ''))).toBe(
+      CHECK_VIOLATION,
+    );
+  });
+
+  it('SMS sends are a usage record the app cannot edit or delete', async () => {
+    const a = await insertUser(app, 'ann@example.com');
+    const { rows } = await send(a, 2, 2);
+    expect(await sqlState(send(a, 2, 3))).toBe(CHECK_VIOLATION);
+    expect(await sqlState(send(a, 0, 0))).toBe(CHECK_VIOLATION);
+    expect(
+      await sqlState(
+        app.query('UPDATE sms_sends SET accepted = 0 WHERE id = $1', [
+          (rows[0] as { id: string }).id,
+        ]),
+      ),
+    ).toBe(PERMISSION_DENIED);
+    expect(await sqlState(app.query('DELETE FROM sms_sends'))).toBe(
+      PERMISSION_DENIED,
+    );
   });
 });

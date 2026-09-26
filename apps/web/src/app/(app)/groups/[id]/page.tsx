@@ -61,10 +61,10 @@ export default async function GroupPage({
         </Link>
         {numbers.length > 0 && (
           <>
-            <a href={`sms:${numbers.join(',')}`} className={button}>
+            <Link href={`/groups/${g.id}/text`} className={button}>
               <MessageIcon className="size-4" />
               Text everyone
-            </a>
+            </Link>
             <CopyNumbers numbers={numbers} />
           </>
         )}

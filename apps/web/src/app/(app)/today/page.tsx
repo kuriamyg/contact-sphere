@@ -239,6 +239,13 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
           ))}
         </Section>
       )}
+      <p className="border-t border-border pt-4 text-sm text-muted">
+        Get a free reminder on this phone each morning:{' '}
+        <Link href="/account#reminders-heading" className="underline">
+          turn on morning reminders
+        </Link>
+        .
+      </p>
     </div>
   );
 }

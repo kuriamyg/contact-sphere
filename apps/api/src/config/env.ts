@@ -45,6 +45,33 @@ export interface Env {
    * (recovery codes still work); changing it requires re-enrolment.
    */
   totpEncryptionKey: Buffer;
+  /**
+   * VAPID keys for Web Push (morning reminders on the phone). Unset = the
+   * feature is off and says so. Generate once: npx web-push
+   * generate-vapid-keys. Changing them drops every phone's subscription.
+   */
+  push?: { publicKey: string; privateKey: string; subject: string };
+  /**
+   * Paid group texts through an SMS aggregator (Phase 11). Unset = off:
+   * groups are texted from the owner's own phone instead. `log` only
+   * records (tests, local); `partner` is the partnerID/apikey/shortcode API
+   * that Celcom, Advanta and TextSMS share.
+   */
+  sms?: SmsConfig;
+}
+
+export interface SmsConfig {
+  provider: 'log' | 'partner';
+  /** Partner API base, e.g. https://isms.celcomafrica.com/api/services/ */
+  url?: string;
+  apiKey?: string;
+  partnerId?: string;
+  /** Registered sender ID ("shortcode" in these APIs). */
+  senderId?: string;
+  /** Most SMS parts one owner may send in a calendar month. 0 = none. */
+  monthlyLimit: number;
+  /** What one SMS part costs us, in KES cents, for estimates. */
+  priceCents: number;
 }
 
 export class EnvError extends Error {
@@ -190,6 +217,78 @@ function parseKey(name: string, raw: string | undefined): Buffer {
   return Buffer.from(value, 'hex');
 }
 
+const VAPID_PUBLIC = /^[A-Za-z0-9_-]{87}$/;
+const VAPID_PRIVATE = /^[A-Za-z0-9_-]{43}$/;
+
+function parsePush(source: NodeJS.ProcessEnv): Env['push'] | undefined {
+  const publicKey = source.VAPID_PUBLIC_KEY?.trim();
+  const privateKey = source.VAPID_PRIVATE_KEY?.trim();
+  const subject = source.VAPID_SUBJECT?.trim();
+  if (!publicKey && !privateKey && !subject) return undefined;
+  if (!publicKey || !privateKey || !subject) {
+    throw new EnvError(
+      'VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT must be set together.',
+    );
+  }
+  if (!VAPID_PUBLIC.test(publicKey) || !VAPID_PRIVATE.test(privateKey)) {
+    throw new EnvError(
+      'VAPID keys are not valid (npx web-push generate-vapid-keys).',
+    );
+  }
+  if (!/^(mailto:|https:\/\/)/.test(subject)) {
+    throw new EnvError('VAPID_SUBJECT must be a mailto: or https:// URL.');
+  }
+  return { publicKey, privateKey, subject };
+}
+
+function parseSms(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): SmsConfig | undefined {
+  const provider = source.SMS_PROVIDER?.trim();
+  if (!provider) return undefined;
+  const monthlyLimit = parseNonNegativeInt(
+    'SMS_MONTHLY_LIMIT',
+    source.SMS_MONTHLY_LIMIT,
+    0,
+  );
+  const price = (source.SMS_PRICE_KES ?? '').trim() || '0';
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(price)) {
+    throw new EnvError('SMS_PRICE_KES must be a price like 0.35.');
+  }
+  const priceCents = Math.round(Number(price) * 100);
+  if (provider === 'log') {
+    if (nodeEnv === 'production') {
+      throw new EnvError('SMS_PROVIDER=log is for tests; not in production.');
+    }
+    return { provider, monthlyLimit, priceCents };
+  }
+  if (provider !== 'partner') {
+    throw new EnvError('SMS_PROVIDER must be partner or log.');
+  }
+  const url = source.SMS_API_URL?.trim().replace(/\/*$/, '/');
+  const apiKey = source.SMS_API_KEY?.trim();
+  const partnerId = source.SMS_PARTNER_ID?.trim();
+  const senderId = source.SMS_SENDER_ID?.trim();
+  if (!url || !apiKey || !partnerId || !senderId) {
+    throw new EnvError(
+      'SMS_PROVIDER=partner needs SMS_API_URL, SMS_API_KEY, SMS_PARTNER_ID and SMS_SENDER_ID.',
+    );
+  }
+  if (!url.startsWith('https://')) {
+    throw new EnvError('SMS_API_URL must use https.');
+  }
+  return {
+    provider,
+    url,
+    apiKey,
+    partnerId,
+    senderId,
+    monthlyLimit,
+    priceCents,
+  };
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const nodeEnv = parseNodeEnv(source.NODE_ENV);
   const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
@@ -216,5 +315,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       'TOTP_ENCRYPTION_KEY',
       source.TOTP_ENCRYPTION_KEY,
     ),
+    push: parsePush(source),
+    sms: parseSms(source, nodeEnv),
   };
 }

@@ -50,6 +50,13 @@ services:
       # Encrypts TOTP secrets at rest (ADR 0013). Never change casually.
       - key: TOTP_ENCRYPTION_KEY
         sync: false
+      # Web Push for morning reminders (Phase 11). Generate once per service.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
 
   - type: web
     name: contact-sphere-api
@@ -79,4 +86,11 @@ services:
       - key: SETUP_TOKEN
         sync: false
       - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      # Web Push for morning reminders (Phase 11). Generate once per service.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
         sync: false

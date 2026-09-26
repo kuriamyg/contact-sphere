@@ -42,6 +42,13 @@ model User {
   totpLastStep  BigInt?   @map("totp_last_step")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  /// The Nairobi day the morning reminder was last pushed; the daily job
+  /// can run twice without sending twice. Phase 11.
+  digestSentOn  DateTime? @map("digest_sent_on") @db.Date
+  /// The owner's own entry in their contacts, shown as their QR business
+  /// card. Checked against owner and trash on every read (no FK: a
+  /// composite SET NULL cannot be expressed in Prisma). Phase 11.
+  cardContactId String?   @map("card_contact_id") @db.Uuid
 
   auditLogs     AuditLog[]
   sessions      Session[]
@@ -50,6 +57,8 @@ model User {
   contacts      Contact[]
   savedSearches SavedSearch[]
   groups        Group[]
+  pushDevices   PushSubscription[]
+  smsSends      SmsSend[]
 
   @@map("users")
 }
@@ -357,4 +366,44 @@ model FollowUp {
   @@index([ownerId, doneAt, dueOn])
   @@index([contactId])
   @@map("follow_ups")
+}
+
+/// A browser or installed app that asked for morning reminders (Web Push).
+/// The endpoint is a capability URL at the browser vendor's push service;
+/// the keys encrypt what we send so the vendor cannot read it. Phase 11.
+model PushSubscription {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  /// https only (CHECK). One row per endpoint: a phone re-subscribing moves
+  /// it, never duplicates it.
+  endpoint  String   @unique @db.VarChar(1000)
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Consecutive failed sends; removed after a few (or at once on 404/410).
+  failures  Int      @default(0) @db.SmallInt
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("push_subscriptions")
+}
+
+/// One group text sent through an SMS provider (paid). Counts only — the
+/// message and the numbers are never stored. Used for monthly limits and
+/// billing. Phase 11.
+model SmsSend {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  ownerId    String   @map("owner_id") @db.Uuid
+  recipients Int
+  /// SMS parts per recipient (160 GSM characters, 70 with emoji).
+  segments   Int      @db.SmallInt
+  accepted   Int
+  provider   String   @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+  @@map("sms_sends")
 }

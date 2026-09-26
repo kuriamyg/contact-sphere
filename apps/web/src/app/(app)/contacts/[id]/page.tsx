@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/contacts';
 import { addToGroup } from '@/app/actions/groups';
 import { undoMerge } from '@/app/actions/merge';
+import { setCard } from '@/app/actions/reach';
 import {
   addFollowUp,
   deleteFollowUp,
@@ -24,6 +25,7 @@ import {
   MailIcon,
   MessageIcon,
   PhoneIcon,
+  QrIcon,
   WhatsAppIcon,
 } from '@/components/icons';
 import {
@@ -529,6 +531,18 @@ export default async function ContactPage({
           <Link href={`/contacts/${c.id}/edit`} className={button}>
             Edit
           </Link>
+          {(c.phones.length > 0 || c.emails.length > 0) && (
+            <Link href={`/contacts/${c.id}/qr`} className={button}>
+              <QrIcon className="size-4" />
+              Share as QR
+            </Link>
+          )}
+          <form action={setCard}>
+            <input type="hidden" name="contactId" value={c.id} />
+            <button type="submit" className={button}>
+              This is me
+            </button>
+          </form>
           <form action={c.archivedAt ? unarchiveContact : archiveContact}>
             <input type="hidden" name="id" value={c.id} />
             <button type="submit" className={button}>

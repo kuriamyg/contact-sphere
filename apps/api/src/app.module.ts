@@ -12,6 +12,7 @@ import { ConfigModule } from './config/env.provider';
 import { ContactsModule } from './contacts/contacts.module';
 import { GroupsModule } from './groups/groups.module';
 import { RememberModule } from './remember/remember.module';
+import { ReachModule } from './reach/reach.module';
 import { SyncModule } from './sync/sync.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -41,6 +42,7 @@ export class AppModule {
         GroupsModule,
         RememberModule,
         SyncModule,
+        ReachModule,
       ],
       // Global guards run in this order for EVERY route (ADR 0006):
       // 1. is the caller our web server?  2. rate limit  3. valid session?
