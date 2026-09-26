@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -422,5 +422,61 @@ describe('contacts (ADRs 0004, 0005, 0010)', () => {
     expect(await sqlState(insertEmail(app, u, c, 'no-at-sign'))).toBe(
       CHECK_VIOLATION,
     );
+  });
+});
+
+describe('duplicate dismissals and merges (Phase 5b)', () => {
+  const contact = async (ownerId: string, name: string) =>
+    (
+      await app.query<{ id: string }>(
+        `INSERT INTO contacts (id, owner_id, display_name, sort_name, updated_at)
+         VALUES (gen_random_uuid(), $1, $2::varchar, lower($2::varchar), now()) RETURNING id`,
+        [ownerId, name],
+      )
+    ).rows[0].id;
+
+  it('stores each dismissed pair once, smaller id first', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const [x, y] = [await contact(u, 'A'), await contact(u, 'B')].sort();
+    const dismiss = (a: string, b: string) =>
+      app.query(
+        `INSERT INTO duplicate_dismissals (id, owner_id, contact_a_id, contact_b_id)
+         VALUES (gen_random_uuid(), $1, $2, $3)`,
+        [u, a, b],
+      );
+    expect(await sqlState(dismiss(y, x))).toBe(CHECK_VIOLATION);
+    await dismiss(x, y);
+    expect(await sqlState(dismiss(x, y))).toBe(UNIQUE_VIOLATION);
+  });
+
+  it('a merge can never link two owners’ contacts, or a contact to itself', async () => {
+    const ann = await insertUser(app, 'ann@example.com');
+    const bob = await insertUser(app, 'bob@example.com');
+    const a = await contact(ann, 'A');
+    const b = await contact(bob, 'B');
+    const merge = (owner: string, s: string, m: string) =>
+      app.query(
+        `INSERT INTO contact_merges (id, owner_id, survivor_id, merged_id, survivor_before)
+         VALUES (gen_random_uuid(), $1, $2, $3, '{}')`,
+        [owner, s, m],
+      );
+    expect(await sqlState(merge(ann, a, b))).toBe(FOREIGN_KEY_VIOLATION);
+    expect(await sqlState(merge(ann, a, a))).toBe(CHECK_VIOLATION);
+  });
+
+  it('merge records disappear with their contacts (no undo after hard delete)', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const a = await contact(u, 'A');
+    const b = await contact(u, 'B');
+    await app.query(
+      `INSERT INTO contact_merges (id, owner_id, survivor_id, merged_id, survivor_before)
+       VALUES (gen_random_uuid(), $1, $2, $3, '{"displayName":"A"}')`,
+      [u, a, b],
+    );
+    await app.query('DELETE FROM contacts WHERE id = $1', [b]);
+    const { rows } = await app.query(
+      'SELECT count(*)::int AS n FROM contact_merges',
+    );
+    expect(rows[0].n).toBe(0);
   });
 });

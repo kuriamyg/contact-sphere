@@ -44,6 +44,9 @@ export default async function ContactsPage({
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Contacts</h1>
         <div className="flex flex-wrap gap-2">
+          <Link href="/contacts/duplicates" className={secondaryButton}>
+            Clean up
+          </Link>
           <Link href="/contacts/import" className={secondaryButton}>
             Import
           </Link>

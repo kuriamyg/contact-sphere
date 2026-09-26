@@ -163,6 +163,10 @@ model Contact {
   owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   phoneNumbers   PhoneNumber[]
   emailAddresses EmailAddress[]
+  dismissedAsA   DuplicateDismissal[] @relation("DismissalA")
+  dismissedAsB   DuplicateDismissal[] @relation("DismissalB")
+  mergesKept     ContactMerge[]       @relation("MergeSurvivor")
+  mergesAbsorbed ContactMerge[]       @relation("MergeMerged")
 
   /// Lets child rows reference (id, owner_id) together, so a phone number
   /// can never belong to one owner while its contact belongs to another.
@@ -213,4 +217,43 @@ model EmailAddress {
   @@unique([contactId, position])
   @@index([ownerId, address])
   @@map("email_addresses")
+}
+
+/// "These two are not the same person": the pair is never suggested again.
+/// Stored with the smaller id first (CHECK), so each pair exists once.
+model DuplicateDismissal {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  ownerId    String   @map("owner_id") @db.Uuid
+  contactAId String   @map("contact_a_id") @db.Uuid
+  contactBId String   @map("contact_b_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  contactA Contact @relation("DismissalA", fields: [contactAId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  contactB Contact @relation("DismissalB", fields: [contactBId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@unique([ownerId, contactAId, contactBId])
+  @@map("duplicate_dismissals")
+}
+
+/// One merge, kept so it can be undone (ADR 0005): the survivor's state
+/// before the merge is stored; the merged-away contact waits in the trash.
+/// When either contact is deleted for good, the record goes with it — and
+/// so does the possibility of undoing.
+model ContactMerge {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  ownerId        String    @map("owner_id") @db.Uuid
+  survivorId     String    @map("survivor_id") @db.Uuid
+  mergedId       String    @map("merged_id") @db.Uuid
+  /// The survivor exactly as it was before the merge (fields, numbers,
+  /// emails). The owner's own data; deleted with the contacts.
+  survivorBefore Json      @map("survivor_before")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  undoneAt       DateTime? @map("undone_at") @db.Timestamptz(3)
+
+  survivor Contact @relation("MergeSurvivor", fields: [survivorId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  merged   Contact @relation("MergeMerged", fields: [mergedId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@index([ownerId, survivorId])
+  @@index([ownerId, mergedId])
+  @@map("contact_merges")
 }

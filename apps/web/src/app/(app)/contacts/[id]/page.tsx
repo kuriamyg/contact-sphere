@@ -9,6 +9,7 @@ import {
   trashContact,
   unarchiveContact,
 } from '@/app/actions/contacts';
+import { undoMerge } from '@/app/actions/merge';
 import { Avatar } from '@/components/avatar';
 import { Notice } from '@/components/contacts/notice';
 import {
@@ -17,7 +18,12 @@ import {
   PhoneIcon,
   WhatsAppIcon,
 } from '@/components/icons';
-import { getContact, markUsed, type Phone } from '@/lib/contacts';
+import {
+  getContact,
+  markUsed,
+  type Phone,
+  undoableMerges,
+} from '@/lib/contacts';
 import {
   formatBirthday,
   formatDate,
@@ -40,6 +46,7 @@ export default async function ContactPage({
   if (!c) notFound();
   // Opening a contact is what "last used" means (ADR 0007).
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
+  const merges = c.deletedAt ? [] : await undoableMerges(c.id);
 
   const subtitle = [c.jobTitle, c.organization].filter(Boolean).join(' · ');
   const primary = c.phones[0];
@@ -208,6 +215,47 @@ export default async function ContactPage({
               </div>
             )}
           </dl>
+        </section>
+      )}
+
+      {merges.length > 0 && (
+        <section
+          aria-labelledby="merges"
+          className="space-y-3 rounded-xl border border-border p-4"
+        >
+          <h2 id="merges" className="font-semibold">
+            Merged contacts
+          </h2>
+          <p className="text-sm text-muted">
+            Undo puts both contacts back exactly as they were before the merge.
+            Changes made to this contact since then are lost.
+          </p>
+          <ul className="space-y-2">
+            {merges.map((m) => (
+              <li
+                key={m.id}
+                className="flex flex-wrap items-center justify-between gap-2"
+              >
+                <span className="min-w-0 break-words">
+                  {m.mergedName}
+                  <span className="ml-2 text-sm text-muted">
+                    merged {formatDateTime(m.createdAt)}
+                  </span>
+                </span>
+                <form action={undoMerge}>
+                  <input type="hidden" name="mergeRecordId" value={m.id} />
+                  <input type="hidden" name="contactId" value={c.id} />
+                  <button
+                    type="submit"
+                    className={button}
+                    aria-label={`Undo merge with ${m.mergedName}`}
+                  >
+                    Undo merge
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

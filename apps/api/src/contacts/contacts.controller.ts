@@ -21,14 +21,21 @@ import {
   type ImportPlan,
 } from './contacts-import.service';
 import {
+  ContactsMergeService,
+  type DuplicateView,
+  type MergePreview,
+} from './contacts-merge.service';
+import {
   type ContactDetail,
   type ContactPage,
   ContactsService,
 } from './contacts.service';
 import {
   ContactInputDto,
+  ContactPairDto,
   ImportVcfDto,
   ListContactsQueryDto,
+  MergeDto,
 } from './dto/contact.dto';
 
 /** Imports parse up to megabytes of text: a few a minute is plenty. */
@@ -49,7 +56,67 @@ export class ContactsController {
   constructor(
     private readonly contacts: ContactsService,
     private readonly vcf: ContactsImportService,
+    private readonly merges: ContactsMergeService,
   ) {}
+
+  /** Possible duplicates, with reasons. Changes nothing. */
+  @Get('duplicates')
+  duplicates(
+    @CurrentAuth() a: AuthContext,
+  ): Promise<{ pairs: DuplicateView[]; total: number }> {
+    return this.merges.duplicates(a.userId);
+  }
+
+  /** "Not the same person": the pair is not suggested again. */
+  @Post('duplicates/dismiss')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  dismiss(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: ContactPairDto,
+  ): Promise<void> {
+    return this.merges.dismiss(a.userId, dto.keepId, dto.mergeId);
+  }
+
+  /** Both contacts, their conflicts, and the default result. Changes nothing. */
+  @Post('merge/preview')
+  @HttpCode(HttpStatus.OK)
+  mergePreview(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: ContactPairDto,
+  ): Promise<MergePreview> {
+    return this.merges.preview(a.userId, dto.keepId, dto.mergeId);
+  }
+
+  @Post('merge')
+  merge(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: MergeDto,
+  ): Promise<{ survivorId: string; mergeRecordId: string }> {
+    return this.merges.merge(
+      a.userId,
+      dto.keepId,
+      dto.mergeId,
+      dto.choices ?? {},
+    );
+  }
+
+  @Post('merges/:id/undo')
+  @HttpCode(HttpStatus.OK)
+  undoMerge(
+    @CurrentAuth() a: AuthContext,
+    @Param('id', Id()) id: string,
+  ): Promise<{ survivorId: string; mergedId: string }> {
+    return this.merges.undo(a.userId, id);
+  }
+
+  /** Merges into this contact that can still be undone. */
+  @Get(':id/merges')
+  undoableMerges(
+    @CurrentAuth() a: AuthContext,
+    @Param('id', Id()) id: string,
+  ): Promise<{ id: string; mergedName: string; createdAt: string }[]> {
+    return this.merges.undoableMerges(a.userId, id);
+  }
 
   @Get('stats')
   stats(

@@ -289,3 +289,25 @@ UPDATE the audit log.
 still 429 after 5) then production (readiness, 403/401 refusals, 130/130
 ordinary requests served, setup still closed). Signed-out production pages
 all redirect to sign-in.
+
+---
+
+## 2026-09-26 — Phase 5a and 6a deployed; Phase 5b built
+
+**Phase 5a (PR #21, `e7c56f0`).** Import/export `.vcf` live; the owner
+imported their phone's contacts and exported them back.
+
+**Phase 6a (PR #22, `2526a5d`).** Migration `user_display_name` applied to
+staging, then production, with no drift; both APIs deployed. Production,
+read-only: readiness ok; `/auth/profile` and `/contacts/stats` refuse
+no-BFF (403) and forged sessions (401); setup still closed; signed-out
+`/account`, `/contacts`, `/contacts/import` redirect to sign-in; the
+`display:none` CSP hash is served.
+
+**Phase 5b.** Duplicate review and safe merge: migration
+`duplicates_and_merges` (dismissed pairs; merge records holding a snapshot
+of the kept contact, for undo). CHECKs: pair ordered, two different
+contacts, snapshot is an object, undone after created. Tests: unit (pair
+finding, merge rules), e2e (merge, conflicts, undo, dismiss, other owner
+404, trashed 409), database guarantees; browser flow 27/27 at phone size,
+360 px, no CSP violations.
