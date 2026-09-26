@@ -13,6 +13,7 @@ import {
   UserIcon,
 } from '@/components/icons';
 import { NameForm } from '@/components/profile/name-form';
+import { InstallApp } from '@/components/pwa/install-app';
 import { requireUser } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
@@ -146,6 +147,20 @@ export default async function ProfilePage() {
             <ChangePasswordForm />
           </div>
         </details>
+      </section>
+
+      <section
+        aria-labelledby="install-heading"
+        className={`${card} space-y-3`}
+      >
+        <CardTitle id="install-heading" icon={<DownloadIcon />}>
+          Use it like an app
+        </CardTitle>
+        <p className="text-sm text-muted">
+          Put Contact Sphere on your home screen: it opens full screen, straight
+          into Today, like any other app.
+        </p>
+        <InstallApp />
       </section>
 
       <section aria-labelledby="data-heading" className={`${card} space-y-4`}>

@@ -378,3 +378,14 @@ owner isolation, audit without notes), database CHECKs; browser flow
 20/20. Found and fixed before shipping: at 412 px the header (now with
 Today) overflowed; the app name now shows from 640 px, and the browser
 flow checks 412 px too.
+
+**Phase 9 deployed (PR #27, `0a9d042`).** Migration `remember` applied to
+staging and production before merging (no drift); both APIs deployed.
+Staging **17/17** live; production read-only **7/7**.
+
+## 2026-09-26 — Phase 10a: installable
+
+Web-only change (no API or database change). Manifest, icons (rendered
+with Chromium), offline-page service worker, install help. Browser flow
+16/16 including a real offline test: only `/offline` and one icon are
+ever cached; signed-in pages are never stored.

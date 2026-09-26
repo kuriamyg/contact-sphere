@@ -138,6 +138,17 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Reminders sent by email/WhatsApp/SMS (Phase 11 channels);
       anniversaries and other dates
 
+## Phase 10 — On the phone
+
+- [x] 10a: installable web app — manifest (standalone, start at Today,
+      shortcuts), icons incl. maskable and Apple, a service worker that
+      only serves an offline page (no personal data cached; CSP
+      `worker-src`/`manifest-src 'self'`), install help on Profile
+- [ ] 10b: offline reading of contacts — needs an encrypted, signed-out-
+      wipes local store; design first (threat model)
+- [ ] 10c: Android app with consented two-way sync with the phone's
+      address book (native; separate project)
+
 ## Phase 6a — Profile and polish
 
 - [x] Owner display name (migration, CHECK never blank), `POST /auth/profile`

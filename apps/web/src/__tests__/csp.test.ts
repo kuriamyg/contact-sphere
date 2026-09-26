@@ -31,6 +31,12 @@ describe('buildCsp', () => {
     ).not.toContain('unsafe-hashes');
   });
 
+  it('lets only our own origin register a service worker and a manifest', () => {
+    const csp = buildCsp('n', false);
+    expect(csp).toContain("worker-src 'self'");
+    expect(csp).toContain("manifest-src 'self'");
+  });
+
   it('adds unsafe-eval only in development (React debugging)', () => {
     expect(buildCsp('n', true)).toContain("'unsafe-eval'");
   });
