@@ -37,6 +37,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
+      // The offline app (public/offline*): plain files with no inline code,
+      // so a fixed, strict policy (no nonce needed). src/proxy.ts skips them.
+      {
+        source: '/offline(.html|-app.js|-app.css)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value:
+              "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+          },
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
       // The service worker must be re-checked on every visit, so a fix
       // reaches every installed phone straight away.
       {

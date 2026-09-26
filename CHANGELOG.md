@@ -5,6 +5,20 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Use it with no data bundle (Phase 10b)
+
+- Profile → "Use it without data" → **Keep a copy on this phone**. With
+  no data at all you can then open the app, see Today, search all your
+  contacts (by name, number, skill, area, notes), open a contact, see its
+  groups and follow-ups, and **call or SMS** (airtime, like your phone
+  book), and text a whole group.
+- Without data you cannot add or change anything or use WhatsApp; the
+  app says so. Back online, the full app returns.
+- The copy is about 16 KB for 465 contacts. Keeping it fresh checks for
+  changes and downloads again only when something changed.
+- Signing out deletes the copy; so does "sign out everywhere" the next
+  time the phone is online, and any visit to the sign-in page.
+
 ### Added — Install it like an app (Phase 10a)
 
 - Add Contact Sphere to your home screen: it gets its own icon, opens
