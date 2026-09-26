@@ -5,6 +5,13 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Import and export .vcf (Phase 5a)
+
+- Import contacts from a phone or address-book export (.vcf): see what
+  will happen first, then import. Contacts already saved are skipped, so
+  importing the same file twice adds nothing. Photos are not uploaded.
+- Export all contacts (except the trash) as a .vcf file.
+
 ### Added — Contacts screens (Phase 4b)
 
 - Contacts list with search, sorting (name, recently opened, date saved)

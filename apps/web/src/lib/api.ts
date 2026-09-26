@@ -52,14 +52,19 @@ export function buildApiHeaders(opts: {
   return h;
 }
 
-export async function api<T>(
-  path: string,
-  init: {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: unknown;
-    auth?: boolean;
-  } = {},
-): Promise<ApiResult<T>> {
+interface ApiInit {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  body?: unknown;
+  auth?: boolean;
+}
+
+/**
+ * One request to the API, or null when it could not be made at all
+ * (unreachable, reset or timed out) — never a throw, which inside a Server
+ * Action would crash the whole page ("This page couldn't load") and lose
+ * what the person had on screen.
+ */
+async function send(path: string, init: ApiInit): Promise<Response | null> {
   const base = process.env.API_URL?.replace(/\/+$/, '');
   const secret = process.env.API_SHARED_SECRET;
   if (!base || !secret) {
@@ -73,9 +78,8 @@ export async function api<T>(
     token: init.auth === false ? undefined : await sessionToken(),
     json: init.body !== undefined,
   });
-  let res: Response;
   try {
-    res = await fetch(`${base}${path}`, {
+    return await fetch(`${base}${path}`, {
       method: init.method ?? 'GET',
       cache: 'no-store',
       headers,
@@ -86,16 +90,31 @@ export async function api<T>(
       signal: AbortSignal.timeout(50_000),
     });
   } catch (err) {
-    // Unreachable, reset or timed out. Report it as status 0 so every caller
-    // shows "try again" in place; a throw here would crash the whole page
-    // ("This page couldn't load") and lose what the person had on screen.
     console.error(`API ${init.method ?? 'GET'} ${path} failed:`, err);
-    return { status: 0, data: null };
+    return null;
   }
+}
+
+/** A JSON request. Failure to reach the API is status 0, never a throw. */
+export async function api<T>(
+  path: string,
+  init: ApiInit = {},
+): Promise<ApiResult<T>> {
+  const res = await send(path, init);
+  if (!res) return { status: 0, data: null };
   if (res.status === 204) return { status: 204, data: null };
   const body: unknown = await res.json().catch(() => null);
   if (res.ok) return { status: res.status, data: body as T };
   return { status: res.status, data: null, message: apiMessage(body) };
+}
+
+/** A GET whose answer is text, not JSON (the .vcf export). */
+export async function apiText(
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const res = await send(path, {});
+  if (!res) return { status: 0, text: '' };
+  return { status: res.status, text: res.ok ? await res.text() : '' };
 }
 
 function apiMessage(body: unknown): string | undefined {

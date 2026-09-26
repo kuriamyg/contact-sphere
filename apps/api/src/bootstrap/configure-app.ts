@@ -47,6 +47,11 @@ export function configureApp(app: NestExpressApplication, env: Env): void {
     maxAge: 600,
   });
 
+  // Bodies up to 5 MB: a .vcf import is sent as text (photos removed
+  // first). Only our web server can reach the API at all (BffGuard), and
+  // each import route has its own tight rate limit.
+  app.useBodyParser('json', { limit: '5mb' });
+
   // Every request body is validated against its DTO. Unknown fields are
   // refused outright, not silently dropped: an unexpected field is a client
   // bug or a probe, and either way worth a 400.

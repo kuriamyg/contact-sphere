@@ -40,9 +40,19 @@ export default async function ContactsPage({
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Contacts</h1>
-        <Link href="/contacts/new" className={primaryButton}>
-          New contact
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/contacts/import" className={secondaryButton}>
+            Import
+          </Link>
+          {/* A file download from a route handler, not a page: a plain link
+              (Link would try client-side navigation). */}
+          <a href="/contacts/export" download className={secondaryButton}>
+            Export
+          </a>
+          <Link href="/contacts/new" className={primaryButton}>
+            New contact
+          </Link>
+        </div>
       </header>
 
       <Notice code={sp.done} />
@@ -213,19 +223,21 @@ function EmptyState({ view, q }: { view: View; q: string }) {
     body = 'Deleted contacts stay here for 30 days before they are removed.';
   } else {
     title = 'No contacts yet';
-    body = 'Add your first contact to get started.';
+    body = 'Import the contacts from your phone, or add one by hand.';
   }
   return (
     <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="mt-1 text-muted">{body}</p>
       {!q && view === 'active' && (
-        <Link
-          href="/contacts/new"
-          className={`mt-4 inline-block ${primaryButton}`}
-        >
-          New contact
-        </Link>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link href="/contacts/import" className={primaryButton}>
+            Import from a .vcf file
+          </Link>
+          <Link href="/contacts/new" className={secondaryButton}>
+            New contact
+          </Link>
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
@@ -12,13 +13,26 @@ import {
   Query,
 } from '@nestjs/common';
 
+import { Throttle } from '@nestjs/throttler';
+
 import { type AuthContext, CurrentAuth } from '../auth/decorators';
+import {
+  ContactsImportService,
+  type ImportPlan,
+} from './contacts-import.service';
 import {
   type ContactDetail,
   type ContactPage,
   ContactsService,
 } from './contacts.service';
-import { ContactInputDto, ListContactsQueryDto } from './dto/contact.dto';
+import {
+  ContactInputDto,
+  ImportVcfDto,
+  ListContactsQueryDto,
+} from './dto/contact.dto';
+
+/** Imports parse up to megabytes of text: a few a minute is plenty. */
+const IMPORT_LIMIT = { default: { limit: 10, ttl: 60_000 } };
 
 /**
  * Any well-formed UUID: ours are v7, but an id from anywhere else should get
@@ -32,7 +46,40 @@ const Id = () => new ParseUUIDPipe();
  */
 @Controller('contacts')
 export class ContactsController {
-  constructor(private readonly contacts: ContactsService) {}
+  constructor(
+    private readonly contacts: ContactsService,
+    private readonly vcf: ContactsImportService,
+  ) {}
+
+  /** What importing this .vcf would do. Changes nothing. */
+  @Throttle(IMPORT_LIMIT)
+  @Post('import/preview')
+  @HttpCode(HttpStatus.OK)
+  previewImport(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: ImportVcfDto,
+  ): Promise<ImportPlan> {
+    return this.vcf.preview(a.userId, dto.vcf);
+  }
+
+  /** Adds the file's new contacts; exact repeats are skipped. */
+  @Throttle(IMPORT_LIMIT)
+  @Post('import')
+  importVcf(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: ImportVcfDto,
+  ): Promise<ImportPlan> {
+    return this.vcf.import(a.userId, dto.vcf);
+  }
+
+  /** Every contact not in the trash, as vCard 3.0. */
+  @Throttle(IMPORT_LIMIT)
+  @Get('export')
+  @Header('Content-Type', 'text/vcard; charset=utf-8')
+  @Header('Cache-Control', 'no-store')
+  exportVcf(@CurrentAuth() a: AuthContext): Promise<string> {
+    return this.vcf.export(a.userId);
+  }
 
   @Get()
   list(
