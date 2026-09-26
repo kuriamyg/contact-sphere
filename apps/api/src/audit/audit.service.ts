@@ -30,7 +30,11 @@ export type AuditAction =
   | 'contact.exported'
   | 'contact.merged'
   | 'contact.merge_undone'
-  | 'contact.duplicate_dismissed';
+  | 'contact.duplicate_dismissed'
+  | 'contact.tag_renamed'
+  | 'contact.tag_deleted'
+  | 'search.saved'
+  | 'search.deleted';
 
 export interface AuditEntry {
   actorUserId?: string | null;

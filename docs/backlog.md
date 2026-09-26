@@ -114,8 +114,10 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       met-through, tags, notes and emails (every word must match, accents
       folded, `search_text` maintained by the API and backfilled); tag
       filter and tag list with counts; merge keeps tags, area, met-through
-- [ ] 7b: saved searches; tags from .vcf CATEGORIES (skip Google's
-      system groups); rename or delete a tag everywhere
+- [x] 7b: saved searches (≤ 50, CHECKs, follow tag renames/deletes);
+      tags from .vcf CATEGORIES (system groups skipped) and exported as
+      CATEGORIES; rename or delete a tag everywhere (one transaction,
+      audited with counts, "edited" date untouched)
 
 ## Phase 6a — Profile and polish
 

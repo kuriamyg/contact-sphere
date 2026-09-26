@@ -132,6 +132,31 @@ describe('parseVcf', () => {
   });
 });
 
+describe('CATEGORIES (groups and labels)', () => {
+  it('keeps real groups and drops the ones phones add to everyone', () => {
+    const { cards } = parseVcf(
+      crlf(`
+    BEGIN:VCARD
+    VERSION:3.0
+    FN:Otieno
+    CATEGORIES:myContacts,Plumbers,* starred,Church\\, Kasarani
+    CATEGORIES:System Group: My Contacts,Imported on 5/3,Chama
+    END:VCARD
+    BEGIN:VCARD
+    VERSION:3.0
+    FN:Kamau
+    CATEGORIES:My Contacts,Starred in Android
+    END:VCARD`),
+    );
+    expect(cards[0].categories).toEqual([
+      'Plumbers',
+      'Church, Kasarani',
+      'Chama',
+    ]);
+    expect(cards[1].categories).toBeUndefined();
+  });
+});
+
 describe('writeVcard', () => {
   it('escapes backslashes, commas, semicolons and newlines', () => {
     const text = writeVcard({
@@ -159,6 +184,7 @@ describe('writeVcard', () => {
       jobTitle: null,
       notes: `Line 1\nLine 2 with a long tail ${'é'.repeat(100)}`,
       birthday: '1960-01-31',
+      tags: ['chama, treasurer', 'church'],
       phones: [
         { raw: '0712 345 678', e164: '+254712345678', label: 'mobile' },
         { raw: '*144#', e164: null, label: null },
@@ -174,6 +200,7 @@ describe('writeVcard', () => {
       organization: 'St. Andrew’s',
       notes: `Line 1\nLine 2 with a long tail ${'é'.repeat(100)}`,
       birthday: '1960-01-31',
+      categories: ['chama, treasurer', 'church'],
       phones: [
         { raw: '+254712345678', label: 'mobile' },
         { raw: '*144#', label: undefined },

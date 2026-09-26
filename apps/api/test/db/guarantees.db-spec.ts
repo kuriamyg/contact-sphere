@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -505,5 +505,42 @@ describe('duplicate dismissals and merges (Phase 5b)', () => {
       'SELECT count(*)::int AS n FROM contact_merges',
     );
     expect(rows[0].n).toBe(0);
+  });
+});
+
+describe('saved searches (Phase 7b)', () => {
+  const insert = (
+    owner: string,
+    name: string,
+    query: string,
+    tag: string | null,
+  ) =>
+    app.query(
+      `INSERT INTO saved_searches (id, owner_id, name, query, tag)
+       VALUES (gen_random_uuid(), $1, $2::varchar, $3::varchar, $4::varchar)`,
+      [owner, name, query, tag],
+    );
+
+  it('always search for something, with a tidy name and a lower-case tag', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    await insert(u, 'Plumbers', '', 'plumber');
+    expect(await sqlState(insert(u, 'Empty', '', null))).toBe(CHECK_VIOLATION);
+    expect(await sqlState(insert(u, ' Padded', 'x', null))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insert(u, 'Upper', '', 'Plumber'))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(insert(u, 'Plumbers', 'x', null))).toBe('23505');
+  });
+
+  it('are deleted with their account', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    await insert(u, 'Plumbers', '', 'plumber');
+    await app.query('DELETE FROM users WHERE id = $1', [u]);
+    const { rows } = await app.query(
+      'SELECT count(*)::int AS n FROM saved_searches',
+    );
+    expect(rows[0]).toEqual({ n: 0 });
   });
 });

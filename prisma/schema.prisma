@@ -48,6 +48,7 @@ model User {
   recoveryCodes RecoveryCode[]
   mfaChallenges MfaChallenge[]
   contacts      Contact[]
+  savedSearches SavedSearch[]
 
   @@map("users")
 }
@@ -267,4 +268,23 @@ model ContactMerge {
   @@index([ownerId, survivorId])
   @@index([ownerId, mergedId])
   @@map("contact_merges")
+}
+
+/// A search the owner keeps for one tap: words, a tag, or both
+/// ("plumber" in "Kasarani"). At least one of them is set (CHECK).
+model SavedSearch {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  /// What the chip says. Unique per owner.
+  name      String   @db.VarChar(60)
+  /// The search words, as typed ("" for none).
+  query     String   @default("") @db.VarChar(100)
+  /// One tag, lower-case, or null.
+  tag       String?  @db.VarChar(40)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, name])
+  @@map("saved_searches")
 }

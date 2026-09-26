@@ -330,3 +330,19 @@ over one API-maintained folded column, backfilled in the migration for
 existing contacts. Tests: unit (tag normalising, folding, words), e2e
 (search table, tag filter, tag counts without trash, limits, owner
 isolation), database CHECKs; browser flow 17/17 at phone size and 360 px.
+
+**Phase 7a deployed (PR #24, `c4776c0`).** Migration `know_who` applied to
+staging and production before merging (additive; no drift on either), then
+both APIs deployed together with the web. Backfill re-run for rows written
+by the old API in between: 0. Staging **16/16** live (tidied tags, nine
+searches incl. accents and numbers, tag filter, counts, limits, 401, folded
+search text, 6 CHECKs). Production read-only **7/7**: readiness, 403/401
+refusals, signed-out redirect, all 464 contacts have search text, CHECKs.
+
+## 2026-09-26 — Phase 7b: skills everywhere, saved searches
+
+Rename/delete a tag across contacts; saved searches (migration
+`saved_searches`); .vcf CATEGORIES import (system groups skipped) and
+export. Tests: unit (CATEGORIES parsing, round trip), e2e (rename merges,
+delete keeps contacts, saved searches follow, 50 limit, owner isolation,
+import/export groups), database CHECKs; browser flow 14/14.

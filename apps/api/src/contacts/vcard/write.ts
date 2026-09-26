@@ -11,6 +11,8 @@ export interface ExportContact {
   jobTitle: string | null;
   notes: string | null;
   birthday: string | null;
+  /** Written as CATEGORIES, which phones import as groups or labels. */
+  tags?: string[];
   phones: { raw: string; e164: string | null; label: string | null }[];
   emails: { address: string; label: string | null }[];
 }
@@ -61,6 +63,7 @@ export function writeVcard(c: ExportContact): string {
   );
   if (c.birthday) lines.push(`BDAY:${c.birthday}`);
   if (c.notes) lines.push(`NOTE:${escape(c.notes)}`);
+  if (c.tags?.length) lines.push(`CATEGORIES:${c.tags.map(escape).join(',')}`);
   lines.push('END:VCARD');
   return lines.map(fold).join('\r\n') + '\r\n';
 }

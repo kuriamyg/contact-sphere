@@ -1057,3 +1057,139 @@ describe('duplicates and safe merge (Phase 5b)', () => {
     expect(JSON.stringify(rows)).not.toMatch(/Secretname|Othername|0712/);
   });
 });
+
+describe('tags everywhere and saved searches (Phase 7b)', () => {
+  const tagsOf = async (q: string) =>
+    (
+      (await list(`?q=${encodeURIComponent(q)}`)).body.items as {
+        tags: string[];
+      }[]
+    ).map((c) => c.tags);
+
+  beforeEach(async () => {
+    await create({ displayName: 'Otieno', tags: ['fundi', 'church'] });
+    await create({ displayName: 'Kamau', tags: ['plumber', 'fundi'] });
+    await create({ displayName: 'Achieng', tags: ['boda boda'] });
+  });
+
+  it('renames a tag on every contact, merging with one it already has', async () => {
+    const before = (await list('?q=kamau')).body.items[0] as { id: string };
+    const edited = (await api('get', `/contacts/${before.id}`).expect(200)).body
+      .updatedAt as string;
+    const { body } = await api('post', '/contacts/tags/rename')
+      .send({ from: 'Fundi', to: ' Plumber ' })
+      .expect(200);
+    expect(body).toEqual({ updated: 2 });
+    expect(await tagsOf('otieno')).toEqual([['plumber', 'church']]);
+    expect(await tagsOf('kamau')).toEqual([['plumber']]);
+    expect(names(await list('?q=fundi'))).toEqual([]);
+    expect(names(await list('?q=plumber')).sort()).toEqual(['Kamau', 'Otieno']);
+    // Renaming a tag is not editing the person.
+    expect(
+      (await api('get', `/contacts/${before.id}`).expect(200)).body.updatedAt,
+    ).toBe(edited);
+  });
+
+  it('deletes a tag everywhere, keeping the contacts', async () => {
+    await api('post', '/contacts/tags/delete')
+      .send({ tag: 'fundi' })
+      .expect(200);
+    expect((await list()).body.total).toBe(3);
+    expect((await api('get', '/contacts/tags').expect(200)).body).toEqual([
+      { tag: 'boda boda', count: 1 },
+      { tag: 'church', count: 1 },
+      { tag: 'plumber', count: 1 },
+    ]);
+  });
+
+  it('refuses unknown or identical tags, and another owner’s', async () => {
+    await api('post', '/contacts/tags/rename')
+      .send({ from: 'nope', to: 'x' })
+      .expect(404);
+    await api('post', '/contacts/tags/rename')
+      .send({ from: 'fundi', to: 'FUNDI' })
+      .expect(400);
+    const other = await secondUser();
+    await api('post', '/contacts/tags/delete', other)
+      .send({ tag: 'fundi' })
+      .expect(404);
+    expect(names(await list('?tag=fundi')).length).toBe(2);
+  });
+
+  it('saves, lists and deletes searches; follows tag renames and deletes', async () => {
+    const a = await api('post', '/contacts/searches')
+      .send({ name: ' Fundis  near me ', query: 'kasarani', tag: 'Fundi' })
+      .expect(201);
+    expect(a.body).toMatchObject({
+      name: 'Fundis near me',
+      query: 'kasarani',
+      tag: 'fundi',
+    });
+    await api('post', '/contacts/searches')
+      .send({ name: 'Only fundis', tag: 'fundi' })
+      .expect(201);
+    await api('post', '/contacts/searches')
+      .send({ name: 'Fundis near me', query: 'x' })
+      .expect(409);
+    await api('post', '/contacts/searches')
+      .send({ name: 'Nothing', query: '  ' })
+      .expect(400);
+
+    await api('post', '/contacts/tags/rename')
+      .send({ from: 'fundi', to: 'mason' })
+      .expect(200);
+    let saved = (await api('get', '/contacts/searches').expect(200)).body as {
+      name: string;
+      tag: string | null;
+    }[];
+    expect(saved.map((s) => [s.name, s.tag])).toEqual([
+      ['Fundis near me', 'mason'],
+      ['Only fundis', 'mason'],
+    ]);
+    // A search that was only the deleted tag goes; one with words stays.
+    await api('post', '/contacts/tags/delete')
+      .send({ tag: 'mason' })
+      .expect(200);
+    saved = (await api('get', '/contacts/searches').expect(200)).body;
+    expect(saved.map((s) => [s.name, s.tag])).toEqual([
+      ['Fundis near me', null],
+    ]);
+
+    const other = await secondUser();
+    await api('delete', `/contacts/searches/${a.body.id}`, other).expect(404);
+    expect(
+      (await api('get', '/contacts/searches', other).expect(200)).body,
+    ).toEqual([]);
+    await api('delete', `/contacts/searches/${a.body.id}`).expect(204);
+    expect((await api('get', '/contacts/searches').expect(200)).body).toEqual(
+      [],
+    );
+  });
+
+  it('keeps at most 50 saved searches', async () => {
+    for (let i = 0; i < 50; i++) {
+      await api('post', '/contacts/searches')
+        .send({ name: `s${i}`, query: `q${i}` })
+        .expect(201);
+    }
+    await api('post', '/contacts/searches')
+      .send({ name: 's50', query: 'q' })
+      .expect(409);
+  });
+
+  it('imports phone groups as tags, without system groups, and exports them', async () => {
+    const vcf = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'FN:Wanjiru',
+      'TEL:0799 000 111',
+      'CATEGORIES:myContacts,Chama,Church',
+      'END:VCARD',
+    ].join('\r\n');
+    await api('post', '/contacts/import').send({ vcf }).expect(201);
+    expect(await tagsOf('wanjiru')).toEqual([['chama', 'church']]);
+    expect(names(await list('?q=chama'))).toEqual(['Wanjiru']);
+    const out = await api('get', '/contacts/export').expect(200);
+    expect(out.text).toContain('CATEGORIES:chama,church');
+  });
+});

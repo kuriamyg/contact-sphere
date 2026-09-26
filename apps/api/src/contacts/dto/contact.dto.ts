@@ -243,3 +243,39 @@ export class MergeDto extends ContactPairDto {
   @Type(() => MergeChoicesDto)
   choices?: MergeChoicesDto;
 }
+
+export class RenameTagDto {
+  @IsString()
+  @Length(1, MAX_TAG_LENGTH)
+  from!: string;
+
+  @Transform(trimmed)
+  @IsString()
+  @Length(1, MAX_TAG_LENGTH)
+  to!: string;
+}
+
+export class TagDto {
+  @IsString()
+  @Length(1, MAX_TAG_LENGTH)
+  tag!: string;
+}
+
+export class SavedSearchDto {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
+  @IsString()
+  @Length(1, 60)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  query?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(MAX_TAG_LENGTH)
+  tag?: string;
+}

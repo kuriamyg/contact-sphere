@@ -28,6 +28,16 @@ const NOTICES: Record<string, { success?: string; error?: string }> = {
     error:
       'That merge can no longer be undone (the other contact was restored or deleted).',
   },
+  tag_renamed: { success: 'Renamed on every contact that had it.' },
+  tag_deleted: {
+    success: 'Removed from every contact. The contacts are still here.',
+  },
+  search_saved: { success: 'Search saved. Tap it any time above your list.' },
+  search_deleted: { success: 'Saved search deleted.' },
+  search_exists: { error: 'You already have a saved search with that name.' },
+  search_full: {
+    error: 'You can keep up to 50 saved searches. Delete one first.',
+  },
   failed: { error: 'That did not work. Nothing was changed — try again.' },
 };
 
