@@ -37,6 +37,7 @@ import {
 import {
   ContactInputDto,
   ContactPairDto,
+  CreateContactDto,
   ImportVcfDto,
   ListContactsQueryDto,
   MergeDto,
@@ -224,9 +225,10 @@ export class ContactsController {
   @Post()
   create(
     @CurrentAuth() a: AuthContext,
-    @Body() dto: ContactInputDto,
+    @Body() dto: CreateContactDto,
   ): Promise<ContactDetail> {
-    return this.contacts.create(a.userId, dto);
+    const { id, ...input } = dto;
+    return this.contacts.create(a.userId, input, id);
   }
 
   /** Deletes every contact in the trash, for good. */

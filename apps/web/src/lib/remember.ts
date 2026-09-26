@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { api } from './api';
-import { ServiceUnavailableError } from './auth';
+import { failedLoad } from './auth';
 
 /** Shapes returned by the API's /remember routes (apps/api remember). */
 type Phone = { raw: string; e164: string | null } | null;
@@ -65,7 +65,7 @@ export const cadenceLabel = (days: number) =>
 export async function getToday(): Promise<TodayView> {
   const res = await api<TodayView>('/remember/today');
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }

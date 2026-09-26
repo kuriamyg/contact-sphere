@@ -154,3 +154,84 @@ describe('offline copy (Phase 10b)', () => {
       .expect(401);
   });
 });
+
+describe('changes made offline, sent later (Phase 10b+)', () => {
+  const uuid = () => crypto.randomUUID();
+
+  it('creating a contact with a device-made id twice makes one contact', async () => {
+    const id = uuid();
+    const body = {
+      id,
+      displayName: 'Offline Ann',
+      phones: [{ raw: '0712 345 678' }],
+    };
+    const a = await api('post', '/contacts').send(body).expect(201);
+    const b = await api('post', '/contacts').send(body).expect(201);
+    expect(a.body.id).toBe(id);
+    expect(b.body.id).toBe(id);
+    expect(
+      (await api('get', '/contacts?q=offline').expect(200)).body.total,
+    ).toBe(1);
+    const audit = await owner.query(
+      `SELECT count(*)::int AS n FROM audit_logs WHERE action = 'contact.created' AND entity_id = $1`,
+      [id],
+    );
+    expect(audit.rows[0].n).toBe(1);
+  });
+
+  it('never lets one owner reuse another owner’s id, and edits ignore ids', async () => {
+    const id = uuid();
+    await api('post', '/contacts')
+      .send({ id, displayName: 'Mine' })
+      .expect(201);
+    const other = await secondUser();
+    await api('post', '/contacts', other)
+      .send({ id, displayName: 'Theirs' })
+      .expect(409);
+    await api('put', `/contacts/${id}`)
+      .send({ id: uuid(), displayName: 'Mine' })
+      .expect(400);
+  });
+
+  it('follow-ups with a device-made id are made once', async () => {
+    const c = (await create({ displayName: 'Ann' })).body.id as string;
+    const id = uuid();
+    const body = { id, dueOn: '2026-10-01', note: 'Call back' };
+    await api('post', `/remember/contacts/${c}/follow-ups`)
+      .send(body)
+      .expect(201);
+    await api('post', `/remember/contacts/${c}/follow-ups`)
+      .send(body)
+      .expect(201);
+    const r = (await api('get', `/remember/contacts/${c}`).expect(200))
+      .body as {
+      followUps: { id: string }[];
+    };
+    expect(r.followUps.map((f) => f.id)).toEqual([id]);
+  });
+
+  it('"in touch" recorded offline keeps when it happened; the latest wins', async () => {
+    const c = (await create({ displayName: 'Ann' })).body.id as string;
+    await owner.query(
+      `UPDATE contacts SET created_at = now() - interval '20 days' WHERE id = $1`,
+      [c],
+    );
+    const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString();
+    const tenDaysAgo = new Date(Date.now() - 10 * 86_400_000).toISOString();
+    const at = async (when?: string) =>
+      api('post', `/remember/contacts/${c}/contacted`).send(
+        when ? { at: when } : {},
+      );
+    await at(threeDaysAgo);
+    await at(tenDaysAgo);
+    const r = (await api('get', `/remember/contacts/${c}`).expect(200))
+      .body as {
+      lastContactedAt: string;
+    };
+    expect(r.lastContactedAt).toBe(threeDaysAgo);
+    expect(
+      (await at(new Date(Date.now() - 40 * 86_400_000).toISOString())).status,
+    ).toBe(400);
+    expect((await at('yesterday')).status).toBe(400);
+  });
+});

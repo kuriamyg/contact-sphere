@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { type AuthContext, CurrentAuth } from '../auth/decorators';
-import { FollowUpDto, KeepInTouchDto } from './remember.dto';
+import { ContactedDto, FollowUpDto, KeepInTouchDto } from './remember.dto';
 import {
   type ContactReminders,
   RememberService,
@@ -54,8 +54,9 @@ export class RememberController {
   contacted(
     @CurrentAuth() a: AuthContext,
     @Param('id', Id()) id: string,
+    @Body() dto: ContactedDto,
   ): Promise<void> {
-    return this.remember.contacted(a.userId, id);
+    return this.remember.contacted(a.userId, id, dto.at);
   }
 
   @Post('contacts/:id/follow-ups')
@@ -64,7 +65,7 @@ export class RememberController {
     @Param('id', Id()) id: string,
     @Body() dto: FollowUpDto,
   ): Promise<{ id: string }> {
-    return this.remember.addFollowUp(a.userId, id, dto.dueOn, dto.note);
+    return this.remember.addFollowUp(a.userId, id, dto.dueOn, dto.note, dto.id);
   }
 
   @Post('follow-ups/:id/done')

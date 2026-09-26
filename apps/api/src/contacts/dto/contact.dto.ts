@@ -152,6 +152,16 @@ export class ContactInputDto {
   emails?: EmailInputDto[];
 }
 
+/**
+ * Creating a contact may carry an id made on the owner's device (for
+ * changes made offline), so sending it twice cannot create two contacts.
+ */
+export class CreateContactDto extends ContactInputDto {
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+}
+
 export const SORTS = ['name', 'created', 'lastUsed'] as const;
 export const ORDERS = ['asc', 'desc'] as const;
 export const VIEWS = ['active', 'archived', 'trash'] as const;

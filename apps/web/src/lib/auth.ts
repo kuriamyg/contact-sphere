@@ -23,6 +23,16 @@ export class ServiceUnavailableError extends Error {
 }
 
 /**
+ * A page's data could not be loaded. "Not signed in" (401: the session
+ * expired or was signed out elsewhere) goes to sign-in; anything else shows
+ * the "can't reach Contact Sphere" page.
+ */
+export function failedLoad(status: number): never {
+  if (status === 401) redirect('/login');
+  throw new ServiceUnavailableError(status);
+}
+
+/**
  * The signed-in user, or null. Always asks the API — the cookie alone proves
  * nothing. Only a 401 means "signed out": any other failure is the service
  * being unavailable, and treating that as signed out would send a signed-in

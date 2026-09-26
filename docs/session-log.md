@@ -405,3 +405,18 @@ gzip for 465 contacts; ETag makes unchanged checks 304). Tests: e2e
 401); browser flows offline 22/22 (real network cut: Today, search by
 name/skill/number, contact, call/SMS links, group SMS, deep link, hostile
 name inert, sign-out wipes, no CSP violations) and install 16/16.
+
+**Phase 10b deployed (PR #29, `0bdbecd`).** No database change. Staging
+live and production read-only **17/17**.
+
+## 2026-09-26 — Phase 10b+: changes with no data
+
+Offline new contact, in touch, follow-up add/done; queue sent on
+reconnect. API: optional device ids on contact and follow-up create
+(idempotent; foreign id 409; race handled), "in touch" with `at` (30-day
+window, latest wins). Found and fixed a real bug on the way: an expired
+session on a contact/group page showed "Can't reach" instead of sign-in.
+Tests: unit (op parsing and mapping), e2e (+4), browser flow 18/18
+(offline edits, reconnect sends 4 once, replay no duplicate, other
+account 409, other site 403, expired session → sign-in); earlier flows
+re-run green.

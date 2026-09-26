@@ -5,6 +5,22 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Make changes with no data bundle (Phase 10b+)
+
+- With the offline copy switched on, you can now, with no data: add a new
+  contact (name, number, note — and call them straight away), tap "I was
+  in touch today", add a follow-up, and mark follow-ups done.
+- Each change is kept on the phone ("waiting to send") and sent by itself
+  when you have data again. Sending twice never makes duplicates.
+- Editing a contact's existing details (name, numbers, skills) still needs
+  data, so two phones can never silently overwrite each other.
+
+### Fixed
+
+- If your session had ended (e.g. "sign out everywhere" on another phone),
+  opening a contact or group showed "Can't reach Contact Sphere"; it now
+  takes you to sign in.
+
 ### Added — Use it with no data bundle (Phase 10b)
 
 - Profile → "Use it without data" → **Keep a copy on this phone**. With

@@ -149,7 +149,11 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       (304 when unchanged); IndexedDB; offline app in plain files with a
       strict CSP (textContent only); wiped on sign-out, 401 and sign-in
       page. Read-only offline
-- [ ] 10b+: add/edit offline with a queue and conflict handling
+- [x] 10b+: offline changes — new contact, in touch, follow-up add/done —
+      queued on the phone with device-made ids (idempotent on the API),
+      sent in order on reconnect via same-origin /offline-sync; bound to
+      the account that made them; sign-out warns about unsent changes
+- [ ] Editing existing contact details offline (needs conflict handling)
 - [ ] 10c: Android app with consented two-way sync with the phone's
       address book (native; separate project)
 

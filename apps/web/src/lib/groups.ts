@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { api } from './api';
-import { ServiceUnavailableError } from './auth';
+import { failedLoad } from './auth';
 import { UUID } from './contacts';
 
 /** Shapes returned by the API's /groups routes (apps/api groups.service). */
@@ -61,7 +61,7 @@ export interface ContactGroup {
 export async function listGroups(): Promise<GroupSummary[]> {
   const res = await api<GroupSummary[]>('/groups');
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }
@@ -72,7 +72,7 @@ export async function getGroup(id: string): Promise<GroupDetail | null> {
   const res = await api<GroupDetail>(`/groups/${id}`);
   if (res.status === 404 || res.status === 400) return null;
   if (res.status !== 200 || !res.data) {
-    throw new ServiceUnavailableError(res.status);
+    failedLoad(res.status);
   }
   return res.data;
 }
