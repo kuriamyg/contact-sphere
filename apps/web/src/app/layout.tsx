@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { connection } from 'next/server';
 import './globals.css';
 
+import { RegisterServiceWorker } from '@/components/pwa/register-sw';
+
 // next/font downloads these at build time and serves them from our own
 // origin, so visitors' browsers never contact Google.
 const geistSans = Geist({
@@ -29,6 +31,16 @@ export const metadata: Metadata = {
   description: 'A private, privacy-first contact manager.',
   // A private application: keep every page out of search engines.
   robots: { index: false, follow: false },
+  applicationName: 'Contact Sphere',
+  appleWebApp: {
+    capable: true,
+    title: 'Contacts',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -57,6 +69,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           Skip to content
         </a>
         {children}
+        <RegisterServiceWorker />
       </body>
     </html>
   );

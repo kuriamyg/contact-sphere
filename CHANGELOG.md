@@ -5,6 +5,14 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Install it like an app (Phase 10a)
+
+- Add Contact Sphere to your home screen: it gets its own icon, opens
+  full screen straight into Today, and has shortcuts (Today, New contact,
+  Groups). Profile → "Use it like an app" shows how on your phone.
+- With no connection, you see a clear "You're offline" page instead of a
+  browser error. Nothing about your contacts is stored on the phone.
+
 ### Added — Today: remember people (Phase 9)
 
 - **Today** (first in the header): follow-ups that are due, people you
