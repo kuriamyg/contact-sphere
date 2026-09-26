@@ -24,7 +24,9 @@ export type AuditAction =
   | 'contact.restored'
   | 'contact.deleted'
   | 'contact.trash_emptied'
-  | 'contact.trash_purged';
+  | 'contact.trash_purged'
+  | 'contact.imported'
+  | 'contact.exported';
 
 export interface AuditEntry {
   actorUserId?: string | null;

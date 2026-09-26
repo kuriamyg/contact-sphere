@@ -168,3 +168,12 @@ export class ListContactsQueryDto {
   @Max(100)
   pageSize?: number;
 }
+
+/** Largest .vcf text accepted (photos are removed before upload). */
+export const MAX_VCF_CHARS = 4_000_000;
+
+export class ImportVcfDto {
+  @IsString()
+  @Length(1, MAX_VCF_CHARS)
+  vcf!: string;
+}

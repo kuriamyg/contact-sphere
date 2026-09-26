@@ -283,3 +283,9 @@ deployed, read-only checks: readiness ok, contacts refuse no-BFF (403),
 no/forged session (401); in the database, 12 CHECK constraints, both
 composite owner FKs, app role may manage contacts and still may not
 UPDATE the audit log.
+
+**Phase 4b (PR #20, `4685a51`).** Web on Vercel (READY); API to staging
+(5/5: non-v7 id → 404, malformed → 400, 150 requests/min served, sign-in
+still 429 after 5) then production (readiness, 403/401 refusals, 130/130
+ordinary requests served, setup still closed). Signed-out production pages
+all redirect to sign-in.

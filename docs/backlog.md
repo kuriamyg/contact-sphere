@@ -93,6 +93,17 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Browser flow (41 checks, phone size) and 360 px layout checks
 - [ ] Account deletion (ADR 0005 §4) — with Settings, later
 
+## Phase 5 — VCF and duplicates
+
+- [x] 5a: .vcf import (vCard 2.1/3.0/4.0; quoted-printable, folded lines,
+      Apple labels, tel: URIs), preview before saving, exact repeats
+      skipped (idempotent), photos stripped in the browser, up to 5,000
+      contacts per file; .vcf export (vCard 3.0) of everything not in the
+      trash; audit with counts only
+- [ ] 5b: duplicate candidates with reasons, review screen, safe merge
+      (choose survivor, keep all numbers/emails, transaction, audit,
+      merged-away record to the trash for 30 days)
+
 ## Later phases
 
 See `PROJECT_CONTEXT.md` §12. Open evaluation: graph library for Phase 7

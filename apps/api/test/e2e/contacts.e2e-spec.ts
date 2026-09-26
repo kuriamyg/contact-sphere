@@ -475,3 +475,163 @@ describe('audit', () => {
     }
   });
 });
+
+describe('.vcf import and export (Phase 5)', () => {
+  const card = (fn: string, tel?: string, email?: string) =>
+    [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN:${fn}`,
+      tel ? `TEL;TYPE=CELL:${tel}` : '',
+      email ? `EMAIL:${email}` : '',
+      'END:VCARD',
+    ]
+      .filter(Boolean)
+      .join('\r\n');
+
+  const file = (...cards: string[]) => cards.join('\r\n') + '\r\n';
+
+  it('previews without saving, then imports, skipping exact repeats', async () => {
+    await create({
+      displayName: 'Ann Wanjiru',
+      phones: [{ raw: '+254712345678' }],
+    });
+    const vcf = file(
+      card('Ann Wanjiru', '0712 345 678'), // already saved (same number, other format)
+      card('Bob', '0733 111 222'),
+      card('Bob', '0733111222'), // repeated in the file
+      card('Bob', '0733 111 222', 'bob@example.com'), // has something new: imported
+      card('Carol', undefined, 'Carol@Example.com'),
+      'BEGIN:VCARD\r\nVERSION:3.0\r\nNOTE:nothing to identify\r\nEND:VCARD',
+    );
+    const preview = await api('post', '/contacts/import/preview')
+      .send({ vcf })
+      .expect(200);
+    expect(preview.body).toMatchObject({
+      cards: 6,
+      toImport: 3,
+      alreadySaved: 1,
+      repeatedInFile: 1,
+      empty: 1,
+    });
+    const previewed = preview.body.preview as { displayName: string }[];
+    expect(previewed.map((p) => p.displayName)).toEqual([
+      'Bob',
+      'Bob',
+      'Carol',
+    ]);
+    expect((await list()).body.total).toBe(1); // preview changed nothing
+
+    const done = await api('post', '/contacts/import')
+      .send({ vcf })
+      .expect(201);
+    expect(done.body.toImport).toBe(3);
+    expect(names(await list())).toEqual(['Ann Wanjiru', 'Bob', 'Bob', 'Carol']);
+    const bob = (await list('?q=bob%40')).body.items[0];
+    expect(bob.primaryPhone).toMatchObject({
+      raw: '0733 111 222',
+      e164: '+254733111222',
+    });
+    expect(bob.primaryEmail).toBe('bob@example.com');
+
+    // Importing the same file again adds nothing.
+    const again = await api('post', '/contacts/import')
+      .send({ vcf })
+      .expect(201);
+    expect(again.body).toMatchObject({
+      toImport: 0,
+      alreadySaved: 5,
+      empty: 1,
+    });
+    expect((await list()).body.total).toBe(4);
+  });
+
+  it('imports 468 contacts in one go', async () => {
+    const vcf = file(
+      ...Array.from({ length: 468 }, (_, i) =>
+        card(
+          `Person ${String(i).padStart(3, '0')}`,
+          `07${String(10_000_000 + i)}`,
+        ),
+      ),
+    );
+    const t0 = Date.now();
+    const res = await api('post', '/contacts/import').send({ vcf }).expect(201);
+    expect(res.body.toImport).toBe(468);
+    expect(Date.now() - t0).toBeLessThan(15_000);
+    expect((await list()).body.total).toBe(468);
+    const { rows } = await owner.query(
+      "SELECT count(*)::int AS n FROM contacts WHERE id::text ~ '^[0-9a-f]{8}-[0-9a-f]{4}-7'",
+    );
+    expect(rows[0].n).toBe(468); // UUIDv7 ids, like everything else
+  });
+
+  it('refuses files that are not vCards, and imports only for the signed-in owner', async () => {
+    await api('post', '/contacts/import/preview')
+      .send({ vcf: 'name,phone\nAnn,0712' })
+      .expect(400);
+    await api('post', '/contacts/import').send({}).expect(400);
+    const other = await secondUser();
+    await api('post', '/contacts/import', other)
+      .send({ vcf: file(card('Theirs', '0799 000 000')) })
+      .expect(201);
+    expect((await list()).body.total).toBe(0);
+    expect(names(await list('', other))).toEqual(['Theirs']);
+  });
+
+  it('exports every contact not in the trash as vCard 3.0, which imports back', async () => {
+    await create({
+      givenName: 'Ann',
+      familyName: 'Wanjiru',
+      phones: [{ raw: '0712 345 678', label: 'mobile' }],
+      emails: [{ address: 'ann@example.com' }],
+      notes: 'Line 1\nLine 2; with, punctuation',
+      birthday: '1990-04-12',
+    });
+    const gone = await create({ displayName: 'Trashed' });
+    await api('delete', `/contacts/${gone.body.id as string}`).expect(204);
+
+    const res = await api('get', '/contacts/export').expect(200);
+    expect(res.headers['content-type']).toMatch(/^text\/vcard/);
+    expect(res.headers['cache-control']).toBe('no-store');
+    const text = res.text;
+    expect(text.match(/BEGIN:VCARD/g)).toHaveLength(1);
+    expect(text).toContain('TEL;TYPE=cell;TYPE=pref:+254712345678');
+    expect(text).not.toContain('Trashed');
+
+    // Into a fresh account: everything comes back.
+    const other = await secondUser();
+    await api('post', '/contacts/import', other)
+      .send({ vcf: text })
+      .expect(201);
+    const id = (await list('', other)).body.items[0].id as string;
+    const back = (await api('get', `/contacts/${id}`, other).expect(200)).body;
+    expect(back).toMatchObject({
+      displayName: 'Ann Wanjiru',
+      givenName: 'Ann',
+      familyName: 'Wanjiru',
+      notes: 'Line 1\nLine 2; with, punctuation',
+      birthday: '1990-04-12',
+      phones: [{ e164: '+254712345678', label: 'mobile' }],
+      emails: [{ address: 'ann@example.com' }],
+    });
+  });
+
+  it('audits imports and exports with counts only', async () => {
+    await api('post', '/contacts/import')
+      .send({ vcf: file(card('Secretname', '0712 000 111')) })
+      .expect(201);
+    await api('get', '/contacts/export').expect(200);
+    const { rows } = await owner.query<{ action: string; metadata: object }>(
+      "SELECT action, metadata FROM audit_logs WHERE action IN ('contact.imported','contact.exported') ORDER BY created_at",
+    );
+    expect(rows).toEqual([
+      {
+        action: 'contact.imported',
+        metadata: { imported: 1, alreadySaved: 0, repeatedInFile: 0, empty: 0 },
+      },
+      { action: 'contact.exported', metadata: { count: 1 } },
+    ]);
+    expect(JSON.stringify(rows)).not.toMatch(/Secretname|0712/);
+  });
+});

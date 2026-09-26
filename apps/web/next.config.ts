@@ -27,6 +27,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // A .vcf import is sent to a Server Action as text. Photos are removed
+    // in the browser first, so a few thousand contacts fit well within this
+    // (and within Vercel's 4.5 MB request limit).
+    serverActions: { bodySizeLimit: '4.4mb' },
+  },
   reactStrictMode: true,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
