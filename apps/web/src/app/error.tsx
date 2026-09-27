@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { startTransition, useEffect } from 'react';
 
+import { useMessages } from '@/i18n/client';
+
 /**
  * Shown when a page cannot be built — in practice, when the API cannot be
  * reached (Render's free instance waking up, a network blip). Says plainly
@@ -17,6 +19,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   const router = useRouter();
+  const t = useMessages().error;
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -26,13 +29,8 @@ export default function ErrorPage({
       id="main"
       className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-16"
     >
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Can’t reach Contact Sphere right now
-      </h1>
-      <p className="text-muted">
-        The service may be starting up (up to a minute) or busy. Nothing was
-        changed — try again in a moment.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
+      <p className="text-muted">{t.body}</p>
       <button
         type="button"
         // Refetch the server-rendered page, not just re-render the client.
@@ -44,7 +42,7 @@ export default function ErrorPage({
         }
         className="rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
       >
-        Try again
+        {t.retry}
       </button>
     </main>
   );

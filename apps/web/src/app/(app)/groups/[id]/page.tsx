@@ -13,10 +13,12 @@ import {
   PlusIcon,
   WhatsAppIcon,
 } from '@/components/icons';
+import { fmt, plural } from '@/i18n/format';
+import { getMessages, pageTitle } from '@/i18n/server';
 import { whatsappHref } from '@/lib/format';
-import { getGroup, kindLabel, ROLE_SUGGESTIONS } from '@/lib/groups';
+import { getGroup, kindLabel } from '@/lib/groups';
 
-export const metadata: Metadata = { title: 'Group · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('group');
 
 const button =
   'inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
@@ -31,17 +33,21 @@ export default async function GroupPage({
   const { done } = await searchParams;
   const g = await getGroup(id);
   if (!g) notFound();
+  const m = await getMessages();
+  const t = m.groups.detail;
   const numbers = g.members
-    .map((m) => m.phone?.e164 ?? m.phone?.raw)
+    .map((mem) => mem.phone?.e164 ?? mem.phone?.raw)
     .filter((n): n is string => Boolean(n));
 
   return (
     <div className="max-w-xl space-y-6">
       <Link href="/groups" className="text-sm text-muted hover:underline">
-        ← Groups
+        {t.back}
       </Link>
       <header className="space-y-1">
-        <p className="text-sm font-medium text-accent">{kindLabel(g.kind)}</p>
+        <p className="text-sm font-medium text-accent">
+          {kindLabel(g.kind, m.groups.kinds)}
+        </p>
         <h1 className="text-2xl font-semibold tracking-tight break-words">
           {g.name}
         </h1>
@@ -49,7 +55,7 @@ export default async function GroupPage({
           <p className="text-muted break-words">{g.description}</p>
         )}
         <p className="text-sm text-muted">
-          {g.memberCount} {g.memberCount === 1 ? 'member' : 'members'}
+          {plural(g.memberCount, m.common.members)}
         </p>
       </header>
       <Notice code={done} />
@@ -57,13 +63,13 @@ export default async function GroupPage({
       <div className="flex flex-wrap gap-2">
         <Link href={`/groups/${g.id}/add`} className={button}>
           <PlusIcon className="size-4" />
-          Add members
+          {t.addMembers}
         </Link>
         {numbers.length > 0 && (
           <>
             <Link href={`/groups/${g.id}/text`} className={button}>
               <MessageIcon className="size-4" />
-              Text everyone
+              {t.textEveryone}
             </Link>
             <CopyNumbers numbers={numbers} />
           </>
@@ -71,47 +77,42 @@ export default async function GroupPage({
         {g.memberCount > 0 && (
           <a href={`/groups/${g.id}/export`} download className={button}>
             <DownloadIcon className="size-4" />
-            Export .vcf
+            {t.exportVcf}
           </a>
         )}
         <Link href={`/groups/${g.id}/edit`} className={button}>
-          Edit
+          {t.edit}
         </Link>
       </div>
       {numbers.length > 0 && (
-        <p className="text-sm text-muted">
-          WhatsApp cannot open one chat with many people from a link. Copy the
-          numbers, then paste them when you create a WhatsApp group or broadcast
-          list — or tap WhatsApp next to each member.
-        </p>
+        <p className="text-sm text-muted">{t.whatsappNote}</p>
       )}
 
       {g.members.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
-          <h2 className="text-lg font-semibold">No members yet</h2>
-          <p className="mt-1 text-muted">
-            Add them from your contacts, with their role if they have one.
-          </p>
+          <h2 className="text-lg font-semibold">{t.noMembersTitle}</h2>
+          <p className="mt-1 text-muted">{t.noMembersBody}</p>
         </div>
       ) : (
         <ul className="divide-y divide-border rounded-xl card">
-          {g.members.map((m) => {
-            const dial = m.phone?.e164 ?? m.phone?.raw;
+          {g.members.map((mem) => {
+            const dial = mem.phone?.e164 ?? mem.phone?.raw;
             return (
-              <li key={m.contactId} className="space-y-2 px-3 py-3 sm:px-4">
+              <li key={mem.contactId} className="space-y-2 px-3 py-3 sm:px-4">
                 <div className="flex items-center gap-3">
                   <Link
-                    href={`/contacts/${m.contactId}`}
+                    href={`/contacts/${mem.contactId}`}
                     className="flex min-w-0 flex-1 items-center gap-3 hover:underline"
                   >
-                    <Avatar name={m.displayName} colourKey={m.contactId} />
+                    <Avatar name={mem.displayName} colourKey={mem.contactId} />
                     <span className="min-w-0">
                       <span className="block truncate font-medium">
-                        {m.displayName}
+                        {mem.displayName}
                       </span>
                       <span className="block truncate text-sm text-muted">
-                        {[m.role, m.phone?.raw].filter(Boolean).join(' · ') ||
-                          'No number'}
+                        {[mem.role, mem.phone?.raw]
+                          .filter(Boolean)
+                          .join(' · ') || t.noNumber}
                       </span>
                     </span>
                   </Link>
@@ -119,17 +120,21 @@ export default async function GroupPage({
                     <div className="flex shrink-0 gap-1.5">
                       <a
                         href={`tel:${dial}`}
-                        aria-label={`Call ${m.displayName}`}
+                        aria-label={fmt(m.common.callName, {
+                          name: mem.displayName,
+                        })}
                         className={icon}
                       >
                         <PhoneIcon className="size-4" />
                       </a>
-                      {m.phone?.e164 && (
+                      {mem.phone?.e164 && (
                         <a
-                          href={whatsappHref(m.phone.e164)}
+                          href={whatsappHref(mem.phone.e164)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`WhatsApp ${m.displayName}`}
+                          aria-label={fmt(m.common.whatsappName, {
+                            name: mem.displayName,
+                          })}
                           className={icon}
                         >
                           <WhatsAppIcon className="size-4" />
@@ -140,7 +145,7 @@ export default async function GroupPage({
                 </div>
                 <details>
                   <summary className="cursor-pointer text-sm text-muted">
-                    Role or remove
+                    {t.roleOrRemove}
                   </summary>
                   <div className="mt-2 flex flex-wrap items-end gap-2">
                     <form action={setRole} className="flex gap-2">
@@ -148,25 +153,25 @@ export default async function GroupPage({
                       <input
                         type="hidden"
                         name="contactId"
-                        value={m.contactId}
+                        value={mem.contactId}
                       />
                       <label
                         className="sr-only"
-                        htmlFor={`role-${m.contactId}`}
+                        htmlFor={`role-${mem.contactId}`}
                       >
-                        Role of {m.displayName}
+                        {fmt(t.roleOf, { name: mem.displayName })}
                       </label>
                       <input
-                        id={`role-${m.contactId}`}
+                        id={`role-${mem.contactId}`}
                         name="role"
                         list="roles"
                         maxLength={40}
-                        defaultValue={m.role ?? ''}
-                        placeholder="e.g. treasurer"
+                        defaultValue={mem.role ?? ''}
+                        placeholder={t.rolePlaceholder}
                         className="w-40 rounded-lg border border-border bg-surface px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                       />
                       <button type="submit" className={button}>
-                        Save
+                        {t.save}
                       </button>
                     </form>
                     <form action={removeMember}>
@@ -174,14 +179,17 @@ export default async function GroupPage({
                       <input
                         type="hidden"
                         name="contactId"
-                        value={m.contactId}
+                        value={mem.contactId}
                       />
                       <button
                         type="submit"
-                        aria-label={`Remove ${m.displayName} from ${g.name}`}
+                        aria-label={fmt(t.removeFrom, {
+                          name: mem.displayName,
+                          group: g.name,
+                        })}
                         className={`${button} text-red-700 dark:text-red-300`}
                       >
-                        Remove
+                        {t.remove}
                       </button>
                     </form>
                   </div>
@@ -192,7 +200,7 @@ export default async function GroupPage({
         </ul>
       )}
       <datalist id="roles">
-        {ROLE_SUGGESTIONS.map((r) => (
+        {m.groups.roles.map((r) => (
           <option key={r} value={r} />
         ))}
       </datalist>

@@ -1,16 +1,17 @@
 import Link from 'next/link';
 
-export default function ContactNotFound() {
+import { getMessages } from '@/i18n/server';
+
+export default async function ContactNotFound() {
+  const t = (await getMessages()).missing;
   return (
     <div className="max-w-xl space-y-3">
       <h1 className="text-2xl font-semibold tracking-tight">
-        Contact not found
+        {t.contactTitle}
       </h1>
-      <p className="text-muted">
-        It may have been deleted for good, or the link is wrong.
-      </p>
+      <p className="text-muted">{t.contactBody}</p>
       <Link href="/contacts" className="underline">
-        Back to contacts
+        {t.contactBack}
       </Link>
     </div>
   );

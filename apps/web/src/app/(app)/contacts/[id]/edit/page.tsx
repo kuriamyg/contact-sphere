@@ -5,8 +5,11 @@ import { updateContact } from '@/app/actions/contacts';
 import { ContactForm } from '@/components/contacts/contact-form';
 import { fromContact } from '@/lib/contact-form';
 import { getContact } from '@/lib/contacts';
+import { fmt } from '@/i18n/format';
+import { getMessages, pageTitle } from '@/i18n/server';
 
-export const metadata: Metadata = { title: 'Edit contact · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> =>
+  pageTitle('editContact');
 
 export default async function EditContactPage({
   params,
@@ -16,16 +19,17 @@ export default async function EditContactPage({
   if (!c) notFound();
   // A contact in the trash is read-only until restored.
   if (c.deletedAt) redirect(`/contacts/${id}`);
+  const t = (await getMessages()).contactPages;
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">
-        Edit {c.displayName}
+        {fmt(t.editTitle, { name: c.displayName })}
       </h1>
       <ContactForm
         action={updateContact}
         initial={fromContact(c)}
         contactId={c.id}
-        submitText="Save changes"
+        submitText={t.saveChanges}
         cancelHref={`/contacts/${c.id}`}
       />
     </div>

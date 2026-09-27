@@ -178,7 +178,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Owner action: choose an aggregator, get a sender ID, set SMS_* env
       when paid plans launch
 - [ ] Email digest (Resend/Brevo free tier) — needs a sending domain
-- [ ] 11b: Swahili
+- [x] 11b: Kiswahili — every screen, the offline app, messages and the
+      morning reminder; switch in the avatar menu or Profile (ADR 0014)
 
 ## Phase 6a — Profile and polish
 

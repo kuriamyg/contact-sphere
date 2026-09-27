@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { useMessages } from '@/i18n/client';
+
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -14,6 +16,7 @@ type State = 'unknown' | 'installed' | 'can-install' | 'ios' | 'manual';
  * needs Share → Add to Home Screen, which we explain.
  */
 export function InstallApp() {
+  const t = useMessages().install;
   const [state, setState] = useState<State>('unknown');
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
 
@@ -43,7 +46,7 @@ export function InstallApp() {
   if (state === 'installed') {
     return (
       <p className="text-sm text-muted" role="status">
-        Installed — you are using the app from your home screen.
+        {t.installed}
       </p>
     );
   }
@@ -59,15 +62,11 @@ export function InstallApp() {
         }}
         className="inline-flex items-center gap-2 rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
       >
-        Install on this phone
+        {t.install}
       </button>
     );
   }
   return (
-    <p className="text-sm text-muted">
-      {state === 'ios'
-        ? 'On iPhone: tap Share, then “Add to Home Screen”.'
-        : 'In your browser menu (⋮), choose “Install app” or “Add to Home screen”.'}
-    </p>
+    <p className="text-sm text-muted">{state === 'ios' ? t.ios : t.other}</p>
   );
 }

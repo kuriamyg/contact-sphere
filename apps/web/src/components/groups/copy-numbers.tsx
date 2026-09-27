@@ -2,12 +2,16 @@
 
 import { useState } from 'react';
 
+import { useMessages } from '@/i18n/client';
+import { plural } from '@/i18n/format';
+
 /**
  * Copies every member's number, one per line: paste them into a new
  * WhatsApp group or broadcast list. (WhatsApp has no link that opens a chat
  * with many people.)
  */
 export function CopyNumbers({ numbers }: { numbers: string[] }) {
+  const t = useMessages().copyNumbers;
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   return (
     <button
@@ -24,10 +28,10 @@ export function CopyNumbers({ numbers }: { numbers: string[] }) {
     >
       <span aria-live="polite">
         {state === 'copied'
-          ? `Copied ${numbers.length} ${numbers.length === 1 ? 'number' : 'numbers'}`
+          ? plural(numbers.length, t.copied)
           : state === 'failed'
-            ? 'Could not copy — try again'
-            : 'Copy all numbers'}
+            ? t.failed
+            : t.copy}
       </span>
     </button>
   );

@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 
 import { changePassword, type FormState } from '@/app/actions/auth';
+import { useMessages } from '@/i18n/client';
 
 import { Field, FormMessage, SubmitButton } from './field';
 
@@ -11,34 +12,35 @@ export function ChangePasswordForm() {
     changePassword,
     {},
   );
+  const t = useMessages().password;
   return (
     <form action={formAction} className="space-y-5" noValidate>
       <FormMessage error={state.error} success={state.success} />
       <Field
-        label="Current password"
+        label={t.current}
         name="currentPassword"
         type="password"
         autoComplete="current-password"
         required
       />
       <Field
-        label="New password"
+        label={t.next}
         name="newPassword"
         type="password"
         autoComplete="new-password"
         minLength={12}
-        hint="At least 12 characters."
+        hint={t.nextHint}
         required
       />
       <Field
-        label="Confirm new password"
+        label={t.confirm}
         name="confirmPassword"
         type="password"
         autoComplete="new-password"
         required
       />
-      <SubmitButton pending={pending} pendingText="Changing…">
-        Change password
+      <SubmitButton pending={pending} pendingText={t.changing}>
+        {t.change}
       </SubmitButton>
     </form>
   );

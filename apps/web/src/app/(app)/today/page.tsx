@@ -13,6 +13,9 @@ import {
   QrIcon,
   WhatsAppIcon,
 } from '@/components/icons';
+import type { Messages } from '@/i18n/en';
+import { fmt, plural } from '@/i18n/format';
+import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { requireUser } from '@/lib/auth';
 import { formatDay, whatsappHref } from '@/lib/format';
 import {
@@ -22,7 +25,7 @@ import {
   type TodayView,
 } from '@/lib/remember';
 
-export const metadata: Metadata = { title: 'Today · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('today');
 
 const icon =
   'inline-flex size-10 items-center justify-center rounded-full border border-border bg-surface text-muted hover:bg-surface-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
@@ -35,17 +38,19 @@ function Reach({
   name,
   phone,
   text,
+  c,
 }: {
   name: string;
   phone: Phone;
   text?: string;
+  c: Messages['common'];
 }) {
   if (!phone) return null;
   return (
     <>
       <a
         href={`tel:${phone.e164 ?? phone.raw}`}
-        aria-label={`Call ${name}`}
+        aria-label={fmt(c.callName, { name })}
         className={icon}
       >
         <PhoneIcon className="size-4" />
@@ -55,7 +60,7 @@ function Reach({
           href={whatsappHref(phone.e164, text)}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`WhatsApp ${name}`}
+          aria-label={fmt(c.whatsappName, { name })}
           className={icon}
         >
           <WhatsAppIcon className="size-4" />
@@ -121,15 +126,15 @@ function Section({
 const firstName = (n: string) => n.split(/[\s@]/)[0];
 
 /** Nairobi time (UTC+3, no daylight saving). */
-function greeting(now = new Date()): string {
+function greeting(t: Messages['today'], now = new Date()): string {
   const h = (now.getUTCHours() + 3) % 24;
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return t.morning;
+  if (h < 17) return t.afternoon;
+  return t.evening;
 }
 
 /** The one person to reach first: a birthday today, then the most urgent. */
-function spotlight(t: TodayView) {
+function spotlight(t: TodayView, m: Messages) {
   const b = t.birthdays.find((x) => x.daysAway === 0);
   if (b) {
     return {
@@ -138,10 +143,10 @@ function spotlight(t: TodayView) {
       phone: b.phone,
       line:
         b.turning > 0 && b.turning < 130
-          ? `Birthday today · turns ${b.turning}`
-          : 'Birthday today',
-      text: `Happy birthday, ${firstName(b.displayName)}! 🎉`,
-      message: 'Say happy birthday',
+          ? fmt(m.today.turnsToday, { n: b.turning })
+          : m.today.birthdayToday,
+      text: fmt(m.today.happyBirthday, { name: firstName(b.displayName) }),
+      message: m.today.sayHappy,
     };
   }
   const f = t.followUps.find((x) => x.daysAway <= 0);
@@ -152,7 +157,7 @@ function spotlight(t: TodayView) {
       phone: f.phone,
       line: f.note,
       text: undefined,
-      message: 'Message',
+      message: m.today.message,
     };
   }
   const k = t.keepInTouch[0];
@@ -161,9 +166,11 @@ function spotlight(t: TodayView) {
       id: k.contactId,
       name: k.displayName,
       phone: k.phone,
-      line: `Keep in touch · ${cadenceLabel(k.everyDays)}`,
+      line: fmt(m.today.keepLine, {
+        cadence: cadenceLabel(k.everyDays, m.remember),
+      }),
       text: undefined,
-      message: 'Message',
+      message: m.today.message,
     };
   }
   return null;
@@ -181,50 +188,56 @@ function Stat({ href, n, label }: { href: string; n: number; label: string }) {
   );
 }
 
-function QuickActions() {
+function QuickActions({ t }: { t: Messages['today'] }) {
   const tile =
-    'card flex h-16 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
+    'card flex min-h-16 flex-col px-1.5 py-2 text-center leading-tight items-center justify-center gap-1 rounded-2xl text-xs font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
   return (
     <section aria-labelledby="quick" className="space-y-2">
       <h2
         id="quick"
         className="text-xs font-bold tracking-wider text-muted uppercase"
       >
-        Quick actions
+        {t.quick}
       </h2>
       <div className="grid grid-cols-3 gap-2.5">
         <Link href="/contacts/new" className={tile}>
           <PlusIcon className="size-[18px] text-accent" />
-          New contact
+          {t.newContact}
         </Link>
         <Link href="/groups" className={tile}>
           <MessageIcon className="size-[18px] text-violet" />
-          Text a group
+          {t.textGroup}
         </Link>
         <Link href="/card" className={tile}>
           <QrIcon className="size-[18px] text-sky-500" />
-          My QR card
+          {t.myCard}
         </Link>
       </div>
     </section>
   );
 }
 
-function Checklist({ setup }: { setup: NonNullable<TodayView['setup']> }) {
+function Checklist({
+  setup,
+  t,
+}: {
+  setup: NonNullable<TodayView['setup']>;
+  t: Messages['today'];
+}) {
   const steps = [
     {
       done: setup.contacts > 0,
-      label: 'Bring in your phone contacts',
+      label: t.steps.import,
       href: '/contacts/import',
     },
     {
       done: setup.birthdays > 0,
-      label: 'Add birthdays you care about',
+      label: t.steps.birthdays,
       href: '/contacts',
     },
     {
       done: setup.keepInTouch > 0,
-      label: 'Choose who to keep in touch with',
+      label: t.steps.keepInTouch,
       href: '/contacts',
     },
   ];
@@ -237,12 +250,12 @@ function Checklist({ setup }: { setup: NonNullable<TodayView['setup']> }) {
           id="start"
           className="text-xs font-bold tracking-wider text-muted uppercase"
         >
-          Get started · {count} of {steps.length}
+          {fmt(t.start, { done: count, total: steps.length })}
         </h2>
         <div
           className="h-1.5 w-24 overflow-hidden rounded-full bg-border"
           role="progressbar"
-          aria-label="Setup progress"
+          aria-label={t.setupProgress}
           aria-valuemin={0}
           aria-valuemax={steps.length}
           aria-valuenow={count}
@@ -287,7 +300,13 @@ function Checklist({ setup }: { setup: NonNullable<TodayView['setup']> }) {
 /** Who to reach today: follow-ups, keep-in-touch, birthdays. */
 export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
   const { done: doneCode } = await searchParams;
-  const [t, user] = await Promise.all([getToday(), requireUser()]);
+  const [t, user, m, locale] = await Promise.all([
+    getToday(),
+    requireUser(),
+    getMessages(),
+    getLocale(),
+  ]);
+  const w = m.today;
   const people = new Set([
     ...t.followUps.filter((f) => f.daysAway <= 0).map((f) => f.contactId),
     ...t.keepInTouch.map((k) => k.contactId),
@@ -297,7 +316,7 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
     t.followUps.length === 0 &&
     t.keepInTouch.length === 0 &&
     t.birthdays.length === 0;
-  const first = spotlight(t);
+  const first = spotlight(t, m);
   const name = user.displayName?.trim()
     ? firstName(user.displayName.trim())
     : null;
@@ -306,30 +325,38 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
     <div className="max-w-xl space-y-6">
       <header className="space-y-1">
         <p className="text-xs font-bold tracking-wider text-accent uppercase">
-          {formatDay(t.today)}
+          {formatDay(t.today, locale)}
         </p>
         <h1 className="text-[28px] leading-tight font-semibold">
-          {greeting()}
+          {greeting(w)}
           {name ? `, ${name}` : ''}
         </h1>
         <p className="text-muted">
           {people > 0
-            ? `${people} ${people === 1 ? 'person' : 'people'} to reach today.`
+            ? plural(people, w.toReach)
             : nothing
-              ? 'You’re all caught up.'
-              : 'Nothing due today — here’s what’s coming up.'}
+              ? w.caughtUp
+              : w.comingUp}
         </p>
       </header>
       <Notice code={doneCode} />
 
       {!nothing && (
         <div className="grid grid-cols-3 gap-2.5">
-          <Stat href="#follow-ups" n={t.followUps.length} label="Follow-ups" />
-          <Stat href="#birthdays" n={t.birthdays.length} label="Birthdays" />
+          <Stat
+            href="#follow-ups"
+            n={t.followUps.length}
+            label={w.stats.followUps}
+          />
+          <Stat
+            href="#birthdays"
+            n={t.birthdays.length}
+            label={w.stats.birthdays}
+          />
           <Stat
             href="#keep-in-touch"
             n={t.keepInTouch.length}
-            label="Keep in touch"
+            label={w.stats.keepInTouch}
           />
         </div>
       )}
@@ -357,7 +384,7 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
                 className="btn-primary inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 <PhoneIcon className="size-4" />
-                Call
+                {m.common.call}
               </a>
               {first.phone.e164 && (
                 <a
@@ -412,18 +439,15 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
             <circle cx="108" cy="30" r="5" fill="#34d399" />
             <circle cx="96" cy="60" r="3" fill="#f59e0b" />
           </svg>
-          <h2 className="text-xl font-semibold">You&rsquo;re all caught up</h2>
-          <p className="max-w-xs text-sm text-muted">
-            No follow-ups, birthdays or catch-ups today. Set a few up and this
-            screen plans your day.
-          </p>
+          <h2 className="text-xl font-semibold">{w.emptyTitle}</h2>
+          <p className="max-w-xs text-sm text-muted">{w.emptyBody}</p>
         </div>
       )}
 
-      {nothing && t.setup && <Checklist setup={t.setup} />}
+      {nothing && t.setup && <Checklist setup={t.setup} t={w} />}
 
       {t.followUps.length > 0 && (
-        <Section id="follow-ups" title="Follow up">
+        <Section id="follow-ups" title={w.followUp}>
           {t.followUps.map((f) => (
             <Row
               key={f.id}
@@ -439,19 +463,19 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
                   >
                     {' · '}
                     {f.daysAway < 0
-                      ? `${-f.daysAway} ${f.daysAway === -1 ? 'day' : 'days'} late`
-                      : relativeDay(f.daysAway)}
+                      ? plural(-f.daysAway, w.late)
+                      : relativeDay(f.daysAway, m.remember)}
                   </span>
                 </>
               }
             >
-              <Reach name={f.displayName} phone={f.phone} />
+              <Reach name={f.displayName} phone={f.phone} c={m.common} />
               <form action={followUpDone}>
                 <input type="hidden" name="id" value={f.id} />
                 <input type="hidden" name="back" value="/today" />
                 <button
                   type="submit"
-                  aria-label={`Done: ${f.note}`}
+                  aria-label={fmt(w.doneLabel, { note: f.note })}
                   className={done}
                 >
                   <CheckIcon className="size-[18px]" />
@@ -463,29 +487,25 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
       )}
 
       {t.keepInTouch.length > 0 && (
-        <Section
-          id="keep-in-touch"
-          title="Keep in touch"
-          hint="People you wanted to hear from, most overdue first."
-        >
+        <Section id="keep-in-touch" title={w.keepInTouch} hint={w.keepHint}>
           {t.keepInTouch.map((k) => (
             <Row
               key={k.contactId}
               id={k.contactId}
               name={k.displayName}
-              detail={`${cadenceLabel(k.everyDays)} · ${
+              detail={`${cadenceLabel(k.everyDays, m.remember)} · ${
                 k.overdueDays === 0
-                  ? 'due today'
-                  : `${k.overdueDays} ${k.overdueDays === 1 ? 'day' : 'days'} overdue`
+                  ? w.dueToday
+                  : plural(k.overdueDays, w.overdue)
               }`}
             >
-              <Reach name={k.displayName} phone={k.phone} />
+              <Reach name={k.displayName} phone={k.phone} c={m.common} />
               <form action={markContacted}>
                 <input type="hidden" name="contactId" value={k.contactId} />
                 <input type="hidden" name="back" value="/today" />
                 <button
                   type="submit"
-                  aria-label={`I was in touch with ${k.displayName}`}
+                  aria-label={fmt(w.inTouchWith, { name: k.displayName })}
                   className={done}
                 >
                   <CheckIcon className="size-[18px]" />
@@ -497,7 +517,7 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
       )}
 
       {t.birthdays.length > 0 && (
-        <Section id="birthdays" title="Birthdays">
+        <Section id="birthdays" title={w.birthdays}>
           {t.birthdays.map((b) => (
             <Row
               key={b.contactId}
@@ -506,34 +526,35 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
               detail={
                 <>
                   {b.daysAway === 0 ? (
-                    <strong className="text-accent">Today 🎉</strong>
+                    <strong className="text-accent">{w.todayParty}</strong>
                   ) : (
-                    `${formatDay(b.on)} · ${relativeDay(b.daysAway)}`
+                    `${formatDay(b.on, locale)} · ${relativeDay(b.daysAway, m.remember)}`
                   )}
-                  {b.turning > 0 && b.turning < 130 && ` · turns ${b.turning}`}
+                  {b.turning > 0 &&
+                    b.turning < 130 &&
+                    fmt(w.turns, { n: b.turning })}
                 </>
               }
             >
               <Reach
                 name={b.displayName}
                 phone={b.phone}
-                text={`Happy birthday, ${firstName(b.displayName)}! 🎉`}
+                text={fmt(w.happyBirthday, { name: firstName(b.displayName) })}
+                c={m.common}
               />
             </Row>
           ))}
         </Section>
       )}
 
-      <QuickActions />
+      <QuickActions t={w} />
 
       <Link
         href="/account#reminders-heading"
         className="card flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
       >
-        <span className="flex-1 text-muted">
-          Get a free reminder on this phone each morning.
-        </span>
-        <span className="font-semibold text-accent">Turn on</span>
+        <span className="flex-1 text-muted">{w.reminderPromo}</span>
+        <span className="font-semibold text-accent">{w.turnOn}</span>
         <ChevronRightIcon className="size-4 text-accent" />
       </Link>
     </div>

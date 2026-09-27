@@ -49,6 +49,10 @@ model User {
   /// card. Checked against owner and trash on every read (no FK: a
   /// composite SET NULL cannot be expressed in Prisma). Phase 11.
   cardContactId String?   @map("card_contact_id") @db.Uuid
+  /// The owner's language: "en" or "sw" (CHECK). Drives server-written
+  /// text such as the morning reminder. The web app keeps its own cookie
+  /// for rendering pages.
+  locale        String    @default("en") @db.VarChar(5)
 
   auditLogs     AuditLog[]
   sessions      Session[]

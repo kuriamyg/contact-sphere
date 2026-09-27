@@ -447,3 +447,18 @@ spotlight, quick actions, empty-state checklist from new `setup` counts on
 offline app re-themed. `currentUser()` now cached per request. Browser flow
 26/26 (themes persist across reload, menu closes on Escape/outside, search
 focus, 412 px, desktop header, no CSP violations).
+
+## 2026-09-27 — A1: Kiswahili
+
+Whole app in English or Kiswahili (ADR 0014): typed paired sections, no
+library; cookie `cs-lang` → Accept-Language → English; server-rendered, so
+no flash. Account keeps `users.locale` (migration `locale`, CHECK en|sw) so
+the morning reminder is in the owner's language. API messages stay English
+and are translated by the web server (exact + patterns). Offline app has
+its own table and reads the cookie; service worker cache v4. Language
+switch in the avatar menu and Profile. Tests: web i18n 18 (key and
+placeholder parity, translation ratio, Accept-Language, API messages,
+components), API e2e +5 (locale 204/400/401, DB CHECK, Swahili digest);
+browser flow 36/36 over 17 screens (no English UI words left, dates
+"Jumapili, 27 Sep", API error translated, import wizard, offline app,
+switch back) — it caught a quick-action label overflowing its tile, fixed.

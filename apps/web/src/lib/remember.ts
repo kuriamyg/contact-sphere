@@ -1,5 +1,8 @@
 import 'server-only';
 
+import type { Messages } from '@/i18n/en';
+import { fmt } from '@/i18n/format';
+
 import { api } from './api';
 import { failedLoad } from './auth';
 
@@ -50,19 +53,16 @@ export interface ContactReminders {
   }[];
 }
 
-export const CADENCES = [
-  { days: 7, label: 'Every week' },
-  { days: 14, label: 'Every 2 weeks' },
-  { days: 30, label: 'Every month' },
-  { days: 60, label: 'Every 2 months' },
-  { days: 90, label: 'Every 3 months' },
-  { days: 180, label: 'Every 6 months' },
-  { days: 365, label: 'Every year' },
-] as const;
+/** Keep-in-touch choices, in days (the API accepts exactly these). */
+export const CADENCE_DAYS = [7, 14, 30, 60, 90, 180, 365] as const;
 
-export const cadenceLabel = (days: number) =>
-  CADENCES.find((c) => c.days === days)?.label.toLowerCase() ??
-  `every ${days} days`;
+type RememberText = Messages['remember'];
+
+/** "every month" — the cadence as a phrase, lower-case. */
+export const cadenceLabel = (days: number, t: RememberText) => {
+  const label = (t.cadences as Record<string, string>)[String(days)];
+  return label ? label.toLowerCase() : fmt(t.everyNDays, { n: days });
+};
 
 export async function getToday(): Promise<TodayView> {
   const res = await api<TodayView>('/remember/today');
@@ -80,10 +80,10 @@ export async function remindersFor(
   return res.status === 200 && res.data ? res.data : null;
 }
 
-/** "in 3 days", "today", "2 days late". */
-export function relativeDay(days: number): string {
-  if (days === 0) return 'today';
-  if (days === 1) return 'tomorrow';
-  if (days === -1) return 'yesterday';
-  return days > 0 ? `in ${days} days` : `${-days} days ago`;
+/** "in 3 days", "today", "yesterday". */
+export function relativeDay(days: number, t: RememberText): string {
+  if (days === 0) return t.today;
+  if (days === 1) return t.tomorrow;
+  if (days === -1) return t.yesterday;
+  return days > 0 ? fmt(t.inDays, { n: days }) : fmt(t.daysAgo, { n: -days });
 }

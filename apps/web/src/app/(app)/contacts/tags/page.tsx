@@ -3,11 +3,11 @@ import Link from 'next/link';
 
 import { deleteSearch, deleteTag, renameTag } from '@/app/actions/tags';
 import { Notice } from '@/components/contacts/notice';
+import { fmt, plural } from '@/i18n/format';
+import { getMessages, pageTitle } from '@/i18n/server';
 import { listSavedSearches, listTags } from '@/lib/contacts';
 
-export const metadata: Metadata = {
-  title: 'Skills and saved searches · Contact Sphere',
-};
+export const generateMetadata = (): Promise<Metadata> => pageTitle('tags');
 
 const button =
   'rounded-lg border border-border px-3 py-2 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
@@ -26,66 +26,63 @@ export default async function TagsPage({
   searchParams,
 }: PageProps<'/contacts/tags'>) {
   const { done } = await searchParams;
-  const [tags, searches] = await Promise.all([listTags(), listSavedSearches()]);
+  const [tags, searches, m] = await Promise.all([
+    listTags(),
+    listSavedSearches(),
+    getMessages(),
+  ]);
+  const t = m.contactPages.tags;
   return (
     <div className="max-w-xl space-y-8">
       <Link href="/contacts" className="text-sm text-muted hover:underline">
-        ← Contacts
+        {m.contacts.detail.back}
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Skills and saved searches
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
       <Notice code={done} />
 
       <section aria-labelledby="skills" className="space-y-3">
         <h2 id="skills" className="text-lg font-semibold">
-          Skills and services
+          {t.skills}
         </h2>
         {tags.length === 0 ? (
-          <p className="text-muted">
-            None yet. Add them when you edit a contact, or import a .vcf with
-            groups.
-          </p>
+          <p className="text-muted">{t.noSkills}</p>
         ) : (
           <>
-            <p className="text-sm text-muted">
-              Renaming or removing changes every contact that has it. Renaming
-              to a skill that already exists joins the two.
-            </p>
+            <p className="text-sm text-muted">{t.explain}</p>
             <ul className="divide-y divide-border rounded-xl card">
-              {tags.map((t) => (
-                <li key={t.tag} className="space-y-2 px-4 py-3">
+              {tags.map((tg) => (
+                <li key={tg.tag} className="space-y-2 px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <Link
-                      href={`/contacts?tag=${encodeURIComponent(t.tag)}`}
+                      href={`/contacts?tag=${encodeURIComponent(tg.tag)}`}
                       className="min-w-0 font-medium break-words hover:underline"
                     >
-                      {t.tag}
+                      {tg.tag}
                     </Link>
                     <span className="shrink-0 text-sm text-muted tabular-nums">
-                      {t.count} {t.count === 1 ? 'contact' : 'contacts'}
+                      {plural(tg.count, m.common.contacts)}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <details className="group">
                       <summary className={`${button} cursor-pointer list-none`}>
-                        Rename
+                        {t.rename}
                       </summary>
                       <form action={renameTag} className="mt-2 flex gap-2">
-                        <input type="hidden" name="from" value={t.tag} />
-                        <label className="sr-only" htmlFor={`to-${t.tag}`}>
-                          New name for {t.tag}
+                        <input type="hidden" name="from" value={tg.tag} />
+                        <label className="sr-only" htmlFor={`to-${tg.tag}`}>
+                          {fmt(t.newName, { tag: tg.tag })}
                         </label>
                         <input
-                          id={`to-${t.tag}`}
+                          id={`to-${tg.tag}`}
                           name="to"
                           required
                           maxLength={40}
-                          defaultValue={t.tag}
+                          defaultValue={tg.tag}
                           className={input}
                         />
                         <button type="submit" className={button}>
-                          Save
+                          {t.save}
                         </button>
                       </form>
                     </details>
@@ -93,20 +90,18 @@ export default async function TagsPage({
                       <summary
                         className={`${button} cursor-pointer list-none text-red-700 dark:text-red-300`}
                       >
-                        Remove
+                        {t.remove}
                       </summary>
                       <form action={deleteTag} className="mt-2 space-y-2">
-                        <input type="hidden" name="tag" value={t.tag} />
+                        <input type="hidden" name="tag" value={tg.tag} />
                         <p className="text-sm">
-                          Remove “{t.tag}” from {t.count}{' '}
-                          {t.count === 1 ? 'contact' : 'contacts'}? The contacts
-                          stay.
+                          {plural(tg.count, t.removeConfirm, { tag: tg.tag })}
                         </p>
                         <button
                           type="submit"
                           className="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
                         >
-                          Remove “{t.tag}”
+                          {fmt(t.removeTag, { tag: tg.tag })}
                         </button>
                       </form>
                     </details>
@@ -120,13 +115,10 @@ export default async function TagsPage({
 
       <section aria-labelledby="saved" className="space-y-3">
         <h2 id="saved" className="text-lg font-semibold">
-          Saved searches
+          {t.saved}
         </h2>
         {searches.length === 0 ? (
-          <p className="text-muted">
-            None yet. Search or pick a skill on your contacts, then “Save this
-            search”.
-          </p>
+          <p className="text-muted">{t.noSaved}</p>
         ) : (
           <ul className="divide-y divide-border rounded-xl card">
             {searches.map((s) => (
@@ -142,7 +134,10 @@ export default async function TagsPage({
                     {s.name}
                   </span>
                   <span className="block text-sm break-words text-muted">
-                    {[s.query && `“${s.query}”`, s.tag && `skill: ${s.tag}`]
+                    {[
+                      s.query && `“${s.query}”`,
+                      s.tag && fmt(t.skillIs, { tag: s.tag }),
+                    ]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
@@ -152,9 +147,9 @@ export default async function TagsPage({
                   <button
                     type="submit"
                     className={button}
-                    aria-label={`Delete saved search ${s.name}`}
+                    aria-label={fmt(t.deleteSaved, { name: s.name })}
                   >
-                    Delete
+                    {t.delete}
                   </button>
                 </form>
               </li>

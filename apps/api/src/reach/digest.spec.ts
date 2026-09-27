@@ -39,3 +39,30 @@ describe('digestText', () => {
     );
   });
 });
+
+describe('digestText in Kiswahili', () => {
+  it('says the same counts, in Kiswahili, still naming no one', () => {
+    expect(
+      digestText(
+        {
+          ...base,
+          followUps: [f(0), f(-1)],
+          birthdays: [{ daysAway: 0 } as TodayView['birthdays'][0]],
+          keepInTouch: [
+            {} as TodayView['keepInTouch'][0],
+            {} as TodayView['keepInTouch'][0],
+          ],
+        },
+        'sw',
+      ),
+    ).toBe(
+      'Leo: ufuatiliaji 2, siku 1 ya kuzaliwa na watu 2 wa kuwasiliana nao.',
+    );
+    expect(
+      digestText(
+        { ...base, keepInTouch: [{} as TodayView['keepInTouch'][0]] },
+        'sw',
+      ),
+    ).toBe('Leo: mtu 1 wa kuwasiliana naye.');
+  });
+});

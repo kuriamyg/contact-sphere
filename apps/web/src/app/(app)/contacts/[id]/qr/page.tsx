@@ -4,9 +4,10 @@ import { notFound } from 'next/navigation';
 
 import { QrCard } from '@/components/reach/qr-card';
 import { getContact, UUID } from '@/lib/contacts';
+import { getMessages, pageTitle } from '@/i18n/server';
 import { cardQr } from '@/lib/reach';
 
-export const metadata: Metadata = { title: 'Share as QR · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('shareQr');
 
 /** Hand a contact to someone standing next to you: they scan, it saves. */
 export default async function ContactQrPage({
@@ -16,7 +17,7 @@ export default async function ContactQrPage({
   if (!UUID.test(id)) notFound();
   const c = await getContact(id);
   if (!c || c.deletedAt) notFound();
-  const qr = await cardQr(c);
+  const [qr, m] = await Promise.all([cardQr(c), getMessages()]);
   return (
     <div className="mx-auto max-w-md space-y-6">
       <Link
@@ -25,13 +26,11 @@ export default async function ContactQrPage({
       >
         ← {c.displayName}
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Share as QR</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        {m.card.shareTitle}
+      </h1>
       <QrCard card={c} qr={qr} />
-      <p className="text-sm text-muted">
-        The other person opens their phone camera and points it at the code,
-        then taps to save. It holds only the name, work, numbers and emails —
-        never your notes, tags or birthday.
-      </p>
+      <p className="text-sm text-muted">{m.card.shareHow}</p>
     </div>
   );
 }

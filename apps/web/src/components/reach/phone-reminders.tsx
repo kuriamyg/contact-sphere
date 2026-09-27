@@ -7,6 +7,7 @@ import {
   savePushDevice,
   sendTestPush,
 } from '@/app/actions/reach';
+import { useMessages } from '@/i18n/client';
 
 type State =
   | 'checking'
@@ -38,6 +39,7 @@ const button =
  * no data beyond a tiny message. The notification shows counts only.
  */
 export function PhoneReminders({ publicKey }: { publicKey: string }) {
+  const t = useMessages().reminders;
   const [state, setState] = useState<State>('checking');
   const [note, setNote] = useState('');
 
@@ -87,12 +89,12 @@ export function PhoneReminders({ publicKey }: { publicKey: string }) {
       });
       if (!saved) {
         await sub.unsubscribe();
-        setNote('Could not turn reminders on. Try again.');
+        setNote(t.failed);
         return setState('off');
       }
       setState('on');
     } catch {
-      setNote('This browser could not turn on reminders.');
+      setNote(t.browserFailed);
       setState('off');
     }
   }
@@ -111,34 +113,19 @@ export function PhoneReminders({ publicKey }: { publicKey: string }) {
   async function test() {
     setNote('');
     const sent = await sendTestPush();
-    setNote(
-      sent
-        ? 'Sent. It should appear in a few seconds.'
-        : 'Could not send a test. Turn reminders off and on again.',
-    );
+    setNote(sent ? t.testSent : t.testFailed);
   }
 
   if (state === 'checking') return null;
   return (
     <div className="space-y-2">
       {state === 'unsupported' && (
-        <p className="text-sm text-muted">
-          This browser cannot show reminders. On Android, open Contact Sphere in
-          Chrome and install it.
-        </p>
+        <p className="text-sm text-muted">{t.unsupported}</p>
       )}
       {state === 'ios-install' && (
-        <p className="text-sm text-muted">
-          On iPhone, first add Contact Sphere to your Home Screen (Share → Add
-          to Home Screen), then open it from there to turn reminders on.
-        </p>
+        <p className="text-sm text-muted">{t.iosInstall}</p>
       )}
-      {state === 'blocked' && (
-        <p className="text-sm text-muted">
-          Notifications are blocked for this site. Allow them in your browser’s
-          site settings, then come back.
-        </p>
-      )}
+      {state === 'blocked' && <p className="text-sm text-muted">{t.blocked}</p>}
       {(state === 'off' || state === 'busy') && (
         <button
           type="button"
@@ -146,24 +133,23 @@ export function PhoneReminders({ publicKey }: { publicKey: string }) {
           disabled={state === 'busy'}
           className={button}
         >
-          Turn on morning reminders
+          {t.turnOn}
         </button>
       )}
       {state === 'on' && (
         <div className="flex flex-wrap gap-2">
           <p className="w-full text-sm" role="status">
-            On — each morning, if something is due, this phone gets one
-            notification. It shows counts only, never names.
+            {t.onNow}
           </p>
           <button type="button" onClick={() => void test()} className={button}>
-            Send a test
+            {t.test}
           </button>
           <button
             type="button"
             onClick={() => void turnOff()}
             className={button}
           >
-            Turn off
+            {t.turnOff}
           </button>
         </div>
       )}

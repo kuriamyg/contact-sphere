@@ -203,6 +203,19 @@ describe('morning digest', () => {
     expect(deliver).toHaveBeenCalledTimes(1);
   });
 
+  it('writes the reminder in the owner’s language', async () => {
+    await api('put', '/auth/locale').send({ locale: 'sw' }).expect(204);
+    await api('post', '/reach/push/devices').send(device()).expect(204);
+    const c = await create({ givenName: 'Wanjiru' });
+    await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
+      .send({ dueOn: nairobiToday(), note: 'Harambee' })
+      .expect(201);
+    expect((await run().expect(200)).body).toEqual({ owners: 1, sent: 1 });
+    const [, msg] = deliver.mock.calls[0] as [unknown, { body: string }];
+    expect(msg.body).toBe('Leo: ufuatiliaji 1.');
+    expect(JSON.stringify(msg)).not.toMatch(/Wanjiru|Harambee/);
+  });
+
   it('forgets a phone the push service says is gone', async () => {
     await api('post', '/reach/push/devices').send(device()).expect(204);
     const c = await create({ givenName: 'Otieno' });

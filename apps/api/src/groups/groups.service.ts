@@ -50,6 +50,14 @@ const ROLE_ORDER = [
   'elder',
   'organiser',
   'organizer',
+  // Kiswahili, the same order.
+  'mwenyekiti',
+  'makamu mwenyekiti',
+  'katibu',
+  'mweka hazina',
+  'mchungaji',
+  'mzee',
+  'mratibu',
 ];
 const roleRank = (r: string | null) =>
   r === null ? 1000 : ROLE_ORDER.indexOf(r) >= 0 ? ROLE_ORDER.indexOf(r) : 100;

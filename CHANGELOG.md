@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Kiswahili
+
+- **The whole app in Kiswahili.** Tap your avatar → Language → Kiswahili
+  (or Profile → Language). Every screen, button, message and the offline
+  app switch at once; dates read the Kiswahili way (e.g. "Jumamosi, 3
+  Okt"). A phone set to Kiswahili gets it from the first visit.
+- **Morning reminders follow your language** too ("Leo: ufuatiliaji 1.").
+- Group roles suggest Kiswahili names (mwenyekiti, katibu, mweka hazina…).
+
 ### Changed — New look: Aurora
 
 - A new design across the app: a galaxy-dark theme (near-black with soft

@@ -32,6 +32,7 @@ function bff(ip = `198.51.100.${++ipCounter % 250}`) {
   return {
     get: (url: string) => wrap(agent.get(url)),
     post: (url: string) => wrap(agent.post(url)),
+    put: (url: string) => wrap(agent.put(url)),
   };
 }
 
@@ -113,6 +114,7 @@ describe('first-account setup', () => {
       id: expect.any(String),
       email: EMAIL,
       displayName: null,
+      locale: 'en',
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       totpEnabled: false,
       recoveryCodesLeft: 0,
@@ -336,5 +338,41 @@ describe('changing the password', () => {
     await login(PASSWORD).expect(401);
     await login('a brand new passphrase').expect(200);
     expect(await auditActions()).toContain('auth.password_changed');
+  });
+});
+
+describe('language', () => {
+  let token: string;
+  beforeEach(async () => {
+    token = await setupOwner();
+  });
+
+  const setLocale = (body: object, as = token) =>
+    withSession(bff().put('/auth/locale'), as).send(body);
+
+  it('starts in English and can switch to Kiswahili and back', async () => {
+    const me = () => withSession(bff().get('/auth/me'), token).expect(200);
+    expect((await me()).body.locale).toBe('en');
+    await setLocale({ locale: 'sw' }).expect(204);
+    expect((await me()).body.locale).toBe('sw');
+    await setLocale({ locale: 'en' }).expect(204);
+    expect((await me()).body.locale).toBe('en');
+  });
+
+  it('accepts only the languages the app speaks', async () => {
+    await setLocale({ locale: 'fr' }).expect(400);
+    await setLocale({ locale: 'SW' }).expect(400);
+    await setLocale({}).expect(400);
+    await setLocale({ locale: 'sw', extra: 1 }).expect(400);
+  });
+
+  it('needs a session', async () => {
+    await bff().put('/auth/locale').send({ locale: 'sw' }).expect(401);
+  });
+
+  it('the database refuses an unknown language too', async () => {
+    await expect(owner.query("UPDATE users SET locale = 'xx'")).rejects.toThrow(
+      /users_locale_known/,
+    );
   });
 });

@@ -11,19 +11,27 @@ import {
   syncNow,
   wipe,
 } from '@/lib/offline-store';
+import type { Messages } from '@/i18n/en';
+import { useMessages } from '@/i18n/client';
+import { fmt, plural } from '@/i18n/format';
+
+type T = Messages['client']['offline'];
 
 const kb = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
-function ago(iso: string): string {
+function ago(iso: string, t: T): string {
   const min = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
+  if (min < 1) return t.justNow;
+  if (min < 60) return fmt(t.minAgo, { n: min });
   const h = Math.round(min / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} days ago`;
+  return h < 24
+    ? fmt(t.hoursAgo, { n: h })
+    : fmt(t.daysAgo, { n: Math.round(h / 24) });
 }
 
 /** "Keep a copy on this phone": on/off, with what is stored and when. */
 export function OfflineToggle() {
+  const t = useMessages().offline;
   const [on, setOn] = useState<boolean | null>(null);
   const [info, setInfo] = useState<StoredCopy | null>(null);
   const [busy, setBusy] = useState(false);
@@ -46,7 +54,7 @@ export function OfflineToggle() {
     try {
       localStorage.setItem(FLAG, 'on');
     } catch {
-      setError('This browser does not allow saving data (private mode?).');
+      setError(t.noStorage);
       setBusy(false);
       return;
     }
@@ -57,11 +65,7 @@ export function OfflineToggle() {
     } else {
       wipe();
       setOn(false);
-      setError(
-        r === 'signed-out'
-          ? 'You are signed out. Sign in again, then switch this on.'
-          : 'Could not download the copy. Check your connection and try again.',
-      );
+      setError(r === 'signed-out' ? t.signedOut : t.downloadFailed);
     }
     setBusy(false);
   };
@@ -71,18 +75,13 @@ export function OfflineToggle() {
     setError(null);
     const r = await syncNow();
     if (r === 'saved') setInfo(await readInfo());
-    else setError('Could not refresh now; your last copy is still there.');
+    else setError(t.refreshFailed);
     setWaiting(await pendingCount());
     setBusy(false);
   };
 
   const turnOff = () => {
-    if (
-      waiting > 0 &&
-      !window.confirm(
-        `${waiting} change(s) made without data have not been sent yet. Delete them?`,
-      )
-    ) {
+    if (waiting > 0 && !window.confirm(fmt(t.confirmDelete, { n: waiting }))) {
       return;
     }
     wipe();
@@ -97,20 +96,18 @@ export function OfflineToggle() {
     <div className="space-y-3">
       {on && info ? (
         <p className="text-sm" role="status">
-          <strong>On.</strong> {info.contacts}{' '}
-          {info.contacts === 1 ? 'contact' : 'contacts'} ({kb(info.bytes)})
-          saved on this phone, updated {ago(info.savedAt)}. It refreshes by
-          itself when you have data.
+          <strong>{t.on}</strong>{' '}
+          {plural(info.contacts, t.onDetail, {
+            size: kb(info.bytes),
+            ago: ago(info.savedAt, t),
+          })}
         </p>
       ) : (
-        <p className="text-sm text-muted">
-          Off. Without data you only see a “You’re offline” page.
-        </p>
+        <p className="text-sm text-muted">{t.off}</p>
       )}
       {waiting > 0 && (
         <p className="text-sm font-medium" role="status">
-          {waiting} {waiting === 1 ? 'change' : 'changes'} made without data
-          waiting to be sent.
+          {plural(waiting, t.waiting)}
         </p>
       )}
       {error && (
@@ -127,7 +124,7 @@ export function OfflineToggle() {
               disabled={busy}
               className={button}
             >
-              {busy ? 'Updating…' : 'Update now'}
+              {busy ? t.updating : t.updateNow}
             </button>
             <button
               type="button"
@@ -135,7 +132,7 @@ export function OfflineToggle() {
               disabled={busy}
               className={button}
             >
-              Turn off and delete the copy
+              {t.turnOff}
             </button>
           </>
         ) : (
@@ -145,7 +142,7 @@ export function OfflineToggle() {
             disabled={busy}
             className="rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
           >
-            {busy ? 'Saving…' : 'Keep a copy on this phone'}
+            {busy ? t.saving : t.keepCopy}
           </button>
         )}
       </div>
@@ -158,6 +155,7 @@ export function OfflineToggle() {
  * changes made without data have not been sent yet.
  */
 export function WipeOnSubmit({ children }: { children: React.ReactNode }) {
+  const t = useMessages().offline;
   const [waiting, setWaiting] = useState(0);
   useEffect(() => {
     void pendingCount().then(setWaiting);
@@ -167,9 +165,7 @@ export function WipeOnSubmit({ children }: { children: React.ReactNode }) {
       onSubmitCapture={(e) => {
         if (
           waiting > 0 &&
-          !window.confirm(
-            `${waiting} change(s) made without data have not been sent yet. Sign out and lose them?`,
-          )
+          !window.confirm(fmt(t.confirmSignOut, { n: waiting }))
         ) {
           e.preventDefault();
           return;

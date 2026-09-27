@@ -1,16 +1,15 @@
 import Link from 'next/link';
 
-export default function PairNotFound() {
+import { getMessages } from '@/i18n/server';
+
+export default async function PairNotFound() {
+  const t = (await getMessages()).missing;
   return (
     <div className="max-w-xl space-y-3">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        This pair is no longer available
-      </h1>
-      <p className="text-muted">
-        One of the contacts may have been merged, moved to the trash or deleted.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t.pairTitle}</h1>
+      <p className="text-muted">{t.pairBody}</p>
       <Link href="/contacts/duplicates" className="underline">
-        Back to duplicates
+        {t.pairBack}
       </Link>
     </div>
   );

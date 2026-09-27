@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useMessages } from '@/i18n/client';
+
 const ITEMS = [
-  { href: '/today', label: 'Today', icon: 'today' },
-  { href: '/contacts', label: 'Contacts', icon: 'contacts' },
-  { href: '/groups', label: 'Groups', icon: 'groups' },
-  { href: '/contacts?find=1', label: 'Search', icon: 'search' },
+  { href: '/today', label: 'today', icon: 'today' },
+  { href: '/contacts', label: 'contacts', icon: 'contacts' },
+  { href: '/groups', label: 'groups', icon: 'groups' },
+  { href: '/contacts?find=1', label: 'search', icon: 'search' },
 ] as const;
 
 function Icon({ name }: { name: (typeof ITEMS)[number]['icon'] }) {
@@ -57,13 +59,14 @@ function Icon({ name }: { name: (typeof ITEMS)[number]['icon'] }) {
 /** The phone's main navigation, where the thumb reaches. Hidden from sm up. */
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useMessages().shell;
   const current = (href: string) => {
     if (href.includes('?')) return false;
     return pathname === href || pathname.startsWith(`${href}/`);
   };
   return (
     <nav
-      aria-label="Main"
+      aria-label={t.main}
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid h-16 grid-cols-4 items-center rounded-2xl card bg-[var(--bar)] shadow-[0_12px_40px_rgba(0,0,0,0.25)] backdrop-blur-md sm:hidden"
     >
       {ITEMS.map((i) => {
@@ -78,7 +81,7 @@ export function BottomNav() {
             }`}
           >
             <Icon name={i.icon} />
-            {i.label}
+            {t[i.label]}
           </Link>
         );
       })}

@@ -7,6 +7,8 @@ import {
   type SendResult,
   sendGroupSms,
 } from '@/app/actions/reach';
+import { fmt, plural } from '@/i18n/format';
+import { useMessages } from '@/i18n/client';
 import { batches, BATCH_SIZES, smsHref, smsSize } from '@/lib/sms-size';
 
 const button =
@@ -42,6 +44,8 @@ export function GroupTexter({
   numbers: string[];
   provider: ProviderInfo | null;
 }) {
+  const t = useMessages().texter;
+  const people = (x: number) => plural(x, t.people, { n: n(x) });
   const [message, setMessage] = useState('');
   const [size, setSize] = useState<number>(20);
   const [ios, setIos] = useState(false);
@@ -68,17 +72,24 @@ export function GroupTexter({
     setBusy(false);
     setQuote(
       q
-        ? `${n(q.recipients)} people × ${q.parts} SMS = ${n(q.totalParts)} SMS, about ${kes(q.costCents)}.` +
-            (q.skipped
-              ? ` ${n(q.skipped)} without a Kenyan mobile are left out.`
-              : '') +
-            ` ${n(q.remaining)} SMS left this month.`
-        : 'Could not work out the cost. Try again.',
+        ? [
+            fmt(t.quote, {
+              people: people(q.recipients),
+              parts: q.parts,
+              total: n(q.totalParts),
+              cost: kes(q.costCents),
+            }),
+            q.skipped ? fmt(t.quoteSkipped, { n: n(q.skipped) }) : '',
+            fmt(t.quoteLeft, { n: n(q.remaining) }),
+          ]
+            .filter(Boolean)
+            .join(' ')
+        : t.quoteFailed,
     );
   }
 
   async function send() {
-    if (!window.confirm(`Send this to ${n(numbers.length)} people now?`)) {
+    if (!window.confirm(fmt(t.confirm, { people: people(numbers.length) }))) {
       return;
     }
     setBusy(true);
@@ -90,7 +101,7 @@ export function GroupTexter({
     <div className="space-y-6">
       <div className="space-y-2">
         <label htmlFor="message" className="block font-medium">
-          Message
+          {t.message}
         </label>
         <textarea
           id="message"
@@ -102,48 +113,41 @@ export function GroupTexter({
           }}
           maxLength={900}
           rows={5}
-          placeholder="Habari! Our meeting is on Saturday at 3pm…"
+          placeholder={t.placeholder}
           className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
         />
         <p className="text-sm text-muted" aria-live="polite">
-          {s.length} characters · {parts} SMS each ·{' '}
+          {fmt(t.counter, { chars: s.length, parts })}{' '}
           <strong className="text-foreground">
-            {n(total)} SMS for {n(numbers.length)} people
+            {fmt(t.total, { total: n(total), people: people(numbers.length) })}
           </strong>
         </p>
         {s.encoding === 'unicode' && (
           <p className="text-sm text-amber-700 dark:text-amber-300">
-            An emoji or special character makes each SMS hold 70 characters
-            instead of 160. Remove it to send fewer SMS.
+            {t.unicode}
           </p>
         )}
       </div>
 
       <section aria-labelledby="own-phone" className={box}>
         <h2 id="own-phone" className="text-lg font-semibold">
-          Send from my phone <span className="text-accent">· cheapest</span>
+          {t.fromPhone} <span className="text-accent">{t.cheapest}</span>
         </h2>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
           <li>
-            With a Safaricom SMS bundle (dial *188#, e.g. {n(BUNDLE_SMS)} SMS
-            for KES {BUNDLE_KES} a week):{' '}
+            {fmt(t.bundle, { bundleSms: n(BUNDLE_SMS), bundleKes: BUNDLE_KES })}{' '}
             <strong className="text-foreground">
-              about KES {n(bundleKes)}
+              {fmt(t.about, { kes: n(bundleKes) })}
             </strong>
             .
           </li>
           <li>
-            Without a bundle: about KES {n(total * PAYG_KES)} (about KES{' '}
-            {PAYG_KES} per SMS).
+            {fmt(t.noBundle, { kes: n(total * PAYG_KES), rate: PAYG_KES })}
           </li>
-          <li>
-            Bundles are for personal messages — your chama, church or family —
-            up to {n(BUNDLE_SMS)} SMS a day. For adverts, use a bulk SMS
-            service.
-          </li>
+          <li>{fmt(t.personal, { limit: n(BUNDLE_SMS) })}</li>
         </ul>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label htmlFor="batch">People per tap</label>
+          <label htmlFor="batch">{t.perTap}</label>
           <select
             id="batch"
             value={size}
@@ -173,30 +177,26 @@ export function GroupTexter({
                 >
                   {opened.has(i) ? '✓ ' : ''}
                   {groups.length === 1
-                    ? `Open Messages (${g.length})`
-                    : `Open Messages: ${from}–${to}`}
+                    ? fmt(t.openOne, { n: g.length })
+                    : fmt(t.openRange, { from, to })}
                 </a>
               </li>
             );
           })}
         </ol>
-        <p className="text-sm text-muted">
-          Each tap opens your Messages app with the numbers and the text filled
-          in; press send there. If it offers a “group conversation” or MMS,
-          choose separate texts instead — in Google Messages: Settings →
-          Advanced → Group messaging → “Send an SMS reply to all recipients and
-          get individual replies (mass text)”.
-        </p>
+        <p className="text-sm text-muted">{t.howTo}</p>
       </section>
 
       {provider && (
         <section aria-labelledby="provider" className={box}>
           <h2 id="provider" className="text-lg font-semibold">
-            Send through Contact Sphere
+            {t.viaUs}
           </h2>
           <p className="text-sm text-muted">
-            One tap, from our sender name, at {kes(provider.priceCents)} per
-            SMS. {n(provider.remaining)} SMS left this month.
+            {fmt(t.viaUsDetail, {
+              price: kes(provider.priceCents),
+              left: n(provider.remaining),
+            })}
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -205,7 +205,7 @@ export function GroupTexter({
               onClick={() => void getQuote()}
               className={button}
             >
-              Check the cost
+              {t.checkCost}
             </button>
             <button
               type="button"
@@ -213,7 +213,7 @@ export function GroupTexter({
               onClick={() => void send()}
               className={button}
             >
-              Send to everyone
+              {t.sendAll}
             </button>
           </div>
           {quote && (
