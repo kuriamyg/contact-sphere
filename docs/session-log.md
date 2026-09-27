@@ -462,3 +462,15 @@ components), API e2e +5 (locale 204/400/401, DB CHECK, Swahili digest);
 browser flow 36/36 over 17 screens (no English UI words left, dates
 "Jumapili, 27 Sep", API error translated, import wizard, offline app,
 switch back) — it caught a quick-action label overflowing its tile, fixed.
+
+## 2026-09-27 — A2: import and duplicates in Aurora
+
+Redesigned the import wizard (step progress, drop a file, count tiles,
+skipped/warning cards, done screen with next steps), the duplicates list
+(pair cards, likely/possible tiles) and the merge review (stays / merged
+in, swap, choice tiles naming their source, "after the merge" summary),
+in both languages. No API change. Accessible names kept, so the old
+browser flows still guard behaviour: import 22/22, duplicates 27/27; new
+A2 flow 25/25 (steps, drag-and-drop, tiles, keyboard on choice tiles, 360
+px light, desktop, no CSP issues); Kiswahili 36/36. Two test races found
+(`isVisible`/`count` before navigation settled) and fixed in the tests.

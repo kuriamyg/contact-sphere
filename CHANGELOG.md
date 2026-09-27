@@ -5,6 +5,19 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — Import and duplicates in the Aurora look
+
+- **Import** shows where you are (Choose → Check → Done), accepts a file
+  dropped on the box, and sums the file up in three tiles: in the file, to
+  add, skipped. Skipped entries and anything worth knowing sit in their own
+  cards. When it is done, one tap takes you to your contacts or to check
+  for duplicates.
+- **Clean up duplicates** lists each pair as a card with why it matched,
+  and counts how many are likely the same person.
+- **Reviewing a pair** shows which contact stays and which merges into it,
+  lets you swap them, offers each difference as a tile to tap (saying which
+  contact it comes from), and sums up the result before you merge.
+
 ### Added — Kiswahili
 
 - **The whole app in Kiswahili.** Tap your avatar → Language → Kiswahili
