@@ -4,7 +4,8 @@
  * Shown by the service worker when there is no connection. It reads the
  * copy the signed-in app saved in this browser (IndexedDB "cs-offline")
  * and lets the owner browse, search and call — with no data at all.
- * Read-only: nothing here writes to the server.
+ * Changes (new contacts, edits, follow-ups) wait in a queue on the phone
+ * and go to the server through /offline-sync once there is a connection.
  *
  * Safety: all text is inserted with textContent, never as HTML.
  */
@@ -70,7 +71,31 @@
       birthday: 'Birthday: ',
       followUps: 'Follow-ups',
       notes: 'Notes',
-      editNeedsData: 'Editing details (name, numbers, skills) needs data.',
+      edit: 'Edit details',
+      editTitle: 'Edit {x}',
+      editNote:
+        'Saved on this phone now; sent when you have data. If the same detail was changed elsewhere meanwhile, you choose which to keep.',
+      save: 'Save',
+      cancel: 'Cancel',
+      nickname: 'Nickname',
+      organization: 'Organisation',
+      jobTitle: 'Job title',
+      areaLabel: 'Area',
+      metThroughLabel: 'Met through',
+      birthdayLabel: 'Birthday',
+      skillsHint: 'Skills and services (comma-separated)',
+      phoneLabel: 'Label (e.g. mobile)',
+      labelShort: 'Label',
+      emailAddress: 'Email address',
+      clashTitle: 'Changed in two places',
+      clashBody:
+        'You edited this offline, and it was also changed elsewhere. The other change was kept for these details:',
+      clashMine: 'Yours: {x}',
+      clashTheirs: 'Kept: {x}',
+      useMine: 'Use mine',
+      keepTheirs: 'Keep this',
+      clashBanner: [' {n} contact needs a look.', ' {n} contacts need a look.'],
+      empty: '(empty)',
       inTouchToday: 'I was in touch today',
       lastInTouch: 'Last in touch: {x}',
       notContacted: 'Not marked as contacted yet',
@@ -157,7 +182,34 @@
       birthday: 'Siku ya kuzaliwa: ',
       followUps: 'Ufuatiliaji',
       notes: 'Maelezo',
-      editNeedsData: 'Kuhariri taarifa (jina, nambari, ujuzi) kunahitaji data.',
+      edit: 'Hariri taarifa',
+      editTitle: 'Hariri {x}',
+      editNote:
+        'Imehifadhiwa kwenye simu hii sasa; itatumwa ukipata data. Ikiwa taarifa hiyo hiyo ilibadilishwa kwingine wakati huo, utachagua ipi ibaki.',
+      save: 'Hifadhi',
+      cancel: 'Ghairi',
+      nickname: 'Jina la utani',
+      organization: 'Shirika',
+      jobTitle: 'Cheo',
+      areaLabel: 'Eneo',
+      metThroughLabel: 'Tulikutana kupitia',
+      birthdayLabel: 'Siku ya kuzaliwa',
+      skillsHint: 'Ujuzi na huduma (tenganisha kwa koma)',
+      phoneLabel: 'Aina (k.m. rununu)',
+      labelShort: 'Aina',
+      emailAddress: 'Anwani ya barua pepe',
+      clashTitle: 'Imebadilishwa sehemu mbili',
+      clashBody:
+        'Uliihariri bila mtandao, na pia ilibadilishwa kwingine. Badiliko lile lingine limebaki kwa taarifa hizi:',
+      clashMine: 'Yako: {x}',
+      clashTheirs: 'Imebaki: {x}',
+      useMine: 'Tumia yangu',
+      keepTheirs: 'Acha hii',
+      clashBanner: [
+        ' Anwani {n} inahitaji kuangaliwa.',
+        ' Anwani {n} zinahitaji kuangaliwa.',
+      ],
+      empty: '(tupu)',
       inTouchToday: 'Nimewasiliana naye leo',
       lastInTouch: 'Mliwasiliana mara ya mwisho: {x}',
       notContacted: 'Bado hajawekwa kuwa mliwasiliana',
@@ -240,6 +292,9 @@
   var banner = document.getElementById('banner');
   /** Changes made here, waiting to be sent: { ownerId, ops: [...] }. */
   var queue = { ownerId: null, ops: [] };
+  /** Offline edits that clashed with changes made elsewhere:
+   *  { ownerId, items: [{ contactId, name, fields: [{ field, mine, theirs }] }] }. */
+  var clashes = { ownerId: null, items: [] };
   var lastProblems = [];
 
   function uuid() {
@@ -273,6 +328,7 @@
       var tx = db.transaction('kv', 'readwrite');
       tx.objectStore('kv').put(data, 'snapshot');
       tx.objectStore('kv').put(queue, 'queue');
+      tx.objectStore('kv').put(clashes, 'conflicts');
       tx.oncomplete = function () {
         db.close();
         if (cb) cb();
@@ -361,6 +417,326 @@
     persist();
     location.hash = '#/c/' + id;
   }
+  // ---- editing details offline (A4) --------------------------------------
+  var TEXT_FIELDS = [
+    'name',
+    'nickname',
+    'organization',
+    'jobTitle',
+    'area',
+    'metThrough',
+    'birthday',
+    'notes',
+  ];
+  /** The editable values of a contact in the copy, as the server names them. */
+  function valuesOf(c) {
+    var v = {};
+    TEXT_FIELDS.forEach(function (f) {
+      v[f] = c[f] || '';
+    });
+    v.tags = c.tags.slice();
+    v.phones = c.phones.map(function (p) {
+      return { raw: p[0], label: p[2] || '' };
+    });
+    v.emails = c.emails.map(function (e) {
+      return { address: e[0], label: e[1] || '' };
+    });
+    return v;
+  }
+  function same(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  /** Writes values into the copy, so the phone shows the edit at once. */
+  function setValues(c, v) {
+    TEXT_FIELDS.forEach(function (f) {
+      if (v[f] !== undefined) c[f] = f === 'name' ? v[f] : v[f] || null;
+    });
+    if (v.tags) c.tags = v.tags.slice();
+    if (v.phones)
+      c.phones = v.phones.map(function (p) {
+        return [p.raw, null, p.label || null];
+      });
+    if (v.emails)
+      c.emails = v.emails.map(function (e) {
+        return [e.address, e.label || null];
+      });
+  }
+  /**
+   * Queues the edit. Several edits of one contact before sending become
+   * one change that remembers what the phone showed before the first.
+   */
+  function saveEdit(c, next) {
+    var before = valuesOf(c);
+    var op = queue.ops.find(function (o) {
+      return o.type === 'contact.edit' && o.contactId === c.id;
+    });
+    var changes = op ? op.changes : {};
+    Object.keys(next).forEach(function (f) {
+      if (same(before[f], next[f])) return;
+      var from = changes[f] ? changes[f].from : before[f];
+      if (same(from, next[f])) delete changes[f];
+      else changes[f] = { from: from, to: next[f] };
+    });
+    if (op) {
+      if (!Object.keys(changes).length)
+        queue.ops = queue.ops.filter(function (o) {
+          return o !== op;
+        });
+      persist();
+      updateBanner();
+    } else if (Object.keys(changes).length) {
+      record({ type: 'contact.edit', contactId: c.id, changes: changes });
+    }
+    setValues(c, next);
+    if (next.name !== undefined)
+      data.contacts.sort(function (a, b) {
+        return fold(a.name) < fold(b.name) ? -1 : 1;
+      });
+    persist();
+    location.hash = '#/c/' + c.id;
+  }
+  function clean(s) {
+    return s.trim().replace(/\s+/g, ' ');
+  }
+  function editScreen(id) {
+    var c = byId(id);
+    if (!c) return contactScreen(id);
+    var v = valuesOf(c);
+    function field(label, value, attrs) {
+      var input = h(
+        attrs && attrs.rows ? 'textarea' : 'input',
+        Object.assign(
+          { type: 'text', 'aria-label': label, placeholder: label },
+          attrs || {},
+        ),
+      );
+      input.value = value;
+      return input;
+    }
+    var name = field(T.name, v.name, {
+      required: 'required',
+      maxlength: '200',
+    });
+    var nickname = field(T.nickname, v.nickname, { maxlength: '200' });
+    var org = field(T.organization, v.organization, { maxlength: '200' });
+    var job = field(T.jobTitle, v.jobTitle, { maxlength: '200' });
+    var area = field(T.areaLabel, v.area, { maxlength: '100' });
+    var met = field(T.metThroughLabel, v.metThrough, { maxlength: '200' });
+    var bday = field(T.birthdayLabel, v.birthday, {
+      type: 'date',
+      max: today(),
+    });
+    var tags = field(T.skillsHint, v.tags.join(', '), { maxlength: '2000' });
+    var notes = field(T.notes, v.notes, { rows: '4', maxlength: '10000' });
+    function rowsOf(list, key, placeholder, type) {
+      var out = list.concat([{ label: '' }]).map(function (r) {
+        var o = {};
+        o.value = field(placeholder, r[key] || '', {
+          type: type,
+          maxlength: key === 'raw' ? '64' : '254',
+        });
+        o.label = field(T.phoneLabel, r.label || '', {
+          maxlength: '50',
+          placeholder: T.labelShort,
+        });
+        return o;
+      });
+      return out;
+    }
+    var phones = rowsOf(v.phones, 'raw', T.phoneNumber, 'tel');
+    var emails = rowsOf(v.emails, 'address', T.emailAddress, 'email');
+    /** A visible caption, so a filled field still says what it is. */
+    function labelled(text, input) {
+      return h('label', { class: 'field' }, h('span', null, text), input);
+    }
+    function group(title, list) {
+      return h(
+        'fieldset',
+        { class: 'stack group' },
+        h('legend', null, title),
+        list.map(function (r) {
+          return h('div', { class: 'pair' }, r.value, r.label);
+        }),
+      );
+    }
+    var cancel = h('a', { class: 'btn', href: '#/c/' + c.id }, T.cancel);
+    var form = h(
+      'form',
+      { class: 'stack' },
+      labelled(T.name, name),
+      labelled(T.nickname, nickname),
+      labelled(T.jobTitle, job),
+      labelled(T.organization, org),
+      group(T.phone, phones),
+      group(T.email, emails),
+      labelled(T.areaLabel, area),
+      labelled(T.metThroughLabel, met),
+      labelled(T.birthdayLabel, bday),
+      labelled(T.skillsHint, tags),
+      labelled(T.notes, notes),
+      h(
+        'div',
+        { class: 'actions' },
+        h('button', { type: 'submit', class: 'btn primary' }, T.save),
+        cancel,
+      ),
+    );
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = clean(name.value);
+      if (!n) return;
+      var seen = {};
+      var next = {
+        name: n.slice(0, 200),
+        nickname: clean(nickname.value),
+        organization: clean(org.value),
+        jobTitle: clean(job.value),
+        area: clean(area.value),
+        metThrough: clean(met.value),
+        birthday: /^\d{4}-\d{2}-\d{2}$/.test(bday.value) ? bday.value : '',
+        notes: notes.value.trim(),
+        tags: tags.value
+          .split(',')
+          .map(function (t) {
+            return clean(t).toLowerCase().slice(0, 50);
+          })
+          .filter(function (t) {
+            if (!t || seen[t]) return false;
+            seen[t] = true;
+            return true;
+          })
+          .slice(0, 50),
+        phones: phones
+          .map(function (r) {
+            return { raw: r.value.value.trim(), label: clean(r.label.value) };
+          })
+          .filter(function (r) {
+            return r.raw;
+          }),
+        emails: emails
+          .map(function (r) {
+            return {
+              address: r.value.value.trim().toLowerCase(),
+              label: clean(r.label.value),
+            };
+          })
+          .filter(function (r) {
+            return r.address;
+          }),
+      };
+      saveEdit(c, next);
+    });
+    show(
+      h(
+        'p',
+        null,
+        h('a', { href: '#/c/' + c.id, class: 'muted small' }, '← ' + c.name),
+      ),
+      h('h1', null, tr('editTitle', undefined, c.name)),
+      h('p', { class: 'muted small' }, T.editNote),
+      form,
+    );
+  }
+
+  // ---- edits that clashed with changes made elsewhere --------------------
+  var FIELD_LABEL = {
+    name: 'name',
+    nickname: 'nickname',
+    organization: 'organization',
+    jobTitle: 'jobTitle',
+    area: 'areaLabel',
+    metThrough: 'metThroughLabel',
+    birthday: 'birthdayLabel',
+    notes: 'notes',
+    tags: 'skills',
+    phones: 'phone',
+    emails: 'email',
+  };
+  function showValue(f, v) {
+    var s =
+      f === 'phones' || f === 'emails'
+        ? v
+            .map(function (r) {
+              return (
+                (r.raw || r.address) + (r.label ? ' (' + r.label + ')' : '')
+              );
+            })
+            .join(', ')
+        : f === 'tags'
+          ? v.join(', ')
+          : v;
+    return s || T.empty;
+  }
+  function clashFor(id) {
+    return clashes.items.find(function (x) {
+      return x.contactId === id;
+    });
+  }
+  function settle(item, field) {
+    item.fields = item.fields.filter(function (x) {
+      return x.field !== field;
+    });
+    if (!item.fields.length)
+      clashes.items = clashes.items.filter(function (x) {
+        return x !== item;
+      });
+  }
+  function clashCard(c) {
+    var item = clashFor(c.id);
+    if (!item) return null;
+    return h(
+      'div',
+      { class: 'card clash', role: 'region', 'aria-label': T.clashTitle },
+      h('h2', null, T.clashTitle),
+      h('p', { class: 'small muted' }, T.clashBody),
+      item.fields.map(function (x) {
+        var mine = h(
+          'button',
+          { type: 'button', class: 'btn primary' },
+          T.useMine,
+        );
+        var keep = h('button', { type: 'button', class: 'btn' }, T.keepTheirs);
+        mine.addEventListener('click', function () {
+          // A fresh edit from what the server has now to what you had.
+          // The copy may still show yours; start from what was kept.
+          var kept = {};
+          kept[x.field] = x.theirs;
+          setValues(c, kept);
+          var next = {};
+          next[x.field] = x.mine;
+          settle(item, x.field);
+          saveEdit(c, next);
+          rerender();
+        });
+        keep.addEventListener('click', function () {
+          var kept = {};
+          kept[x.field] = x.theirs;
+          setValues(c, kept);
+          settle(item, x.field);
+          persist();
+          updateBanner();
+          rerender();
+        });
+        return h(
+          'div',
+          { class: 'clash-field' },
+          h('p', null, h('strong', null, T[FIELD_LABEL[x.field]])),
+          h(
+            'p',
+            { class: 'small pre' },
+            tr('clashTheirs', undefined, showValue(x.field, x.theirs)),
+          ),
+          h(
+            'p',
+            { class: 'small pre muted' },
+            tr('clashMine', undefined, showValue(x.field, x.mine)),
+          ),
+          h('div', { class: 'actions' }, mine, keep),
+        );
+      }),
+    );
+  }
+
   function doneButton(label, onClick) {
     var b = h(
       'button',
@@ -647,8 +1023,14 @@
         null,
         h('a', { href: '#/contacts', class: 'muted small' }, T.backContacts),
       ),
-      h('h1', null, c.name),
+      h(
+        'div',
+        { class: 'titlebar' },
+        h('h1', null, c.name),
+        h('a', { class: 'btn', href: '#/e/' + c.id }, T.edit),
+      ),
       c.nickname ? h('p', { class: 'muted' }, '“' + c.nickname + '”') : null,
+      clashCard(c),
       c.jobTitle || c.organization
         ? h(
             'p',
@@ -807,7 +1189,6 @@
       isPending(c.id) ? waitingNote() : null,
       touchSection(c),
       followForm(c),
-      h('p', { class: 'muted small' }, T.editNeedsData),
     );
   }
 
@@ -1127,7 +1508,7 @@
     document.querySelectorAll('.top nav a').forEach(function (a) {
       var here =
         a.getAttribute('href').slice(2) ===
-        (parts[0] === 'c' || parts[0] === 'new'
+        (parts[0] === 'c' || parts[0] === 'e' || parts[0] === 'new'
           ? 'contacts'
           : parts[0] === 'g'
             ? 'groups'
@@ -1137,6 +1518,7 @@
     });
     if (parts[0] === 'new') newScreen();
     else if (parts[0] === 'c') contactScreen(parts[1]);
+    else if (parts[0] === 'e') editScreen(parts[1]);
     else if (parts[0] === 'contacts') contactsScreen('');
     else if (parts[0] === 'g') groupScreen(parts[1]);
     else if (parts[0] === 'groups') groupsScreen();
@@ -1164,9 +1546,13 @@
         store = db.transaction('kv').objectStore('kv');
       var s = store.get('snapshot'),
         i = store.get('info'),
-        q = store.get('queue');
+        q = store.get('queue'),
+        k = store.get('conflicts');
       q.onsuccess = function () {
         if (q.result && q.result.ops) queue = q.result;
+      };
+      k.onsuccess = function () {
+        if (k.result && k.result.items) clashes = k.result;
       };
       s.onsuccess = function () {
         i.onsuccess = function () {
@@ -1188,6 +1574,8 @@
     // Queued changes from another account never show or send here.
     if (queue.ownerId && queue.ownerId !== data.ownerId)
       queue = { ownerId: null, ops: [] };
+    if (clashes.ownerId !== data.ownerId)
+      clashes = { ownerId: data.ownerId, items: [] };
     updateBanner();
     window.addEventListener('hashchange', route);
     route();
@@ -1204,11 +1592,31 @@
     if (queue.ops.length) {
       banner.appendChild(h('strong', null, tr('queued', queue.ops.length)));
     }
+    if (clashes.items.length) {
+      banner.appendChild(document.createTextNode(' '));
+      banner.appendChild(
+        h(
+          'a',
+          { href: '#/c/' + clashes.items[0].contactId, class: 'late' },
+          tr('clashBanner', clashes.items.length).trim(),
+        ),
+      );
+    }
     lastProblems.forEach(function (m) {
       banner.appendChild(
         h('span', { class: 'late' }, tr('notSaved', undefined, m)),
       );
     });
+  }
+
+  /** A newer clash for a contact replaces the older one. */
+  function addClash(x) {
+    clashes.ownerId = data.ownerId;
+    clashes.items = clashes.items
+      .filter(function (y) {
+        return y.contactId !== x.contactId;
+      })
+      .concat([x]);
   }
 
   /** Back online: send waiting changes, refresh the copy, offer the full app. */
@@ -1235,6 +1643,7 @@
             body.results.forEach(function (x) {
               if (x.status === 'retry') keep[x.opId] = true;
               if (x.status === 'ok') sent++;
+              if (x.conflict) addClash(x.conflict);
               if (x.status === 'rejected')
                 lastProblems.push(x.message || T.refused);
             });

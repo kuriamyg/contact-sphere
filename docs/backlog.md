@@ -153,7 +153,9 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       queued on the phone with device-made ids (idempotent on the API),
       sent in order on reconnect via same-origin /offline-sync; bound to
       the account that made them; sign-out warns about unsent changes
-- [ ] Editing existing contact details offline (needs conflict handling)
+- [x] A4: editing existing contact details offline — field-level
+      three-way merge, `If-Match` on the API (412 when changed), clashes
+      kept on the device and reviewed by the owner (ADR 0015)
 - [ ] 10c: Android app with consented two-way sync with the phone's
       address book (native; separate project)
 

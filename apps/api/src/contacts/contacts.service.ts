@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  PreconditionFailedException,
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
@@ -234,14 +235,41 @@ export class ContactsService {
   }
 
   /** Saves the whole contact; the phone and email lists are replaced. */
+  /**
+   * Replaces the contact's details. With `ifUnchangedSince` (the `updatedAt`
+   * the caller last saw) the save happens only if nobody changed the contact
+   * since — otherwise 412, so an edit made offline never silently overwrites
+   * a newer one. The row is locked while it is checked and written.
+   */
   async update(
     ownerId: string,
     id: string,
     dto: ContactInputDto,
+    ifUnchangedSince?: Date,
   ): Promise<ContactDetail> {
     const data = contactData(dto);
     const c = await this.prisma.$transaction(async (tx) => {
-      await this.requireEditable(tx, ownerId, id);
+      if (ifUnchangedSince) {
+        const [row] = await tx.$queryRaw<
+          { updated_at: Date; deleted_at: Date | null }[]
+        >`
+          SELECT updated_at, deleted_at FROM contacts
+          WHERE id = ${id}::uuid AND owner_id = ${ownerId}::uuid
+          FOR UPDATE`;
+        if (!row) throw new NotFoundException('Contact not found.');
+        if (row.deleted_at) {
+          throw new ConflictException(
+            'Restore the contact from the trash first.',
+          );
+        }
+        if (row.updated_at.getTime() !== ifUnchangedSince.getTime()) {
+          throw new PreconditionFailedException(
+            'This contact changed since you opened it.',
+          );
+        }
+      } else {
+        await this.requireEditable(tx, ownerId, id);
+      }
       await tx.phoneNumber.deleteMany({ where: { contactId: id, ownerId } });
       await tx.emailAddress.deleteMany({ where: { contactId: id, ownerId } });
       const updated = await tx.contact.update({

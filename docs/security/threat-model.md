@@ -115,8 +115,12 @@ app's storage (IndexedDB) so it works with no data bundle.
   (`ownerId`). `/offline-sync` refuses a different signed-in account
   (409, the queue is then discarded) and any request whose `Origin` is not
   the app's own (403) — a cross-site form cannot send JSON with our Origin.
-- Only four narrow operations exist (create contact, in touch, follow-up
-  add/done); each maps to an existing API call with its normal checks.
+- Only five narrow operations exist (create contact, edit details, in
+  touch, follow-up add/done); each maps to existing API calls with their
+  normal checks. An edit is validated field by field (known fields only,
+  the API's length limits) and saved with `If-Match`, so it can never
+  overwrite a newer change it did not see (ADR 0015). Clashes are stored
+  on the device next to the queue and wiped with it.
 - Device-made ids make replays harmless; an id already used by another
   owner is refused (409).
 - Sign-out warns before discarding unsent changes; the sign-in page and a

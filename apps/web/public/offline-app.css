@@ -260,3 +260,46 @@ button.btn.primary {
 .card .btn {
   margin-top: 8px;
 }
+.stack select,
+.stack input[type='date'] {
+  min-height: 44px;
+}
+fieldset.group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+fieldset.group legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pair {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 8px;
+}
+.clash {
+  margin: 12px 0;
+  border-color: var(--danger);
+}
+.clash h2 {
+  margin-top: 0;
+}
+.clash-field {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+label.field > span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
