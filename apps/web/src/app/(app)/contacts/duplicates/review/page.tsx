@@ -4,15 +4,16 @@ import { notFound } from 'next/navigation';
 
 import { dismissPair, mergePair } from '@/app/actions/merge';
 import { Avatar } from '@/components/avatar';
+import { ArrowDownIcon, CheckIcon, SwapIcon } from '@/components/icons';
+import type { Messages } from '@/i18n/en';
+import { fmt, plural } from '@/i18n/format';
+import type { Locale } from '@/i18n/locales';
+import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import {
   type ContactDetail,
   type MergeField,
   mergePreview,
 } from '@/lib/contacts';
-import type { Messages } from '@/i18n/en';
-import { fmt, plural } from '@/i18n/format';
-import type { Locale } from '@/i18n/locales';
-import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { formatBirthday } from '@/lib/format';
 
 export const generateMetadata = (): Promise<Metadata> =>
@@ -24,38 +25,47 @@ const show = (field: MergeField, v: string, locale: Locale) =>
 function Card({
   c,
   role,
-  swapHref,
   t,
   locale,
 }: {
   c: ContactDetail;
   role: 'keep' | 'merge';
-  swapHref: string;
   t: Messages['duplicates'];
   locale: Locale;
 }) {
+  const keep = role === 'keep';
   return (
     <section
-      aria-label={role === 'keep' ? t.keepLabel : t.mergeLabel}
-      className={`space-y-3 rounded-2xl border p-4 ${
-        role === 'keep' ? 'border-accent bg-accent-soft' : 'border-border'
+      aria-label={keep ? t.keepLabel : t.mergeLabel}
+      className={`space-y-3 rounded-2xl p-4 ${
+        keep
+          ? 'border border-accent/50 bg-gradient-to-br from-emerald-500/15 to-violet-500/10 shadow-[var(--card-shadow)]'
+          : 'card opacity-90'
       }`}
     >
-      <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-        {role === 'keep' ? t.keep : t.mergeThenTrash}
-      </p>
       <div className="flex items-center gap-3">
         <Avatar name={c.displayName} colourKey={c.id} size="md" />
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{c.displayName}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-bold">{c.displayName}</p>
           {c.organization && (
             <p className="truncate text-sm text-muted">{c.organization}</p>
           )}
         </div>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+            keep
+              ? 'bg-accent-soft text-accent'
+              : 'border border-border text-muted'
+          }`}
+        >
+          {keep && <CheckIcon className="size-3.5" />}
+          {keep ? t.stays : t.mergedIn}
+        </span>
       </div>
+      <p className="sr-only">{keep ? t.keep : t.mergeThenTrash}</p>
       <ul className="space-y-1 text-sm">
         {c.phones.map((p, i) => (
-          <li key={`p${i}`}>
+          <li key={`p${i}`} className="tabular-nums">
             {p.raw}
             {p.label && <span className="text-muted"> · {p.label}</span>}
           </li>
@@ -76,14 +86,6 @@ function Card({
           </li>
         )}
       </ul>
-      {role === 'merge' && (
-        <Link
-          href={swapHref}
-          className="text-sm font-medium text-accent underline"
-        >
-          {t.keepInstead}
-        </Link>
-      )}
     </section>
   );
 }
@@ -99,83 +101,143 @@ export default async function ReviewPage({
   const swapHref = `/contacts/duplicates/review?keep=${mergeId}&merge=${keepId}`;
   const [m, locale] = await Promise.all([getMessages(), getLocale()]);
   const t = m.duplicates;
+  const names = { keep: p.keep.displayName, merge: p.merge.displayName };
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-xl space-y-6">
       <Link
         href="/contacts/duplicates"
         className="text-sm text-muted hover:underline"
       >
         {t.allDuplicates}
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">{t.samePerson}</h1>
+      <header className="space-y-1">
+        <p className="text-xs font-bold tracking-wider text-accent uppercase">
+          {t.reviewEyebrow}
+        </p>
+        <h1 className="text-[28px] leading-tight font-semibold">
+          {t.samePerson}
+        </h1>
+      </header>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Card
-          c={p.keep}
-          role="keep"
-          swapHref={swapHref}
-          t={t}
-          locale={locale}
-        />
-        <Card
-          c={p.merge}
-          role="merge"
-          swapHref={swapHref}
-          t={t}
-          locale={locale}
-        />
+      <div className="space-y-2">
+        <Card c={p.merge} role="merge" t={t} locale={locale} />
+        <div className="flex items-center justify-between gap-3 px-2">
+          <span
+            aria-hidden="true"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-surface text-accent"
+          >
+            <ArrowDownIcon className="size-4" />
+          </span>
+          <Link
+            href={swapHref}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
+            <SwapIcon className="size-4" />
+            {t.keepInstead}
+          </Link>
+        </div>
+        <Card c={p.keep} role="keep" t={t} locale={locale} />
       </div>
 
-      <form action={mergePair} className="space-y-5">
+      <form action={mergePair} className="space-y-6">
         <input type="hidden" name="keepId" value={p.keep.id} />
         <input type="hidden" name="mergeId" value={p.merge.id} />
 
         {p.conflicts.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t.choose}</h2>
+          <section aria-labelledby="choose" className="space-y-3">
+            <div className="space-y-0.5">
+              <h2
+                id="choose"
+                className="text-xs font-bold tracking-wider text-muted uppercase"
+              >
+                {t.choose}
+              </h2>
+              <p className="text-sm text-muted">{t.choosePick}</p>
+            </div>
             {p.conflicts.map((c) => (
-              <fieldset key={c.field} className="space-y-2 rounded-xl card p-4">
-                <legend className="px-1 text-sm font-medium">
+              <fieldset key={c.field} className="space-y-2">
+                <legend className="mb-2 text-sm font-semibold">
                   {t.fields[c.field]}
                 </legend>
-                {(['keep', 'merge'] as const).map((side) => (
-                  <label key={side} className="flex items-center gap-3 py-1">
-                    <input
-                      type="radio"
-                      name={`choice_${c.field}`}
-                      value={side}
-                      defaultChecked={side === 'keep'}
-                      className="size-4 accent-[var(--accent)]"
-                    />
-                    <span className="break-words">
-                      {show(c.field, c[side], locale)}
-                    </span>
-                  </label>
-                ))}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(['keep', 'merge'] as const).map((side) => (
+                    <label
+                      key={side}
+                      className="card flex cursor-pointer items-start gap-3 rounded-2xl p-3 has-checked:border-accent has-checked:bg-accent-soft has-focus-visible:ring-2 has-focus-visible:ring-accent"
+                    >
+                      <input
+                        type="radio"
+                        name={`choice_${c.field}`}
+                        value={side}
+                        defaultChecked={side === 'keep'}
+                        className="mt-1 size-4 accent-[var(--accent)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-medium break-words">
+                          {show(c.field, c[side], locale)}
+                        </span>
+                        <span className="block text-xs text-muted">
+                          {side === 'keep' ? t.fromKeep : t.fromMerge}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </fieldset>
             ))}
-          </div>
+          </section>
         )}
 
-        <div className="space-y-1 rounded-xl bg-surface p-4 text-sm">
-          <p className="font-medium">{t.nothingLost}</p>
-          <p className="text-muted">
-            <strong className="text-foreground">{p.keep.displayName}</strong>{' '}
+        <section
+          aria-labelledby="after"
+          className="card space-y-3 rounded-2xl p-4"
+        >
+          <h2
+            id="after"
+            className="text-xs font-bold tracking-wider text-muted uppercase"
+          >
+            {t.afterTitle}
+          </h2>
+          <div className="flex items-center gap-3">
+            <Avatar name={names.keep} colourKey={p.keep.id} ring />
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{names.keep}</p>
+              <div className="mt-1 flex flex-wrap gap-1.5 text-xs font-medium">
+                {[
+                  plural(p.result.phones.length, t.numbers),
+                  plural(p.result.emails.length, t.emails),
+                  t.notesBoth,
+                ].map((x) => (
+                  <span
+                    key={x}
+                    className="rounded-full bg-accent-soft px-2.5 py-0.5 text-accent"
+                  >
+                    {x}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-muted">
+            <strong className="font-semibold text-foreground">
+              {t.nothingLost}.
+            </strong>{' '}
+            <strong className="text-foreground">{names.keep}</strong>{' '}
             {fmt(t.willHave, {
               numbers: plural(p.result.phones.length, t.numbers),
               emails: plural(p.result.emails.length, t.emails),
             })}{' '}
-            <strong className="text-foreground">{p.merge.displayName}</strong>{' '}
+            <strong className="text-foreground">{names.merge}</strong>{' '}
             {t.movesToTrash}
           </p>
-        </div>
+        </section>
 
         <button
           type="submit"
-          className="w-full rounded-lg btn-primary px-4 py-3 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="btn-primary inline-flex h-12 w-full items-center justify-center rounded-xl px-5 text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
         >
-          {fmt(t.mergeInto, { name: p.keep.displayName })}
+          {fmt(t.mergeInto, { name: names.keep })}
         </button>
       </form>
 
@@ -184,7 +246,7 @@ export default async function ReviewPage({
         <input type="hidden" name="mergeId" value={p.merge.id} />
         <button
           type="submit"
-          className="w-full rounded-lg border border-border px-4 py-3 font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none"
+          className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
         >
           {t.notSame}
         </button>

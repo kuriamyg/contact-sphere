@@ -45,6 +45,24 @@ today first) with big Call / WhatsApp buttons; sections as cards; quick
 actions. With nothing due: "You're all caught up" and a getting-started
 checklist driven by `GET /remember/today`'s `setup` counts.
 
+## Import and duplicates
+
+Same language as Today: accent eyebrow, Sora heading, count tiles, glass
+cards, one lit primary action per step.
+
+- **Import:** a three-step progress bar (Choose → Check → Done, the
+  current step marked `aria-current="step"`); a drop zone that is also the
+  file picker; a file card, three tiles (in the file / to add / skipped),
+  "skipped" and amber "worth knowing" cards; a done screen announced as a
+  status with next steps (contacts, check for duplicates). How to export a
+  .vcf is one card per platform.
+- **Duplicates:** likely / worth-a-look tiles; each pair a card (confidence
+  and reasons as chips, both people, "Review").
+- **Review:** the contact merging in, an arrow, then the contact that
+  stays (lit card, "Stays" badge); "Keep this one instead" swaps them.
+  Differences are radio tiles that light up when chosen and say which
+  contact the value comes from; "After the merge" summarises the result.
+
 ## App icon
 
 Galaxy orbit: a green sphere with a violet ring on deep space. Android's

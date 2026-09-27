@@ -9,6 +9,15 @@ import {
   runImport,
 } from '@/app/actions/import';
 import { FormMessage } from '@/components/auth/field';
+import { Avatar } from '@/components/avatar';
+import {
+  AlertIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  FileIcon,
+  ShieldIcon,
+  UploadIcon,
+} from '@/components/icons';
 import {
   countCards,
   MAX_VCF_CHARS,
@@ -18,9 +27,9 @@ import { useMessages } from '@/i18n/client';
 import { fmt, plural } from '@/i18n/format';
 
 const primary =
-  'rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60';
+  'btn-primary inline-flex h-12 items-center justify-center rounded-xl px-5 text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60';
 const secondary =
-  'rounded-lg border border-border px-4 py-2.5 font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
+  'inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-60';
 
 type Stage =
   | { name: 'choose' }
@@ -36,6 +45,7 @@ export function ImportWizard() {
   const [stage, setStage] = useState<Stage>({ name: 'choose' });
   const [error, setError] = useState<string>();
   const [pending, start] = useTransition();
+  const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
   function reset() {
@@ -79,37 +89,107 @@ export function ImportWizard() {
     });
   }
 
+  const step = stage.name === 'choose' ? 0 : stage.name === 'preview' ? 1 : 2;
+  const steps = [t.steps.choose, t.steps.check, t.steps.done];
+  const progress = (
+    <ol aria-label={t.stepsLabel} className="grid grid-cols-3 gap-2 text-xs">
+      {steps.map((label, i) => (
+        <li
+          key={label}
+          aria-current={i === step ? 'step' : undefined}
+          className="space-y-1.5"
+        >
+          <span
+            aria-hidden="true"
+            className={`block h-1 rounded-full ${i <= step ? 'bg-accent' : 'bg-border'}`}
+          />
+          <span
+            className={
+              i === step ? 'font-semibold text-foreground' : 'text-muted'
+            }
+          >
+            {i + 1}. {label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+
   if (stage.name === 'done') {
     const p = stage.plan;
     return (
-      <div className="space-y-4">
-        <FormMessage
-          success={
-            p.toImport > 0 ? plural(p.toImport, t.imported) : t.nothingNewDone
-          }
-        />
+      <div className="space-y-5">
+        {progress}
+        <div
+          role="status"
+          className="card flex flex-col items-center gap-2 rounded-3xl px-6 py-8 text-center"
+        >
+          <span className="btn-primary inline-flex size-14 items-center justify-center rounded-full">
+            <CheckIcon className="size-7" />
+          </span>
+          <p className="font-display text-xl font-semibold">
+            {p.toImport > 0 ? plural(p.toImport, t.doneTitle) : t.doneNothing}
+          </p>
+          <p className="text-sm text-muted">
+            {p.toImport > 0 ? plural(p.toImport, t.imported) : t.nothingNewDone}
+          </p>
+        </div>
         <Skipped plan={p} />
-        <div className="flex flex-wrap gap-3">
+        <div className="grid gap-2.5 sm:grid-cols-2">
           <Link href="/contacts" className={primary}>
             {t.viewContacts}
           </Link>
-          <button type="button" onClick={reset} className={secondary}>
-            {t.another}
-          </button>
+          <Link href="/contacts/duplicates" className={secondary}>
+            {t.checkDuplicates}
+          </Link>
         </div>
+        <button
+          type="button"
+          onClick={reset}
+          className="w-full text-sm font-medium text-muted underline-offset-4 hover:underline"
+        >
+          {t.another}
+        </button>
       </div>
     );
   }
 
   if (stage.name === 'preview') {
     const p = stage.plan;
+    const skipped = p.alreadySaved + p.repeatedInFile + p.empty;
     return (
       <div className="space-y-5">
+        {progress}
         <FormMessage error={error} />
-        <div className="space-y-1">
-          <p className="font-medium break-all">{stage.fileName}</p>
-          <p className="text-muted">{plural(p.cards, t.inFile)}</p>
+        <div className="card flex items-center gap-3 rounded-2xl p-3">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <FileIcon />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-semibold">
+              {stage.fileName}
+            </span>
+          </span>
         </div>
+        <dl className="grid grid-cols-3 gap-2.5">
+          {(
+            [
+              [t.stats.inFile, p.cards, ''],
+              [t.stats.add, p.toImport, 'text-accent'],
+              [t.stats.skip, skipped, ''],
+            ] as const
+          ).map(([label, n, tone]) => (
+            <div
+              key={label}
+              className="card flex flex-col-reverse gap-0.5 rounded-2xl p-3"
+            >
+              <dt className="text-xs text-muted">{label}</dt>
+              <dd className={`font-display text-2xl font-semibold ${tone}`}>
+                {n.toLocaleString('en-KE')}
+              </dd>
+            </div>
+          ))}
+        </dl>
         <p className="text-lg">
           {p.toImport > 0 ? (
             <>
@@ -122,16 +202,25 @@ export function ImportWizard() {
         <Skipped plan={p} />
         <Warnings plan={p} />
         {p.preview.length > 0 && (
-          <details className="rounded-xl card">
-            <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
+          <details className="card group rounded-2xl">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold">
               {t.seeWho}
+              <ChevronRightIcon className="size-4 text-muted transition-transform group-open:rotate-90" />
             </summary>
             <ul className="max-h-80 divide-y divide-border overflow-y-auto border-t border-border text-sm">
               {p.preview.map((c, i) => (
-                <li key={i} className="flex justify-between gap-3 px-4 py-2">
-                  <span className="truncate">{c.displayName}</span>
+                <li key={i} className="flex items-center gap-3 px-4 py-2">
+                  <Avatar
+                    name={c.displayName}
+                    colourKey={`${i}${c.displayName}`}
+                  />
+                  <span className="min-w-0 flex-1 truncate">
+                    {c.displayName}
+                  </span>
                   {c.phone && (
-                    <span className="shrink-0 text-muted">{c.phone}</span>
+                    <span className="shrink-0 text-muted tabular-nums">
+                      {c.phone}
+                    </span>
                   )}
                 </li>
               ))}
@@ -143,7 +232,7 @@ export function ImportWizard() {
             </ul>
           </details>
         )}
-        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row">
           <button
             type="button"
             onClick={reset}
@@ -158,7 +247,7 @@ export function ImportWizard() {
               onClick={() => onImport(stage.vcf)}
               disabled={pending}
               aria-busy={pending}
-              className={`${primary} sm:ml-auto`}
+              className={`${primary} sm:ml-auto sm:min-w-56`}
             >
               {pending ? t.importing : plural(p.toImport, t.importN)}
             </button>
@@ -169,14 +258,34 @@ export function ImportWizard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {progress}
       <FormMessage error={error} />
       <label
         htmlFor="vcf"
-        className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center bg-surface hover:bg-surface-hover focus-within:ring-2 focus-within:ring-foreground/40"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          onFile(e.dataTransfer.files?.[0]);
+        }}
+        className={`card flex cursor-pointer flex-col items-center gap-3 rounded-3xl border-2 border-dashed px-6 py-10 text-center transition-colors focus-within:ring-2 focus-within:ring-accent hover:bg-surface-hover ${
+          dragging ? 'border-accent bg-accent-soft' : 'border-border'
+        }`}
       >
-        <span className="font-medium">{pending ? t.reading : t.choose}</span>
-        <span className="text-sm text-muted">{t.nothingSaved}</span>
+        <span
+          className={`btn-primary inline-flex size-14 items-center justify-center rounded-2xl ${pending ? 'animate-pulse' : ''}`}
+        >
+          <UploadIcon className="size-6" />
+        </span>
+        <span className="font-display text-lg font-semibold">
+          {pending ? t.reading : t.choose}
+        </span>
+        <span className="text-sm text-muted">{t.dropHint}</span>
         <input
           ref={input}
           id="vcf"
@@ -187,6 +296,12 @@ export function ImportWizard() {
           onChange={(e) => onFile(e.currentTarget.files?.[0])}
         />
       </label>
+      <p className="flex items-start gap-2 text-sm text-muted">
+        <ShieldIcon className="mt-0.5 size-4 shrink-0 text-accent" />
+        <span>
+          {t.privacy} {t.nothingSaved}
+        </span>
+      </p>
     </div>
   );
 }
@@ -200,11 +315,17 @@ function Skipped({ plan: p }: { plan: ImportPlan }) {
   ].filter(Boolean) as string[];
   if (rows.length === 0) return null;
   return (
-    <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-      {rows.map((r) => (
-        <li key={r}>{r}</li>
-      ))}
-    </ul>
+    <section className="card space-y-2 rounded-2xl p-4 text-sm">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <CheckIcon className="size-4 text-accent" />
+        {t.skippedTitle}
+      </h2>
+      <ul className="space-y-1 pl-6 text-muted">
+        {rows.map((r) => (
+          <li key={r}>{r}</li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -218,12 +339,16 @@ function Warnings({ plan: { warnings: w } }: { plan: ImportPlan }) {
   ].filter(Boolean) as string[];
   if (rows.length === 0) return null;
   return (
-    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
-      <ul className="list-disc space-y-1 pl-5">
+    <section className="space-y-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-900 dark:text-amber-100">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <AlertIcon className="size-4" />
+        {t.warningsTitle}
+      </h2>
+      <ul className="space-y-1 pl-6">
         {rows.map((r) => (
           <li key={r}>{r}</li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }

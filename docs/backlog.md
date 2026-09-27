@@ -161,8 +161,11 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 
 - [x] Aurora light + galaxy dark, Auto/Light/Dark switch, profile menu,
       bottom bar, new Today, galaxy-orbit icon (docs/product/design.md)
-- [ ] Restyle remaining secondary screens in detail (import wizard,
-      duplicates review) — tokens already apply
+- [x] Import wizard and duplicate review in Aurora: step progress,
+      drop-a-file, count tiles, titled skipped/warning cards, done screen
+      with next steps; duplicate pairs as cards with likely/possible counts;
+      review shows the contact that stays, the one merging in, choice tiles
+      and an "after the merge" summary
 
 ## Phase 11 — Reach
 

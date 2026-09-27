@@ -117,6 +117,17 @@ export const client = section(
       notes: 'Notes',
     },
     importWizard: {
+      steps: { choose: 'Choose', check: 'Check', done: 'Done' },
+      stepsLabel: 'Import steps',
+      dropHint: 'Tap to choose, or drop the file here',
+      privacy:
+        'Read on this phone. Photos are removed before anything is uploaded.',
+      stats: { inFile: 'In the file', add: 'To add', skip: 'Skipped' },
+      skippedTitle: 'Skipped, so nothing is saved twice',
+      warningsTitle: 'Worth knowing',
+      doneTitle: { one: '{n} contact added', other: '{n} contacts added' },
+      doneNothing: 'Already up to date',
+      checkDuplicates: 'Check for duplicates',
       unreadable: 'That file could not be read.',
       noCards:
         'No contacts found. Choose a .vcf (vCard) file exported from your phone or address book.',
@@ -130,10 +141,6 @@ export const client = section(
         'Nothing new to import — everything in that file is already saved.',
       viewContacts: 'View contacts',
       another: 'Import another file',
-      inFile: {
-        one: '{n} contact in the file.',
-        other: '{n} contacts in the file.',
-      },
       willAdd: { one: '{n} contact', other: '{n} contacts' },
       willAddSuffix: 'will be added.',
       nothingNew:
@@ -414,6 +421,20 @@ export const client = section(
       notes: 'Maelezo',
     },
     importWizard: {
+      steps: { choose: 'Chagua', check: 'Kagua', done: 'Tayari' },
+      stepsLabel: 'Hatua za kuleta',
+      dropHint: 'Gusa kuchagua, au dondosha faili hapa',
+      privacy:
+        'Inasomwa kwenye simu hii. Picha huondolewa kabla ya chochote kupakiwa.',
+      stats: { inFile: 'Kwenye faili', add: 'Za kuongeza', skip: 'Zitarukwa' },
+      skippedTitle: 'Zitarukwa, ili kitu kisihifadhiwe mara mbili',
+      warningsTitle: 'Ni vizuri kujua',
+      doneTitle: {
+        one: 'Anwani {n} imeongezwa',
+        other: 'Anwani {n} zimeongezwa',
+      },
+      doneNothing: 'Tayari ziko sawa',
+      checkDuplicates: 'Kagua nakala',
       unreadable: 'Faili hiyo haikuweza kusomwa.',
       noCards:
         'Hakuna anwani zilizopatikana. Chagua faili ya .vcf (vCard) iliyotolewa kutoka kwenye simu yako au kitabu cha anwani.',
@@ -427,10 +448,6 @@ export const client = section(
         'Hakuna kipya cha kuleta — kila kitu kwenye faili hiyo tayari kimehifadhiwa.',
       viewContacts: 'Tazama anwani',
       another: 'Leta faili nyingine',
-      inFile: {
-        one: 'Anwani {n} kwenye faili.',
-        other: 'Anwani {n} kwenye faili.',
-      },
       willAdd: { one: 'Anwani {n}', other: 'Anwani {n}' },
       willAddSuffix: 'zitaongezwa.',
       nothingNew:

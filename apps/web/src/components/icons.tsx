@@ -131,3 +131,26 @@ export const GlobeIcon = (p: IconProps) => (
     <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
   </Svg>
 );
+export const FileIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+  </Svg>
+);
+export const SwapIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 4v16M3 8l4-4 4 4" />
+    <path d="M17 20V4M13 16l4 4 4-4" />
+  </Svg>
+);
+export const ArrowDownIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </Svg>
+);
+export const AlertIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3 2 20h20z" />
+    <path d="M12 10v4M12 17h.01" />
+  </Svg>
+);

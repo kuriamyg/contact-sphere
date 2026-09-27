@@ -7,6 +7,8 @@ export const contactPages = section(
     editTitle: 'Edit {name}',
     saveChanges: 'Save changes',
     import: {
+      eyebrow: 'Bring your contacts',
+      howLead: 'Export a .vcf from where your contacts live now:',
       title: 'Import contacts',
       lead: 'From a .vcf (vCard) file. Contacts already saved are skipped, so it is safe to import the same file twice. Photos are not imported.',
       howTitle: 'Getting a .vcf file',
@@ -49,6 +51,8 @@ export const contactPages = section(
     editTitle: 'Hariri {name}',
     saveChanges: 'Hifadhi mabadiliko',
     import: {
+      eyebrow: 'Leta anwani zako',
+      howLead: 'Hamisha faili ya .vcf kutoka mahali anwani zako zilipo sasa:',
       title: 'Leta anwani',
       lead: 'Kutoka faili ya .vcf (vCard). Anwani zilizokwisha hifadhiwa hurukwa, kwa hiyo ni salama kuleta faili ileile mara mbili. Picha haziletwi.',
       howTitle: 'Kupata faili ya .vcf',
