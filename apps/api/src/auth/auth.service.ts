@@ -18,6 +18,7 @@ import type {
   LoginDto,
   SetupDto,
 } from './dto/credentials.dto';
+import { BreachedPasswords } from './breached-passwords';
 import { LoginFailures } from './login-failures';
 import {
   hashPassword,
@@ -25,7 +26,11 @@ import {
   verifyAgainstDummy,
   verifyPassword,
 } from './password';
-import { type IssuedSession, SessionService } from './session.service';
+import {
+  type IssuedSession,
+  SessionService,
+  type SessionView,
+} from './session.service';
 import { hashToken, newSessionToken, secretsEqual } from './tokens';
 import { TotpService } from './totp.service';
 import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
@@ -56,15 +61,18 @@ export interface Me {
 /** One message for every login failure, so it never reveals which part was wrong. */
 const INVALID_LOGIN = 'Invalid email or password.';
 
+const BREACHED_PASSWORD =
+  'This password has appeared in known data breaches, so attackers try it first. Choose a different one.';
+
 @Injectable()
 export class AuthService {
-  private readonly failures = new LoginFailures();
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly sessions: SessionService,
     private readonly audit: AuditService,
     private readonly totp: TotpService,
+    private readonly failures: LoginFailures,
+    private readonly breached: BreachedPasswords,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -78,7 +86,10 @@ export class AuthService {
    * Creates the first (owner) account. Single-user first release (ADR 0004):
    * there is no public sign-up, and this door closes once an account exists.
    */
-  async setup(dto: SetupDto): Promise<SessionResult> {
+  async setup(
+    dto: SetupDto,
+    device: string | null = null,
+  ): Promise<SessionResult> {
     const configured = this.env.setupToken;
     if (!configured) throw new NotFoundException();
     if (!secretsEqual(dto.setupToken, configured)) {
@@ -86,6 +97,7 @@ export class AuthService {
     }
     const problem = passwordProblem(dto.password, dto.email);
     if (problem) throw new BadRequestException(problem);
+    await this.refuseBreached(dto.password);
 
     const passwordHash = await hashPassword(dto.password);
     return this.prisma.$transaction(async (tx) => {
@@ -99,7 +111,12 @@ export class AuthService {
         data: { email: dto.email, passwordHash },
         select: { id: true, email: true },
       });
-      const session = await this.sessions.create(user.id, new Date(), tx);
+      const session = await this.sessions.create(
+        user.id,
+        new Date(),
+        tx,
+        device,
+      );
       await this.audit.record(
         'auth.setup_completed',
         { actorUserId: user.id, entityType: 'user', entityId: user.id },
@@ -109,9 +126,12 @@ export class AuthService {
     });
   }
 
-  async login(dto: LoginDto): Promise<SessionResult | MfaRequired> {
-    const key = hashToken(dto.email);
-    if (this.failures.isLocked(key)) {
+  async login(
+    dto: LoginDto,
+    device: string | null = null,
+  ): Promise<SessionResult | MfaRequired> {
+    const key = hashToken(dto.email.toLowerCase());
+    if (await this.failures.isLocked(key)) {
       throw new HttpException(
         'Too many failed attempts for this account. Try again in 15 minutes.',
         HttpStatus.TOO_MANY_REQUESTS,
@@ -133,7 +153,7 @@ export class AuthService {
       : (await verifyAgainstDummy(dto.password), false);
 
     if (!user || !ok) {
-      this.failures.record(key);
+      await this.failures.record(key);
       await this.audit.record('auth.login_failed', {
         // The account's id when one exists; never the email that was typed.
         entityType: user ? 'user' : undefined,
@@ -143,7 +163,7 @@ export class AuthService {
       throw new UnauthorizedException(INVALID_LOGIN);
     }
 
-    this.failures.clear(key);
+    await this.failures.clear(key);
 
     if (user.totpEnabledAt) {
       // The password alone is not enough: issue a short-lived challenge.
@@ -160,7 +180,12 @@ export class AuthService {
       return { mfaRequired: true, challenge, expiresAt };
     }
 
-    const session = await this.sessions.create(user.id);
+    const session = await this.sessions.create(
+      user.id,
+      undefined,
+      undefined,
+      device,
+    );
     await this.audit.record('auth.login_succeeded', {
       actorUserId: user.id,
       entityType: 'user',
@@ -170,7 +195,11 @@ export class AuthService {
   }
 
   /** Second step of sign-in: the challenge plus a TOTP or recovery code. */
-  async completeMfa(challenge: string, code: string): Promise<SessionResult> {
+  async completeMfa(
+    challenge: string,
+    code: string,
+    device: string | null = null,
+  ): Promise<SessionResult> {
     const found = await this.prisma.mfaChallenge.findUnique({
       where: { tokenHash: hashToken(challenge) },
       select: {
@@ -205,7 +234,12 @@ export class AuthService {
     }
 
     await this.prisma.mfaChallenge.deleteMany({ where: { id: found.id } });
-    const session = await this.sessions.create(found.userId);
+    const session = await this.sessions.create(
+      found.userId,
+      undefined,
+      undefined,
+      device,
+    );
     await this.audit.record('auth.login_succeeded', {
       actorUserId: found.userId,
       entityType: 'user',
@@ -221,6 +255,34 @@ export class AuthService {
   async logout(userId: string, sessionId: string): Promise<void> {
     await this.sessions.revoke(sessionId);
     await this.audit.record('auth.logout', {
+      actorUserId: userId,
+      entityType: 'session',
+      entityId: sessionId,
+    });
+  }
+
+  sessionList(
+    userId: string,
+    current: string,
+  ): Promise<(SessionView & { current: boolean })[]> {
+    return this.sessions
+      .list(userId)
+      .then((rows) => rows.map((r) => ({ ...r, current: r.id === current })));
+  }
+
+  /** Signs one other device out. This device uses "Sign out" instead. */
+  async endSession(
+    userId: string,
+    currentSessionId: string,
+    sessionId: string,
+  ): Promise<void> {
+    if (sessionId === currentSessionId) {
+      throw new BadRequestException('Use “Sign out” to leave this device.');
+    }
+    if (!(await this.sessions.revokeOwn(userId, sessionId))) {
+      throw new NotFoundException('That device is already signed out.');
+    }
+    await this.audit.record('auth.session_ended', {
       actorUserId: userId,
       entityType: 'session',
       entityId: sessionId,
@@ -286,6 +348,13 @@ export class AuthService {
     await this.prisma.user.update({ where: { id: userId }, data: { locale } });
   }
 
+  private async refuseBreached(password: string): Promise<void> {
+    const seen = await this.breached.timesSeen(password);
+    if (seen && seen > 0) {
+      throw new BadRequestException(BREACHED_PASSWORD);
+    }
+  }
+
   /** Changes the password and signs out every OTHER session. */
   async changePassword(
     userId: string,
@@ -306,6 +375,7 @@ export class AuthService {
         'Choose a password different from your current one.',
       );
     }
+    await this.refuseBreached(dto.newPassword);
 
     const passwordHash = await hashPassword(dto.newPassword);
     await this.prisma.$transaction(async (tx) => {

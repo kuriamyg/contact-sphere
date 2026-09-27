@@ -145,6 +145,17 @@ export async function logout(): Promise<void> {
   redirect('/login');
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Signs one other device out (Profile → Devices). */
+export async function signOutDevice(form: FormData): Promise<void> {
+  const id = field(form, 'sessionId');
+  if (UUID.test(id)) {
+    await api(`/auth/sessions/${id}`, { method: 'DELETE' });
+  }
+  revalidatePath('/account');
+}
+
 export async function logoutEverywhere(): Promise<void> {
   await api('/auth/logout-all', { method: 'POST' });
   await endSession();

@@ -47,6 +47,10 @@ without it Render only checks that the port is open.
 | `SETUP_TOKEN`         | production (and staging) | —             | — (one-time; delete after setup)    |
 | `TOTP_ENCRYPTION_KEY` | each service its own     | —             | — (never change casually: ADR 0013) |
 
+Optional on the API (both services): `LOG_LEVEL` (`info` by default) and
+`BREACHED_PASSWORD_CHECK` (`on` by default in production; set `off` only to
+diagnose — ADR 0016).
+
 Generate each with `openssl rand -hex 32`. Staging and production secrets
 must differ. Changing one side without the other makes every page show the
 API as unavailable — change both, then redeploy both.

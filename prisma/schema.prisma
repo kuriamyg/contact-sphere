@@ -83,12 +83,27 @@ model Session {
   lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
   /// Absolute expiry, however active the session is.
   expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  /// "Chrome on Android": a coarse label from the browser, never the full
+  /// user agent and never an address (A5).
+  device     String?  @db.VarChar(60)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+/// Failed sign-ins per account, so the lock-out survives restarts (A5).
+/// Keyed by a hash of the email typed, which may not be an account at all.
+model LoginFailure {
+  /// Hex SHA-256 of the email as typed (lower-cased).
+  keyHash         String   @id @map("key_hash") @db.Char(64)
+  failures        Int      @db.SmallInt
+  windowStartedAt DateTime @map("window_started_at") @db.Timestamptz(3)
+
+  @@index([windowStartedAt])
+  @@map("login_failures")
 }
 
 /// Append-only record of who did what, and when. The app role may INSERT and

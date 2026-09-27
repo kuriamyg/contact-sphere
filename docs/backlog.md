@@ -72,9 +72,10 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [ ] Owner creates the production account; then remove `SETUP_TOKEN`
 - [x] TOTP two-factor (ADR 0013): encrypted secret, single-use codes,
       recovery codes, challenge step; enable/disable from Account
-- [ ] Breached-password check; device/session list
-- [ ] Move the per-account failure counter out of memory before scaling out
-- [ ] Structured logging with redaction (pino) — never contact content
+- [x] A5: breached-password check (HIBP range API, fails open); device
+      list with sign-out per device (coarse label, no IP) — ADR 0016
+- [x] A5: per-account failure counter in Postgres (survives restarts)
+- [x] A5: structured logging with redaction (pino) — never contact content
 
 ## Phase 4 — Contacts (ADRs 0005, 0007, 0010 accepted)
 

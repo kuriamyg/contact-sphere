@@ -1,9 +1,12 @@
+import { createHash } from 'node:crypto';
+
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { Client } from 'pg';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 
 import { SESSION_IDLE_MS } from '../../src/auth/auth.constants';
+import { BreachedPasswords } from '../../src/auth/breached-passwords';
 import {
   createTestApp,
   ownerClient,
@@ -33,6 +36,7 @@ function bff(ip = `198.51.100.${++ipCounter % 250}`) {
     get: (url: string) => wrap(agent.get(url)),
     post: (url: string) => wrap(agent.post(url)),
     put: (url: string) => wrap(agent.put(url)),
+    delete: (url: string) => wrap(agent.delete(url)),
   };
 }
 
@@ -238,23 +242,69 @@ describe('login', () => {
     await login(PASSWORD, '203.0.113.10').expect(200);
   });
 
-  it('locks one account after 10 failures, even from many IPs', async () => {
-    // Its own app instance: the lock lasts 15 minutes and would otherwise
-    // (correctly) lock this account for every later test.
-    const { app: isolated } = await createTestApp();
-    const s = isolated.getHttpServer();
-    const attempt = (password: string, ip: string) =>
+  it('locks one account after 10 failures, even from many IPs — and a restart does not unlock it', async () => {
+    const attempt = (s: App, password: string, ip: string) =>
       request(s)
         .post('/auth/login')
         .set('x-bff-secret', TEST_SECRET)
         .set('x-client-ip', ip)
         .send({ email: EMAIL, password });
     for (let i = 0; i < 10; i++) {
-      await attempt('wrong password here', `192.0.2.${i + 1}`).expect(401);
+      await attempt(server, 'wrong password here', `192.0.2.${i + 1}`).expect(
+        401,
+      );
     }
-    const res = await attempt(PASSWORD, '192.0.2.200').expect(429);
+    const res = await attempt(server, PASSWORD, '192.0.2.200').expect(429);
     expect(res.body.message).toMatch(/Too many failed attempts/);
-    await isolated.close();
+    // A fresh instance (a restart, or a second server) sees the same lock.
+    const { app: restarted } = await createTestApp();
+    await attempt(restarted.getHttpServer(), PASSWORD, '192.0.2.201').expect(
+      429,
+    );
+    await restarted.close();
+    // The row holds a hash, never the email typed.
+    const { rows } = await owner.query<{ key_hash: string; failures: number }>(
+      'SELECT key_hash, failures FROM login_failures',
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].key_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(rows[0].failures).toBe(10);
+  });
+
+  it('a new window starts after 15 minutes; a correct password clears the count', async () => {
+    for (let i = 0; i < 3; i++) {
+      await login('wrong password here', `192.0.2.${i + 30}`).expect(401);
+    }
+    await owner.query(
+      "UPDATE login_failures SET window_started_at = now() - interval '16 minutes'",
+    );
+    await login('wrong password here', '192.0.2.40').expect(401);
+    expect(
+      (await owner.query('SELECT failures FROM login_failures')).rows[0]
+        .failures,
+    ).toBe(1);
+    await login(PASSWORD, '192.0.2.41').expect(200);
+    expect(
+      (await owner.query('SELECT count(*)::int n FROM login_failures')).rows[0]
+        .n,
+    ).toBe(0);
+  });
+
+  it('counts the email however it is capitalised', async () => {
+    for (let i = 0; i < 10; i++) {
+      await bff()
+        .post('/auth/login')
+        .set('x-client-ip', `192.0.2.${i + 60}`)
+        .send({
+          email: i % 2 ? EMAIL.toUpperCase() : EMAIL,
+          password: 'wrong password here',
+        })
+        .expect((r) => expect([400, 401]).toContain(r.status));
+    }
+    const { rows } = await owner.query<{ n: number }>(
+      'SELECT count(*)::int n FROM login_failures',
+    );
+    expect(rows[0].n).toBe(1);
   });
 });
 
@@ -272,6 +322,61 @@ describe('sessions', () => {
       .get('/auth/me')
       .set('authorization', `Bearer ${token}`)
       .expect(401);
+  });
+
+  it('lists signed-in devices with a coarse label, this one marked', async () => {
+    const PHONE =
+      'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36';
+    const phone = (await login().set('x-client-ua', PHONE).expect(200)).body
+      .token as string;
+    const res = await withSession(bff().get('/auth/sessions'), phone).expect(
+      200,
+    );
+    // setup + login (no browser named) + this phone
+    expect(res.body).toHaveLength(3);
+    const list = res.body as Record<string, unknown>[];
+    const mine = list.find((x) => x.current === true)!;
+    expect(mine).toMatchObject({ device: 'Chrome on Android', current: true });
+    expect(Object.keys(mine).sort()).toEqual(
+      ['createdAt', 'current', 'device', 'id', 'lastSeenAt'].sort(),
+    );
+    // Only the label is stored — never the full string, never an address.
+    const { rows } = await owner.query<{ device: string | null }>(
+      'SELECT device FROM sessions',
+    );
+    expect(rows.map((r) => r.device)).toContain('Chrome on Android');
+    expect(JSON.stringify(rows)).not.toMatch(/Pixel|537|Mozilla/);
+  });
+
+  it('signs one other device out, not this one, not someone else’s', async () => {
+    const other = (await login().expect(200)).body.token as string;
+    const list = (await withSession(bff().get('/auth/sessions'), token))
+      .body as {
+      id: string;
+      current: boolean;
+    }[];
+    const here = list.find((x) => x.current)!.id;
+    const { rows } = await owner.query<{ id: string }>(
+      "SELECT id FROM sessions WHERE token_hash = encode(sha256($1::bytea), 'hex')",
+      [other],
+    );
+    await withSession(bff().delete(`/auth/sessions/${here}`), token).expect(
+      400,
+    );
+    await withSession(
+      bff().delete(`/auth/sessions/${rows[0].id}`),
+      token,
+    ).expect(204);
+    await withSession(bff().get('/auth/me'), other).expect(401);
+    await withSession(bff().get('/auth/me'), token).expect(200);
+    await withSession(
+      bff().delete(`/auth/sessions/${rows[0].id}`),
+      token,
+    ).expect(404);
+    await withSession(bff().delete('/auth/sessions/not-a-uuid'), token).expect(
+      400,
+    );
+    expect(await auditActions()).toContain('auth.session_ended');
   });
 
   it('logout ends this session only', async () => {
@@ -374,5 +479,61 @@ describe('language', () => {
     await expect(owner.query("UPDATE users SET locale = 'xx'")).rejects.toThrow(
       /users_locale_known/,
     );
+  });
+});
+
+describe('breached passwords (A5)', () => {
+  const BREACHED = 'password1234';
+  const sha1 = (p: string) =>
+    createHash('sha1').update(p).digest('hex').toUpperCase();
+
+  it('refuses a breached password at setup and on change; an outage never blocks', async () => {
+    const { app: on } = await createTestApp({ BREACHED_PASSWORD_CHECK: 'on' });
+    const checker = on.get(BreachedPasswords);
+    const asked: string[] = [];
+    let down = false;
+    checker.fetchFn = (url) => {
+      asked.push(url);
+      if (down) return Promise.reject(new Error('network'));
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: () =>
+          Promise.resolve(`${sha1(BREACHED).slice(5)}:3861493\nABCDEF:0`),
+      });
+    };
+    const s = on.getHttpServer();
+    const post = (url: string, token?: string) => {
+      const r = request(s)
+        .post(url)
+        .set('x-bff-secret', TEST_SECRET)
+        .set('x-client-ip', `198.18.9.${++ipCounter % 250}`);
+      return token ? r.set('authorization', `Session ${token}`) : r;
+    };
+    const refused = await post('/auth/setup')
+      .send({ setupToken: TEST_SETUP_TOKEN, email: EMAIL, password: BREACHED })
+      .expect(400);
+    expect(refused.body.message).toMatch(/appeared in known data breaches/);
+    // Only the 5-character prefix ever left the server.
+    expect(asked[0]).toBe(
+      `https://api.pwnedpasswords.com/range/${sha1(BREACHED).slice(0, 5)}`,
+    );
+    const token = (
+      await post('/auth/setup')
+        .send({
+          setupToken: TEST_SETUP_TOKEN,
+          email: EMAIL,
+          password: PASSWORD,
+        })
+        .expect(201)
+    ).body.token as string;
+    await post('/auth/password', token)
+      .send({ currentPassword: PASSWORD, newPassword: BREACHED })
+      .expect(400);
+    down = true;
+    await post('/auth/password', token)
+      .send({ currentPassword: PASSWORD, newPassword: BREACHED })
+      .expect(204);
+    await on.close();
   });
 });

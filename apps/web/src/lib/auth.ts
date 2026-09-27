@@ -61,3 +61,18 @@ export async function setupAvailable(): Promise<boolean> {
   });
   return res.data?.setupAvailable ?? false;
 }
+
+export interface DeviceSession {
+  id: string;
+  /** "Chrome on Android", or null when the browser did not say. */
+  device: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  current: boolean;
+}
+
+/** Devices signed in to this account; null if the list could not load. */
+export async function getDevices(): Promise<DeviceSession[] | null> {
+  const res = await api<DeviceSession[]>('/auth/sessions');
+  return res.status === 200 && res.data ? res.data : null;
+}

@@ -29,7 +29,30 @@ describe('loadEnv', () => {
       apiSharedSecret: SECRET,
       setupToken: undefined,
       totpEncryptionKey: Buffer.from(KEY, 'hex'),
+      breachedPasswordCheck: false,
+      logLevel: 'info',
     });
+  });
+
+  it('logs at info, silent in tests, and refuses an unknown level', () => {
+    expect(loadEnv({ ...BASE, NODE_ENV: 'test' }).logLevel).toBe('silent');
+    expect(loadEnv({ ...BASE, LOG_LEVEL: 'DEBUG' }).logLevel).toBe('debug');
+    expect(() => loadEnv({ ...BASE, LOG_LEVEL: 'loud' })).toThrow(/LOG_LEVEL/);
+  });
+
+  it('checks breached passwords by default only in production', () => {
+    expect(loadEnv(PROD).breachedPasswordCheck).toBe(true);
+    expect(
+      loadEnv({ ...PROD, BREACHED_PASSWORD_CHECK: 'off' })
+        .breachedPasswordCheck,
+    ).toBe(false);
+    expect(
+      loadEnv({ ...BASE, BREACHED_PASSWORD_CHECK: ' ON ' })
+        .breachedPasswordCheck,
+    ).toBe(true);
+    expect(() => loadEnv({ ...BASE, BREACHED_PASSWORD_CHECK: 'yes' })).toThrow(
+      /BREACHED_PASSWORD_CHECK must be on or off/,
+    );
   });
 
   it('accepts a complete production configuration', () => {

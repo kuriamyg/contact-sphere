@@ -41,6 +41,8 @@ export function buildApiHeaders(opts: {
   ip: string;
   token?: string;
   json: boolean;
+  /** The browser's User-Agent; the API keeps only "Chrome on Android". */
+  ua?: string | null;
 }): Record<string, string> {
   const h: Record<string, string> = {
     'x-bff-secret': opts.secret,
@@ -49,6 +51,7 @@ export function buildApiHeaders(opts: {
   };
   if (opts.json) h['content-type'] = 'application/json';
   if (opts.token) h.authorization = `Session ${opts.token}`;
+  if (opts.ua) h['x-client-ua'] = opts.ua.slice(0, 512);
   return h;
 }
 
@@ -74,17 +77,18 @@ async function send(path: string, init: ApiInit): Promise<Response | null> {
       'API_URL and API_SHARED_SECRET must be set on the web server.',
     );
   }
-  const headers = buildApiHeaders({
+  const sent = buildApiHeaders({
     secret,
     ip: await clientIp(),
     token: init.auth === false ? undefined : await sessionToken(),
     json: init.body !== undefined,
+    ua: (await headers()).get('user-agent'),
   });
   try {
     return await fetch(`${base}${path}`, {
       method: init.method ?? 'GET',
       cache: 'no-store',
-      headers: { ...init.headers, ...headers },
+      headers: { ...init.headers, ...sent },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       // Render's free instance can take up to ~50 s to wake up. Must stay
       // below `maxDuration` in app/layout.tsx so this, not the platform,
@@ -92,7 +96,11 @@ async function send(path: string, init: ApiInit): Promise<Response | null> {
       signal: AbortSignal.timeout(50_000),
     });
   } catch (err) {
-    console.error(`API ${init.method ?? 'GET'} ${path} failed:`, err);
+    // The path only, never the query: a search holds the words typed.
+    console.error(
+      `API ${init.method ?? 'GET'} ${path.split('?')[0]} failed:`,
+      (err as Error)?.name ?? 'Error',
+    );
     return null;
   }
 }

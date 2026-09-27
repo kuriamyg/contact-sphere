@@ -529,3 +529,18 @@ Keep this. SW cache v5. ADR 0015. Tests: web unit +6 (82), e2e +2 (158),
 browser A4 flow 27/27 (offline edit, second edit folds, laptop edit
 meanwhile, stale 412, reconnect, fields merged, clash shown both places,
 Use mine, Keep this, laptop width, no CSP errors); offline flow re-run.
+
+## 2026-09-27 — A5: hardening
+
+Migration `hardening`: `login_failures` (hash, count, window start;
+CHECKs; app grant) and `sessions.device` (tidy CHECK). Durable lock-out
+via one atomic upsert; device labels from the User-Agent (web server
+passes `x-client-ua`); `GET/DELETE /auth/sessions`; HIBP range check on
+setup and change (fails open, env switch); pino logger with a Nest
+adapter, per-request lines (route masked, no query), safe errors and
+redaction; web log drops query strings. Profile gains the device list
+(en/sw). ADR 0016. Tests: API unit +14 (133), web +1 (83), e2e +5 (163)
+including lock surviving a new instance and breach refusal/outage; browser
+A5 flow 19/19 (two devices, sign one out, Kiswahili, lock across a real
+API restart, 248 real log lines scanned: no contact data, email, password,
+token, secret, device label or search words).

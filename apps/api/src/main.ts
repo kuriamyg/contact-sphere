@@ -10,8 +10,10 @@ async function bootstrap(): Promise<void> {
   // should fail here, loudly, naming the variable.
   const env = loadEnv();
 
+  // Boot messages wait until configureApp installs the redacting logger.
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule.forEnv(env),
+    { bufferLogs: true },
   );
   configureApp(app, env);
 

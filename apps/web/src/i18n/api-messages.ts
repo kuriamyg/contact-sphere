@@ -20,6 +20,11 @@ const EXACT: Record<string, string> = {
   'Your password is not correct.': 'Nenosiri lako si sahihi.',
   'Choose a password different from your current one.':
     'Chagua nenosiri tofauti na la sasa.',
+  'This password has appeared in known data breaches, so attackers try it first. Choose a different one.':
+    'Nenosiri hili limeonekana katika uvujaji wa data unaojulikana, kwa hiyo wavamizi hulijaribu kwanza. Chagua jingine.',
+  'Use “Sign out” to leave this device.':
+    'Tumia “Toka” kuondoka kwenye kifaa hiki.',
+  'That device is already signed out.': 'Kifaa hicho kimeshatolewa.',
   'Start two-factor setup first.':
     'Anza kuweka uthibitisho wa hatua mbili kwanza.',
   'Two-factor is already on.': 'Uthibitisho wa hatua mbili tayari umewashwa.',
