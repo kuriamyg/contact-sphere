@@ -31,7 +31,7 @@ export function LoginForm({ action = login }: { action?: typeof login }) {
         autoComplete="current-password"
         required
       />
-      <SubmitButton pending={pending} pendingText={t.signingIn}>
+      <SubmitButton spinner pending={pending} pendingText={t.signingIn}>
         {t.signIn}
       </SubmitButton>
     </form>

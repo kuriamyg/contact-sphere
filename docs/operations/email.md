@@ -1,6 +1,13 @@
 # Email: the morning reminder by email (A3)
 
-Built and **off**. It turns on when the API has all three of
+**Status (2026-09-27): on in production** with Resend's shared sender
+`Contact Sphere <onboarding@resend.dev>`. Without a verified domain Resend
+delivers only to the address the Resend account was created with — the
+owner's own, which is the only address the reminder is ever sent to. To
+send to other accounts later, verify a domain (below) and change
+`EMAIL_FROM`. Staging stays off (its test account has no real inbox).
+
+It turns on when the API has all three of
 `EMAIL_PROVIDER`, `EMAIL_API_KEY` and `EMAIL_FROM`. Until then Profile says
 email reminders are not available yet and `PUT /reach/email {on:true}` is
 refused (turning it off always works).

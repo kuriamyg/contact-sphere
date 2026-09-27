@@ -1,5 +1,7 @@
 import type { InputHTMLAttributes } from 'react';
 
+import { ChromeRing } from '@/components/brand/chrome-ring';
+
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
@@ -65,18 +67,22 @@ export function SubmitButton({
   pending,
   children,
   pendingText,
+  spinner = false,
 }: {
   pending: boolean;
   children: string;
   pendingText: string;
+  /** Show the chrome ring while pending (sign-in pages). */
+  spinner?: boolean;
 }) {
   return (
     <button
       type="submit"
       disabled={pending}
       aria-busy={pending}
-      className="w-full rounded-lg btn-primary px-4 py-2.5 text-base font-medium transition-opacity focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-lg btn-primary px-4 py-2.5 text-base font-medium transition-opacity focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60"
     >
+      {pending && spinner && <ChromeRing id="submit-ring" className="size-5" />}
       {pending ? pendingText : children}
     </button>
   );

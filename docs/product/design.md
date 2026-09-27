@@ -45,6 +45,23 @@ today first) with big Call / WhatsApp buttons; sections as cards; quick
 actions. With nothing due: "You're all caught up" and a getting-started
 checklist driven by `GET /remember/today`'s `setup` counts.
 
+## Sign-in pages: black and chrome
+
+Chosen by the owner 2026-09-27, for sign-in, first-account setup and the
+two-factor step only; every other page stays Aurora. Always black, whatever
+the theme (`.auth-chrome` redefines the tokens for that subtree and sets
+`data-theme="dark"` so `dark:` utilities apply; the status bar is black):
+
+- Text `#ededed`, muted `#a1a1a1`, glass fields (4% white, 14% hairline),
+  a white pill button with black text.
+- Emblem: our own **chrome ring** — a metallic torus drawn in SVG whose
+  highlight sweeps round as it turns slowly — in a glass tile lit from the
+  top left. It is original work in the spirit of the reference, not a copy
+  of another company's mark.
+- The same ring is the spinner: it spins in the button while signing in,
+  creating the account or checking a code. The words ("Signing in…") are
+  always there too; with reduced motion it stops.
+
 ## Import and duplicates
 
 Same language as Today: accent eyebrow, Sora heading, count tiles, glass
