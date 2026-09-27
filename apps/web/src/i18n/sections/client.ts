@@ -245,6 +245,14 @@ export const client = section(
       browserFailed: 'This browser could not turn on reminders.',
       testSent: 'Sent. It should appear in a few seconds.',
       testFailed: 'Could not send a test. Turn reminders off and on again.',
+      emailTitle: 'Email me too',
+      emailTo: 'To {email}. Counts only, never names.',
+      emailTest: 'Send a test email',
+      emailSent: 'Sent. Check your inbox (and spam) in a minute.',
+      emailFailed: 'Could not send it. Try again later.',
+      emailSaveFailed: 'Could not save. Try again.',
+      emailNotYet:
+        'Email reminders will be available once email sending is set up.',
     },
     texter: {
       message: 'Message',
@@ -560,6 +568,15 @@ export const client = section(
       testSent: 'Imetumwa. Inapaswa kuonekana baada ya sekunde chache.',
       testFailed:
         'Imeshindwa kutuma jaribio. Zima vikumbusho kisha uviwashe tena.',
+      emailTitle: 'Nitumie barua pepe pia',
+      emailTo: 'Kwa {email}. Idadi tu, kamwe si majina.',
+      emailTest: 'Tuma barua pepe ya jaribio',
+      emailSent:
+        'Imetumwa. Angalia kikasha chako (na spam) baada ya dakika moja.',
+      emailFailed: 'Imeshindwa kuituma. Jaribu tena baadaye.',
+      emailSaveFailed: 'Imeshindwa kuhifadhi. Jaribu tena.',
+      emailNotYet:
+        'Vikumbusho vya barua pepe vitapatikana utumaji wa barua pepe ukishawekwa.',
     },
     texter: {
       message: 'Ujumbe',

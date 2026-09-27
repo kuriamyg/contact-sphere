@@ -474,3 +474,17 @@ browser flows still guard behaviour: import 22/22, duplicates 27/27; new
 A2 flow 25/25 (steps, drag-and-drop, tiles, keyboard on choice tiles, 360
 px light, desktop, no CSP issues); Kiswahili 36/36. Two test races found
 (`isVisible`/`count` before navigation settled) and fixed in the tests.
+
+## 2026-09-27 — A3: morning reminder by email
+
+Provider-agnostic email (Resend, Brevo; `log` for tests) behind one
+adapter, off until `EMAIL_PROVIDER`/`EMAIL_API_KEY`/`EMAIL_FROM` are set
+(the sender is validated; header injection refused; the key never logged).
+Opt-in per owner (migration `email_digest`: `users.digest_email`, default
+false), `PUT /reach/email`, `POST /reach/email/test` (3/min); the morning
+job now runs for owners with a phone or email on, one shared day claim;
+counts-only subject and body in the owner's language, links to /today and
+/account, no images or tracking. Profile gains an "Email me too" switch.
+Tests: API unit +18 (adapters, content, escaping, env), e2e +6 (opt-in,
+test, once-a-day, no names, Kiswahili, not-set-up 403/204), browser 14/14
+(email on and off, keyboard, saved on reload, Kiswahili).

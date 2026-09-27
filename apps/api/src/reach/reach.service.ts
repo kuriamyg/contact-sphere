@@ -13,6 +13,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { nairobiToday } from '../remember/dates';
 import { RememberService, type TodayView } from '../remember/remember.service';
 import { PushService } from './push.service';
+import { EMAIL_PROVIDER, type EmailProvider } from './email-provider';
+import { digestEmail, testEmail } from './email-text';
 import { SMS_PROVIDER, type SmsProvider } from './sms-provider';
 import { isKenyanMobile, MAX_SMS_PARTS, smsSize } from './sms-text';
 
@@ -28,6 +30,8 @@ export interface ReachStatus {
     usedThisMonth: number;
     priceCents: number;
   };
+  /** The morning reminder by email: available here, and on for this owner. */
+  email: { enabled: boolean; on: boolean };
 }
 
 export interface SmsQuote {
@@ -130,12 +134,22 @@ export class ReachService {
     private readonly push: PushService,
     @Inject(ENV) private readonly env: Env,
     @Inject(SMS_PROVIDER) private readonly sms: SmsProvider | null,
+    @Inject(EMAIL_PROVIDER) private readonly mail: EmailProvider | null,
   ) {}
 
+  /** Links in emails point at the web app (the first allowed origin). */
+  private get webOrigin(): string {
+    return this.env.webOrigins[0] ?? '';
+  }
+
   async status(ownerId: string, now = new Date()): Promise<ReachStatus> {
-    const [devices, used] = await Promise.all([
+    const [devices, used, user] = await Promise.all([
       this.prisma.pushSubscription.count({ where: { ownerId } }),
       this.usedThisMonth(ownerId, now),
+      this.prisma.user.findUnique({
+        where: { id: ownerId },
+        select: { digestEmail: true },
+      }),
     ]);
     return {
       push: {
@@ -149,7 +163,36 @@ export class ReachService {
         usedThisMonth: used,
         priceCents: this.env.sms?.priceCents ?? 0,
       },
+      email: { enabled: !!this.mail, on: !!user?.digestEmail },
     };
+  }
+
+  // ---- Email --------------------------------------------------------------
+
+  /** Opt in or out. Turning off always works, even with email not set up. */
+  async setEmail(ownerId: string, on: boolean): Promise<void> {
+    if (on && !this.mail) {
+      throw new ForbiddenException('Email reminders are not set up.');
+    }
+    await this.prisma.user.update({
+      where: { id: ownerId },
+      data: { digestEmail: on },
+    });
+  }
+
+  /** Sends a test to the account's own address. */
+  async testEmail(ownerId: string): Promise<{ sent: boolean }> {
+    if (!this.mail) {
+      throw new ForbiddenException('Email reminders are not set up.');
+    }
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: ownerId },
+      select: { email: true, locale: true },
+    });
+    const sent = await this.mail.send(
+      testEmail(user.email, asLocale(user.locale), this.webOrigin),
+    );
+    return { sent };
   }
 
   // ---- Web Push -----------------------------------------------------------
@@ -206,21 +249,30 @@ export class ReachService {
    * The morning job: each owner with a phone gets at most one reminder per
    * Nairobi day, and only when something is due. Safe to run twice.
    */
-  async runDigest(now = new Date()): Promise<{ owners: number; sent: number }> {
-    if (!this.push.enabled) return { owners: 0, sent: 0 };
+  async runDigest(
+    now = new Date(),
+  ): Promise<{ owners: number; sent: number; emailed: number }> {
+    const channels = [
+      ...(this.push.enabled ? [{ pushDevices: { some: {} } }] : []),
+      ...(this.mail ? [{ digestEmail: true }] : []),
+    ];
+    if (channels.length === 0) return { owners: 0, sent: 0, emailed: 0 };
     const today = nairobiToday(now);
     const todayDate = new Date(`${today}T00:00:00Z`);
     const owners = await this.prisma.user.findMany({
       where: {
-        pushDevices: { some: {} },
-        OR: [{ digestSentOn: null }, { digestSentOn: { lt: todayDate } }],
+        AND: [
+          { OR: channels },
+          { OR: [{ digestSentOn: null }, { digestSentOn: { lt: todayDate } }] },
+        ],
       },
-      select: { id: true, locale: true },
+      select: { id: true, locale: true, email: true, digestEmail: true },
       take: 5000,
     });
     let sent = 0;
+    let emailed = 0;
     let reached = 0;
-    for (const { id, locale } of owners) {
+    for (const { id, locale, email, digestEmail: wantsEmail } of owners) {
       // Claim the day first: a second, overlapping run skips this owner.
       const claimed = await this.prisma.user.updateMany({
         where: {
@@ -235,16 +287,25 @@ export class ReachService {
         asLocale(locale),
       );
       if (!body) continue;
-      const n = await this.pushToOwner(id, {
-        title: 'Contact Sphere',
-        body,
-        url: '/today',
-        tag: 'today',
-      });
+      const n = this.push.enabled
+        ? await this.pushToOwner(id, {
+            title: 'Contact Sphere',
+            body,
+            url: '/today',
+            tag: 'today',
+          })
+        : 0;
+      const mailed =
+        wantsEmail && this.mail
+          ? await this.mail.send(
+              digestEmail(email, body, asLocale(locale), this.webOrigin),
+            )
+          : false;
       sent += n;
-      if (n > 0) reached += 1;
+      if (mailed) emailed += 1;
+      if (n > 0 || mailed) reached += 1;
     }
-    return { owners: reached, sent };
+    return { owners: reached, sent, emailed };
   }
 
   private async pushToOwner(

@@ -18,7 +18,7 @@ Figures are per SMS part (160 plain characters, or 70 with an emoji).
 | WhatsApp Business API                                       | utility ~KES 0.80, marketing ~KES 5.20         | KES 800–5,200                    | Meta business verification, templates | Costlier than SMS.                                                                                                                            |
 | `wa.me` link, one person at a time                          | free (data)                                    | —                                | none                                  | What the app already uses per contact.                                                                                                        |
 | **Web Push to the installed app**                           | **free**                                       | **free**                         | VAPID keys                            | Owner's own reminders only. Android: works in Chrome. iPhone: only after Add to Home Screen (iOS 16.4+).                                      |
-| Email (Resend / Brevo free tiers)                           | free up to 100/day (Resend) or 300/day (Brevo) | —                                | domain verification                   | Not built yet; a later option for the digest.                                                                                                 |
+| Email (Resend / Brevo free tiers)                           | free up to 100/day (Resend) or 300/day (Brevo) | —                                | domain verification                   | Built (A3), off until a sending domain exists. See docs/operations/email.md.                                                                  |
 
 A branded sender ID costs about KES 4,500–15,000 once per network with an
 aggregator; shared sender IDs cost nothing to start.
@@ -42,7 +42,11 @@ aggregator; shared sender IDs cost nothing to start.
    send, usage kept as counts in `sms_sends` (never the text or numbers).
    Off unless `SMS_PROVIDER`, keys and `SMS_MONTHLY_LIMIT` are set — turn on
    with Phase 12 (M-Pesa billing), priced from the cheapest aggregator.
-4. **QR business card.** "This is me" on your own contact → `/card` shows a
+4. **Morning reminder by email — built, off until a domain.** The same
+   counts-only line, in the owner's language, for owners who turn on
+   "Email me too" in Profile. Resend or Brevo behind one adapter; one day
+   claim shared with the phone reminder. See docs/operations/email.md.
+5. **QR business card.** "This is me" on your own contact → `/card` shows a
    QR any phone camera saves as a contact; any contact can be shared the same
    way. Only name, work, numbers and emails — never notes, tags or birthday.
 

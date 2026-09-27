@@ -45,6 +45,8 @@ model User {
   /// The Nairobi day the morning reminder was last pushed; the daily job
   /// can run twice without sending twice. Phase 11.
   digestSentOn  DateTime? @map("digest_sent_on") @db.Date
+  /// Opt-in: the morning reminder by email too (A3). Off by default.
+  digestEmail   Boolean   @default(false) @map("digest_email")
   /// The owner's own entry in their contacts, shown as their QR business
   /// card. Checked against owner and trash on every read (no FK: a
   /// composite SET NULL cannot be expressed in Prisma). Phase 11.

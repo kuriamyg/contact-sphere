@@ -58,6 +58,19 @@ export interface Env {
    * that Celcom, Advanta and TextSMS share.
    */
   sms?: SmsConfig;
+  /**
+   * The morning reminder by email (A3). Unset = off. Needs a verified
+   * sending domain at the provider (SPF + DKIM), so it stays off until one
+   * exists. `log` only records (tests, local).
+   */
+  email?: EmailConfig;
+}
+
+export interface EmailConfig {
+  provider: 'log' | 'resend' | 'brevo';
+  apiKey?: string;
+  /** Sender shown in the inbox. */
+  from: { name: string; address: string };
 }
 
 export interface SmsConfig {
@@ -289,6 +302,49 @@ function parseSms(
   };
 }
 
+const EMAIL_ADDRESS = /^[^\s@<>"]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+
+/** "Contact Sphere <digest@example.com>" or a bare address. */
+function parseFrom(raw: string): EmailConfig['from'] {
+  const m = /^\s*(?:"?([^"<>]{1,60})"?\s*)?<([^<>]+)>\s*$/.exec(raw);
+  const name = (m?.[1] ?? 'Contact Sphere').trim() || 'Contact Sphere';
+  const address = (m ? m[2] : raw).trim();
+  if (!EMAIL_ADDRESS.test(address) || /[\r\n]/.test(raw)) {
+    throw new EnvError(
+      'EMAIL_FROM must be an address like "Contact Sphere <digest@example.com>".',
+    );
+  }
+  return { name, address };
+}
+
+function parseEmail(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): EmailConfig | undefined {
+  const provider = source.EMAIL_PROVIDER?.trim();
+  if (!provider) return undefined;
+  if (provider === 'log') {
+    if (nodeEnv === 'production') {
+      throw new EnvError('EMAIL_PROVIDER=log is for tests; not in production.');
+    }
+    return {
+      provider,
+      from: parseFrom(source.EMAIL_FROM?.trim() || 'test@example.com'),
+    };
+  }
+  if (provider !== 'resend' && provider !== 'brevo') {
+    throw new EnvError('EMAIL_PROVIDER must be resend, brevo or log.');
+  }
+  const apiKey = source.EMAIL_API_KEY?.trim();
+  const from = source.EMAIL_FROM?.trim();
+  if (!apiKey || !from) {
+    throw new EnvError(
+      `EMAIL_PROVIDER=${provider} needs EMAIL_API_KEY and EMAIL_FROM.`,
+    );
+  }
+  return { provider, apiKey, from: parseFrom(from) };
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const nodeEnv = parseNodeEnv(source.NODE_ENV);
   const port = parseNonNegativeInt('PORT', source.PORT, DEFAULT_PORT);
@@ -317,5 +373,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     ),
     push: parsePush(source),
     sms: parseSms(source, nodeEnv),
+    email: parseEmail(source, nodeEnv),
   };
 }

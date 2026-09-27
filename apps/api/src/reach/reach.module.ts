@@ -6,6 +6,7 @@ import { RememberModule } from '../remember/remember.module';
 import { PushService } from './push.service';
 import { ReachController } from './reach.controller';
 import { ReachService } from './reach.service';
+import { EMAIL_PROVIDER, emailProviderFor } from './email-provider';
 import { SMS_PROVIDER, smsProviderFor } from './sms-provider';
 
 @Module({
@@ -18,6 +19,11 @@ import { SMS_PROVIDER, smsProviderFor } from './sms-provider';
       provide: SMS_PROVIDER,
       inject: [ENV],
       useFactory: (env: Env) => smsProviderFor(env.sms),
+    },
+    {
+      provide: EMAIL_PROVIDER,
+      inject: [ENV],
+      useFactory: (env: Env) => emailProviderFor(env.email),
     },
   ],
 })

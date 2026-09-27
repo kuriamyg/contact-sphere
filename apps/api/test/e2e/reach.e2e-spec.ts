@@ -4,6 +4,10 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 
 import { hashToken, newSessionToken } from '../../src/auth/tokens';
+import {
+  EMAIL_PROVIDER,
+  LogEmailProvider,
+} from '../../src/reach/email-provider';
 import { PushService } from '../../src/reach/push.service';
 import { LogSmsProvider, SMS_PROVIDER } from '../../src/reach/sms-provider';
 import {
@@ -21,6 +25,10 @@ const VAPID = {
   VAPID_PRIVATE_KEY: '9Q76GW68J7CshY1w3DeUSlNRYoC4ASGLuHfPPddKg-4',
   VAPID_SUBJECT: 'mailto:owner@example.com',
 };
+const EMAIL = {
+  EMAIL_PROVIDER: 'log',
+  EMAIL_FROM: 'Contact Sphere <digest@mail.example.com>',
+};
 const SMS = {
   SMS_PROVIDER: 'log',
   SMS_MONTHLY_LIMIT: '10',
@@ -34,6 +42,7 @@ let token: string;
 let ip = 0;
 let deliver: jest.SpyInstance;
 let sms: LogSmsProvider;
+let mail: LogEmailProvider;
 
 type Method = 'get' | 'post' | 'put' | 'delete';
 const api = (method: Method, url: string, as = token, srv = server) =>
@@ -71,15 +80,17 @@ const nairobiToday = () =>
   new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10);
 
 beforeAll(async () => {
-  ({ app } = await createTestApp({ ...VAPID, ...SMS }));
+  ({ app } = await createTestApp({ ...VAPID, ...SMS, ...EMAIL }));
   server = app.getHttpServer();
   sms = app.get<LogSmsProvider>(SMS_PROVIDER);
+  mail = app.get<LogEmailProvider>(EMAIL_PROVIDER);
   owner = ownerClient();
   await owner.connect();
 });
 beforeEach(async () => {
   await resetDatabase(owner);
   sms.sent.length = 0;
+  mail.sent.length = 0;
   deliver = jest
     .spyOn(app.get(PushService), 'deliver')
     .mockResolvedValue('sent');
@@ -112,6 +123,7 @@ describe('reach status', () => {
         usedThisMonth: 0,
         priceCents: 35,
       },
+      email: { enabled: true, on: false },
     });
     expect(JSON.stringify(res.body)).not.toContain(VAPID.VAPID_PRIVATE_KEY);
   });
@@ -183,14 +195,22 @@ describe('morning digest', () => {
     const c = await create({ givenName: 'Wanjiru', familyName: 'Kamau' });
 
     // Nothing due: nothing sent, but the day is spent.
-    expect((await run().expect(200)).body).toEqual({ owners: 0, sent: 0 });
+    expect((await run().expect(200)).body).toEqual({
+      owners: 0,
+      sent: 0,
+      emailed: 0,
+    });
     expect(deliver).not.toHaveBeenCalled();
 
     await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
       .send({ dueOn: nairobiToday(), note: 'Ask about the harambee' })
       .expect(201);
     await owner.query('UPDATE users SET digest_sent_on = NULL');
-    expect((await run().expect(200)).body).toEqual({ owners: 1, sent: 1 });
+    expect((await run().expect(200)).body).toEqual({
+      owners: 1,
+      sent: 1,
+      emailed: 0,
+    });
     const [, msg] = deliver.mock.calls[0] as [
       unknown,
       { body: string; url: string },
@@ -199,7 +219,11 @@ describe('morning digest', () => {
     expect(JSON.stringify(msg)).not.toMatch(/Wanjiru|harambee/);
 
     // Twice in a day sends nothing more.
-    expect((await run().expect(200)).body).toEqual({ owners: 0, sent: 0 });
+    expect((await run().expect(200)).body).toEqual({
+      owners: 0,
+      sent: 0,
+      emailed: 0,
+    });
     expect(deliver).toHaveBeenCalledTimes(1);
   });
 
@@ -210,7 +234,11 @@ describe('morning digest', () => {
     await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
       .send({ dueOn: nairobiToday(), note: 'Harambee' })
       .expect(201);
-    expect((await run().expect(200)).body).toEqual({ owners: 1, sent: 1 });
+    expect((await run().expect(200)).body).toEqual({
+      owners: 1,
+      sent: 1,
+      emailed: 0,
+    });
     const [, msg] = deliver.mock.calls[0] as [unknown, { body: string }];
     expect(msg.body).toBe('Leo: ufuatiliaji 1.');
     expect(JSON.stringify(msg)).not.toMatch(/Wanjiru|Harambee/);
@@ -223,8 +251,131 @@ describe('morning digest', () => {
       .send({ dueOn: nairobiToday(), note: 'Call' })
       .expect(201);
     deliver.mockResolvedValue('gone');
-    expect((await run().expect(200)).body).toEqual({ owners: 0, sent: 0 });
+    expect((await run().expect(200)).body).toEqual({
+      owners: 0,
+      sent: 0,
+      emailed: 0,
+    });
     expect((await api('get', '/reach/status')).body.push.devices).toBe(0);
+  });
+});
+
+describe('morning reminder by email', () => {
+  const run = () =>
+    request(server)
+      .post('/reach/digest/run')
+      .set('x-bff-secret', TEST_SECRET)
+      .set('x-client-ip', `198.18.12.${++ip % 250}`);
+
+  it('is opt-in, and can be turned on and off', async () => {
+    await api('put', '/reach/email').send({ on: true }).expect(204);
+    expect((await api('get', '/reach/status')).body.email).toEqual({
+      enabled: true,
+      on: true,
+    });
+    await api('put', '/reach/email').send({ on: false }).expect(204);
+    expect((await api('get', '/reach/status')).body.email.on).toBe(false);
+    await api('put', '/reach/email').send({ on: 'yes' }).expect(400);
+    await api('put', '/reach/email').send({}).expect(400);
+    await request(server)
+      .put('/reach/email')
+      .set('x-bff-secret', TEST_SECRET)
+      .send({ on: true })
+      .expect(401);
+  });
+
+  it('sends a test to the account’s own address', async () => {
+    const res = await api('post', '/reach/email/test').expect(200);
+    expect(res.body).toEqual({ sent: true });
+    expect(mail.sent).toHaveLength(1);
+    expect(mail.sent[0].to).toBe('owner@example.com');
+    expect(mail.sent[0].text).toContain('http://localhost:3000/today');
+  });
+
+  it('emails once a day, only when something is due, naming no one', async () => {
+    const c = await create({ givenName: 'Wanjiru', familyName: 'Kamau' });
+    await api('put', '/reach/email').send({ on: true }).expect(204);
+    // Nothing due: nothing sent (no phone either).
+    expect((await run().expect(200)).body).toEqual({
+      owners: 0,
+      sent: 0,
+      emailed: 0,
+    });
+    await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
+      .send({ dueOn: nairobiToday(), note: 'Ask about the harambee' })
+      .expect(201);
+    await owner.query('UPDATE users SET digest_sent_on = NULL');
+    expect((await run().expect(200)).body).toEqual({
+      owners: 1,
+      sent: 0,
+      emailed: 1,
+    });
+    expect(mail.sent[0]).toMatchObject({
+      to: 'owner@example.com',
+      subject: 'Today: 1 follow-up.',
+    });
+    expect(JSON.stringify(mail.sent)).not.toMatch(/Wanjiru|Kamau|harambee/);
+    // Twice in a day sends nothing more; push and email share the day.
+    expect((await run().expect(200)).body.emailed).toBe(0);
+    expect(mail.sent).toHaveLength(1);
+  });
+
+  it('sends phone and email together when both are on, in Kiswahili', async () => {
+    await api('put', '/auth/locale').send({ locale: 'sw' }).expect(204);
+    await api('post', '/reach/push/devices').send(device()).expect(204);
+    await api('put', '/reach/email').send({ on: true }).expect(204);
+    const c = await create({ givenName: 'Otieno' });
+    await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
+      .send({ dueOn: nairobiToday(), note: 'Call' })
+      .expect(201);
+    expect((await run().expect(200)).body).toEqual({
+      owners: 1,
+      sent: 1,
+      emailed: 1,
+    });
+    expect(mail.sent[0].subject).toBe('Leo: ufuatiliaji 1.');
+    expect(mail.sent[0].html).toContain('Fungua Leo');
+  });
+
+  it('never emails someone who did not opt in', async () => {
+    await api('post', '/reach/push/devices').send(device()).expect(204);
+    const c = await create({ givenName: 'Achieng' });
+    await api('post', `/remember/contacts/${c.body.id}/follow-ups`)
+      .send({ dueOn: nairobiToday(), note: 'Call' })
+      .expect(201);
+    expect((await run().expect(200)).body).toEqual({
+      owners: 1,
+      sent: 1,
+      emailed: 0,
+    });
+    expect(mail.sent).toHaveLength(0);
+  });
+
+  it('when email is not set up: turning on is refused, turning off works', async () => {
+    const { app: bare } = await createTestApp({ ...VAPID });
+    const srv = bare.getHttpServer();
+    try {
+      const t = (
+        await request(srv)
+          .post('/auth/login')
+          .set('x-bff-secret', TEST_SECRET)
+          .set('x-client-ip', `198.18.13.${++ip % 250}`)
+          .send({
+            email: 'owner@example.com',
+            password: 'orange piano window cloud',
+          })
+          .expect(200)
+      ).body.token as string;
+      expect((await api('get', '/reach/status', t, srv)).body.email).toEqual({
+        enabled: false,
+        on: false,
+      });
+      await api('put', '/reach/email', t, srv).send({ on: true }).expect(403);
+      await api('put', '/reach/email', t, srv).send({ on: false }).expect(204);
+      await api('post', '/reach/email/test', t, srv).expect(403);
+    } finally {
+      await bare.close();
+    }
   });
 });
 

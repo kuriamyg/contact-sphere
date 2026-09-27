@@ -51,6 +51,21 @@ export async function sendTestPush(): Promise<number | null> {
   return res.status === 200 && res.data ? res.data.sent : null;
 }
 
+/** The morning reminder by email: on or off. True when saved. */
+export async function setEmailReminders(on: boolean): Promise<boolean> {
+  if (typeof on !== 'boolean') return false;
+  const res = await api('/reach/email', { method: 'PUT', body: { on } });
+  return res.status === 204;
+}
+
+/** A test email to the account's own address; null if refused. */
+export async function sendTestEmail(): Promise<boolean | null> {
+  const res = await api<{ sent: boolean }>('/reach/email/test', {
+    method: 'POST',
+  });
+  return res.status === 200 && res.data ? res.data.sent : null;
+}
+
 /** "This is me": the contact shown as the owner's QR card. */
 export async function setCard(form: FormData): Promise<void> {
   const id = str(form, 'contactId');
