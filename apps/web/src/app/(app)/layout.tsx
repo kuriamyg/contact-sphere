@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { OrbitMark } from '@/components/brand/orbit-mark';
 import { NavLink } from '@/components/nav-link';
+import { EditClashes } from '@/components/offline/edit-clashes';
 import { OfflineSync } from '@/components/offline/offline-sync';
 import { BottomNav } from '@/components/shell/bottom-nav';
 import { ProfileMenu } from '@/components/shell/profile-menu';
@@ -58,6 +59,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
           id="main"
           className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-28 sm:py-8 lg:max-w-7xl lg:px-10 lg:py-10"
         >
+          <EditClashes ownerId={user.id} />
           {children}
         </main>
         <BottomNav />

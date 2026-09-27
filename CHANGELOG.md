@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Edit contacts with no data
+
+- **Edit details offline**: name, numbers, emails, job, organisation,
+  area, met through, birthday, skills and notes. Saved on the phone at
+  once, sent when you have data.
+- **Nothing is overwritten by surprise**: each field is merged on its own.
+  If the same detail was also changed elsewhere, the other change is kept
+  and you are shown both — "Use mine" or "Keep this" — in the offline app
+  and in the full app.
+- API: `PUT /contacts/:id` accepts `If-Match` with the contact's
+  `updatedAt` and answers 412 if it changed since.
+
 ### Changed — A proper laptop layout
 
 - **Sidebar** on laptops: search, Today, Contacts, Groups, tools, and your

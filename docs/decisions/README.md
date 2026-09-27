@@ -30,6 +30,7 @@ mattered.
 | [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL    | Accepted |
 | [0013](0013-two-factor-totp.md)                  | Two-factor sign-in with TOTP                               | Accepted |
 | [0014](0014-languages.md)                        | Languages: English and Kiswahili                           | Accepted |
+| [0015](0015-offline-edits-and-conflicts.md)      | Offline edits: field-level merge, owner decides clashes    | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.

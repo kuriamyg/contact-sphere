@@ -515,3 +515,17 @@ menu, flat sections, Appearance) and full-page on phones. Browser: new
 layout flow 22/22 (laptop dark/light, phone, search kept in the pane, pane
 stays on group edit, section menu jumps, no sideways scroll); earlier flows
 re-run (Aurora updated for the sidebar and a tablet check).
+
+## 2026-09-27 — A4: edit contacts offline, with clash handling
+
+API: `If-Match: "<updatedAt>"` on `PUT /contacts/:id` (row locked, 412
+when changed; 400 malformed; 404/409 unchanged). Web: `contact.edit` op
+with per-field from/to, strict parsing, pure `mergeEdit` (three-way per
+field, API-style comparison) and `editBody` (derived names stay derived),
+re-merge on 412 up to 3 times. Offline app: Edit details screen with
+visible labels, edits folded per contact, clash card on the contact and
+a banner link; full app: clash card above every page with Use mine /
+Keep this. SW cache v5. ADR 0015. Tests: web unit +6 (82), e2e +2 (158),
+browser A4 flow 27/27 (offline edit, second edit folds, laptop edit
+meanwhile, stale 412, reconnect, fields merged, clash shown both places,
+Use mine, Keep this, laptop width, no CSP errors); offline flow re-run.

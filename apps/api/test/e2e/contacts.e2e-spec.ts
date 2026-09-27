@@ -211,6 +211,47 @@ describe('creating and editing', () => {
     expect(rows[0].n).toBe(1);
   });
 
+  it('If-Match saves only when the contact is unchanged since then', async () => {
+    const c = (await create({ givenName: 'Ann' })).body;
+    const first = await api('put', `/contacts/${c.id}`)
+      .set('if-match', `"${c.updatedAt}"`)
+      .send({ givenName: 'Anne' })
+      .expect(200);
+    // The same version again is now stale: 412, and nothing changes.
+    const stale = await api('put', `/contacts/${c.id}`)
+      .set('if-match', `"${c.updatedAt}"`)
+      .send({ givenName: 'Annie' })
+      .expect(412);
+    expect(stale.body.message).toBe(
+      'This contact changed since you opened it.',
+    );
+    const now = await api('get', `/contacts/${c.id}`).expect(200);
+    expect(now.body.displayName).toBe('Anne');
+    // Unquoted works too; a malformed value is refused.
+    await api('put', `/contacts/${c.id}`)
+      .set('if-match', first.body.updatedAt as string)
+      .send({ givenName: 'Annie' })
+      .expect(200);
+    await api('put', `/contacts/${c.id}`)
+      .set('if-match', 'yesterday')
+      .send({ givenName: 'X' })
+      .expect(400);
+  });
+
+  it('If-Match still 404s for others and 409s in the trash', async () => {
+    const c = (await create({ givenName: 'Ann' })).body;
+    const other = await secondUser();
+    await api('put', `/contacts/${c.id}`, other)
+      .set('if-match', `"${c.updatedAt}"`)
+      .send({ givenName: 'B' })
+      .expect(404);
+    await api('delete', `/contacts/${c.id}`).expect(204);
+    await api('put', `/contacts/${c.id}`)
+      .set('if-match', `"${c.updatedAt}"`)
+      .send({ givenName: 'B' })
+      .expect(409);
+  });
+
   it('cannot edit a contact in the trash', async () => {
     const c = (await create({ givenName: 'Ann' })).body;
     await api('delete', `/contacts/${c.id}`).expect(204);

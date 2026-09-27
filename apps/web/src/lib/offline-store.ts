@@ -6,6 +6,8 @@
  * The copy exists only while the owner has switched it on (FLAG) and is
  * signed in: sign-out, "sign out everywhere" and any 401 wipe it.
  */
+import type { EditConflict, OpResult } from './offline-ops';
+
 export const DB_NAME = 'cs-offline';
 const STORE = 'kv';
 export const FLAG = 'cs-offline';
@@ -129,6 +131,45 @@ export async function pendingCount(): Promise<number> {
   return (await get<Queue>('queue'))?.ops.length ?? 0;
 }
 
+/** Offline edits that clashed with changes made elsewhere (A4). */
+export interface Clashes {
+  ownerId: string;
+  items: EditConflict[];
+}
+
+export async function readClashes(ownerId: string): Promise<EditConflict[]> {
+  const c = await get<Clashes>('conflicts');
+  return c && c.ownerId === ownerId ? c.items : [];
+}
+
+export async function saveClashes(
+  ownerId: string,
+  items: EditConflict[],
+): Promise<void> {
+  try {
+    await put('conflicts', { ownerId, items } satisfies Clashes);
+  } catch {
+    // Storage blocked: nothing to show later either.
+  }
+  window.dispatchEvent(new Event(CLASHES_EVENT));
+}
+
+/** Fired on window whenever the stored clashes change. */
+export const CLASHES_EVENT = 'cs-clashes';
+
+/** A newer clash for a contact replaces the older one. */
+export async function addClashes(
+  ownerId: string,
+  found: EditConflict[],
+): Promise<void> {
+  if (!found.length) return;
+  const ids = new Set(found.map((c) => c.contactId));
+  const kept = (await readClashes(ownerId)).filter(
+    (c) => !ids.has(c.contactId),
+  );
+  await saveClashes(ownerId, [...kept, ...found]);
+}
+
 export interface FlushResult {
   sent: number;
   rejected: string[];
@@ -156,8 +197,12 @@ export async function flushQueue(): Promise<FlushResult> {
     }
     if (!res.ok) return { sent: 0, rejected: [] };
     const { results } = (await res.json()) as {
-      results: { opId: string; status: string; message?: string }[];
+      results: OpResult[];
     };
+    await addClashes(
+      queue.ownerId,
+      results.flatMap((r) => (r.conflict ? [r.conflict] : [])),
+    );
     const keep = new Set(
       results.filter((r) => r.status === 'retry').map((r) => r.opId),
     );

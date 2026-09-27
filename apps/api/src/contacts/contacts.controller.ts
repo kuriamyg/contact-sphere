@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Header,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
@@ -54,6 +56,17 @@ const IMPORT_LIMIT = { default: { limit: 10, ttl: 60_000 } };
  * a plain 404 rather than a validation error.
  */
 const Id = () => new ParseUUIDPipe();
+
+/** `"2026-09-27T10:00:00.000Z"` (quotes optional) → that instant. */
+function parseIfMatch(v: string | undefined): Date | undefined {
+  if (v === undefined) return undefined;
+  const m = /^\s*"?(\d{4}-\d{2}-\d{2}T[\d:.]+Z)"?\s*$/.exec(v);
+  const d = m ? new Date(m[1]) : null;
+  if (!d || Number.isNaN(d.getTime())) {
+    throw new BadRequestException('If-Match must be the contact’s updatedAt.');
+  }
+  return d;
+}
 
 /**
  * The owner's contacts. Every route needs a session (global SessionGuard)
@@ -245,13 +258,19 @@ export class ContactsController {
     return this.contacts.get(a.userId, id);
   }
 
+  /**
+   * Replaces the contact. `If-Match: "<updatedAt>"` saves only if the contact
+   * is unchanged since then (412 otherwise) — how offline edits avoid
+   * overwriting newer ones.
+   */
   @Put(':id')
   update(
     @CurrentAuth() a: AuthContext,
     @Param('id', Id()) id: string,
     @Body() dto: ContactInputDto,
+    @Headers('if-match') ifMatch?: string,
   ): Promise<ContactDetail> {
-    return this.contacts.update(a.userId, id, dto);
+    return this.contacts.update(a.userId, id, dto, parseIfMatch(ifMatch));
   }
 
   /** Moves the contact to the trash. */

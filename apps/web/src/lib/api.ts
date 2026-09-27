@@ -56,6 +56,8 @@ interface ApiInit {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   auth?: boolean;
+  /** Extra request headers (e.g. If-Match); never the auth ones. */
+  headers?: Record<string, string>;
 }
 
 /**
@@ -82,7 +84,7 @@ async function send(path: string, init: ApiInit): Promise<Response | null> {
     return await fetch(`${base}${path}`, {
       method: init.method ?? 'GET',
       cache: 'no-store',
-      headers,
+      headers: { ...init.headers, ...headers },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       // Render's free instance can take up to ~50 s to wake up. Must stay
       // below `maxDuration` in app/layout.tsx so this, not the platform,
