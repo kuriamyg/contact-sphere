@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsOptional,
   IsString,
   IsUUID,
@@ -47,4 +48,9 @@ export class CardDto {
   @IsOptional()
   @IsUUID()
   contactId?: string | null;
+}
+
+export class EmailOptInDto {
+  @IsBoolean()
+  on!: boolean;
 }

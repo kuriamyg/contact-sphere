@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Morning reminder by email (ready, switched off)
+
+- **Email me too**: Profile → Morning reminders. Once a morning, when
+  something is due, the same short line as the phone reminder ("Today: 1
+  follow-up and 2 birthdays.") by email, in your language, with a button
+  to open Today. Counts only, never names. Off unless you turn it on, and
+  "Send a test email" checks it works.
+- It appears once a sending domain is set up (docs/operations/email.md);
+  until then Profile says so.
+
 ### Changed — Import and duplicates in the Aurora look
 
 - **Import** shows where you are (Choose → Check → Done), accepts a file

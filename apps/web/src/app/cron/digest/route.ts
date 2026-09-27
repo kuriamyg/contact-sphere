@@ -3,7 +3,8 @@ import { timingSafeEqual } from 'node:crypto';
 /**
  * The morning reminder job (Phase 11). Vercel Cron calls this once a day
  * (vercel.json) with "Authorization: Bearer $CRON_SECRET"; anything else is
- * refused. It asks the API to push each owner's reminder. Holds no data.
+ * refused. It asks the API to send each owner's reminder (phone and, if chosen,
+ * email). Holds no data.
  */
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;

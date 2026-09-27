@@ -180,7 +180,11 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] QR business card ("This is me", /card, .vcf) and share-any-contact QR
 - [ ] Owner action: choose an aggregator, get a sender ID, set SMS_* env
       when paid plans launch
-- [ ] Email digest (Resend/Brevo free tier) — needs a sending domain
+- [x] Email digest (A3): opt-in per owner, counts only, en/sw, Resend or
+      Brevo behind one adapter, shares the daily claim with push — built,
+      off until a sending domain (docs/operations/email.md)
+- [ ] Owner action: get a domain, verify it at Resend or Brevo, set
+      EMAIL_PROVIDER / EMAIL_API_KEY / EMAIL_FROM on Render
 - [x] 11b: Kiswahili — every screen, the offline app, messages and the
       morning reminder; switch in the avatar menu or Profile (ADR 0014)
 

@@ -18,6 +18,7 @@ import {
 import { NameForm } from '@/components/profile/name-form';
 import { InstallApp } from '@/components/pwa/install-app';
 import { LanguageSwitch } from '@/components/shell/language-switch';
+import { EmailReminders } from '@/components/reach/email-reminders';
 import { PhoneReminders } from '@/components/reach/phone-reminders';
 import {
   OfflineToggle,
@@ -190,6 +191,13 @@ export default async function ProfilePage() {
           <PhoneReminders publicKey={reach.push.publicKey} />
         ) : (
           <p className="text-sm text-muted">{t.notAvailable}</p>
+        )}
+        {reach?.email?.enabled ? (
+          <EmailReminders initialOn={reach.email.on} email={user.email} />
+        ) : (
+          <p className="border-t border-border pt-3 text-sm text-muted">
+            {m.client.reminders.emailNotYet}
+          </p>
         )}
       </section>
 

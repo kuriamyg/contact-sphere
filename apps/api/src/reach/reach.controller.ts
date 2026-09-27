@@ -14,6 +14,7 @@ import { Throttle } from '@nestjs/throttler';
 import { type AuthContext, CurrentAuth, Public } from '../auth/decorators';
 import {
   CardDto,
+  EmailOptInDto,
   GroupSmsDto,
   PushDeviceDto,
   PushEndpointDto,
@@ -62,6 +63,22 @@ export class ReachController {
     return this.reach.testPush(a.userId);
   }
 
+  @Put('email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  setEmail(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: EmailOptInDto,
+  ): Promise<void> {
+    return this.reach.setEmail(a.userId, dto.on);
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('email/test')
+  @HttpCode(HttpStatus.OK)
+  testEmail(@CurrentAuth() a: AuthContext): Promise<{ sent: boolean }> {
+    return this.reach.testEmail(a.userId);
+  }
+
   /**
    * The morning reminder job. No session: the web server's scheduled route
    * calls it (it has checked its own cron secret); the BFF secret is still
@@ -71,7 +88,7 @@ export class ReachController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('digest/run')
   @HttpCode(HttpStatus.OK)
-  runDigest(): Promise<{ owners: number; sent: number }> {
+  runDigest(): Promise<{ owners: number; sent: number; emailed: number }> {
     return this.reach.runDigest();
   }
 

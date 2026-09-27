@@ -14,6 +14,8 @@ export interface ReachStatus {
     usedThisMonth: number;
     priceCents: number;
   };
+  /** Absent only while an older API is still deploying. */
+  email?: { enabled: boolean; on: boolean };
 }
 
 export interface CardView extends CardInput {

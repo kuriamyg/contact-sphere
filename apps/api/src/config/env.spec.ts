@@ -227,4 +227,50 @@ describe('loadEnv', () => {
       );
     });
   });
+
+  describe('email', () => {
+    const RESEND = {
+      ...BASE,
+      EMAIL_PROVIDER: 'resend',
+      EMAIL_API_KEY: 're_key',
+      EMAIL_FROM: 'Contact Sphere <digest@mail.example.com>',
+    };
+
+    it('is off unless a provider is named', () => {
+      expect(loadEnv(BASE).email).toBeUndefined();
+    });
+
+    it('parses a provider, key and sender', () => {
+      expect(loadEnv(RESEND).email).toEqual({
+        provider: 'resend',
+        apiKey: 're_key',
+        from: { name: 'Contact Sphere', address: 'digest@mail.example.com' },
+      });
+      expect(
+        loadEnv({ ...RESEND, EMAIL_PROVIDER: 'brevo', EMAIL_FROM: 'a@b.co' })
+          .email?.from,
+      ).toEqual({ name: 'Contact Sphere', address: 'a@b.co' });
+    });
+
+    it('refuses a half or unsafe configuration, without echoing the key', () => {
+      expect(() => loadEnv({ ...RESEND, EMAIL_API_KEY: '' })).toThrow(
+        /EMAIL_API_KEY and EMAIL_FROM/,
+      );
+      expect(() =>
+        loadEnv({ ...RESEND, EMAIL_FROM: 'not an address' }),
+      ).toThrow(/EMAIL_FROM/);
+      expect(() =>
+        loadEnv({ ...RESEND, EMAIL_FROM: 'a@b.co\r\nBcc: x@y.z' }),
+      ).toThrow(/EMAIL_FROM/);
+      expect(() => loadEnv({ ...RESEND, EMAIL_PROVIDER: 'sendgrid' })).toThrow(
+        /resend, brevo or log/,
+      );
+      expect(() => loadEnv({ ...RESEND, EMAIL_FROM: 'x' })).not.toThrow(
+        /re_key/,
+      );
+      expect(() => loadEnv({ ...PROD, EMAIL_PROVIDER: 'log' })).toThrow(
+        /not in production/,
+      );
+    });
+  });
 });
