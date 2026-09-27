@@ -252,3 +252,56 @@ h3 {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Sign-in pages: black and chrome, the same in every theme. Tokens are
+ * redefined for this subtree only; unlayered rules so they win over
+ * utilities where needed (the button's pill shape).
+ */
+.auth-chrome {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ededed;
+  --muted: #a1a1a1;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.14);
+  --accent: #ededed;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+  --card-shadow: none;
+  background: #000000;
+  color: var(--foreground);
+}
+.auth-chrome .btn-primary {
+  background-image: none;
+  background: #fafafa;
+  color: #0a0a0a;
+  border-radius: 9999px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.auth-chrome .btn-primary:hover {
+  background: #ffffff;
+  filter: none;
+}
+/* Busy: stay white (the ring shows on it), only a touch dimmer. */
+.auth-chrome .btn-primary:disabled {
+  opacity: 0.85;
+}
+.auth-chrome input {
+  border-radius: 0.875rem;
+}
+/* The emblem's glass tile: lit from the top left, like polished stone. */
+.chrome-tile {
+  background:
+    radial-gradient(
+      120% 120% at 25% 15%,
+      rgba(255, 255, 255, 0.14),
+      transparent 55%
+    ),
+    linear-gradient(160deg, #1c1c1c, #050505 70%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+}

@@ -5,6 +5,20 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — Sign-in in black and chrome
+
+- Sign-in, first-account setup and the two-factor step now have their own
+  look: black, with a polished chrome ring in a glass tile, glass fields
+  and a white pill button. The ring spins in the button while you sign in.
+  The rest of the app keeps its theme.
+
+### Changed — Email reminders switched on
+
+- Production now sends the morning reminder by email (Resend's shared
+  sender, which delivers to the account owner's own address) for owners who
+  turn on "Email me too". A custom sending domain can replace it later by
+  changing `EMAIL_FROM` only.
+
 ### Added — Morning reminder by email (ready, switched off)
 
 - **Email me too**: Profile → Morning reminders. Once a morning, when

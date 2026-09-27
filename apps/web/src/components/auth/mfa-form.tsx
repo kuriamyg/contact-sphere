@@ -25,7 +25,7 @@ export function MfaForm() {
         required
         autoFocus
       />
-      <SubmitButton pending={pending} pendingText={t.checking}>
+      <SubmitButton spinner pending={pending} pendingText={t.checking}>
         {t.verify}
       </SubmitButton>
     </form>

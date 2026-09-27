@@ -488,3 +488,15 @@ counts-only subject and body in the owner's language, links to /today and
 Tests: API unit +18 (adapters, content, escaping, env), e2e +6 (opt-in,
 test, once-a-day, no names, Kiswahili, not-set-up 403/204), browser 14/14
 (email on and off, keyboard, saved on reload, Kiswahili).
+
+## 2026-09-27 — Email on; sign-in in black and chrome
+
+Owner created a Resend account (same address as their Contact Sphere
+login) and a sending-only key; production got EMAIL_PROVIDER=resend and
+EMAIL_FROM=Contact Sphere <onboarding@resend.dev> (the vercel.app domain
+cannot be verified for sending — its DNS belongs to Vercel). Owner then
+asked for a black-and-chrome sign-in in the spirit of Resend's UI: built
+`.auth-chrome` (tokens redefined for the sign-in subtree only) and our own
+chrome-ring SVG, used as the emblem and as the spinner in the submit
+button. Browser flow 12/12 (black in light theme, white pill, spinner
+spins while signing in, rest of app keeps theme, 360 px, Kiswahili, CSP).

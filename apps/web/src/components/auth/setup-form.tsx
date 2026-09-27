@@ -41,7 +41,7 @@ export function SetupForm() {
         hint={t.passwordHint}
         required
       />
-      <SubmitButton pending={pending} pendingText={t.creating}>
+      <SubmitButton spinner pending={pending} pendingText={t.creating}>
         {t.create}
       </SubmitButton>
     </form>
