@@ -5,6 +5,8 @@ import { connection } from 'next/server';
 import './globals.css';
 
 import { RegisterServiceWorker } from '@/components/pwa/register-sw';
+import { I18nProvider } from '@/i18n/client';
+import { getLocale, getMessages } from '@/i18n/server';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
 // next/font downloads these at build time and serves them from our own
@@ -30,7 +32,12 @@ const body = Manrope({
  */
 export const maxDuration = 60;
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const m = await getMessages();
+  return { ...metadata, description: m.meta.description };
+}
+
+const metadata: Metadata = {
   title: 'Contact Sphere',
   description: 'A private, privacy-first contact manager.',
   // A private application: keep every page out of search engines.
@@ -61,9 +68,10 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
   // (src/proxy.ts). A page built once at deploy time could not carry one.
   await connection();
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const [locale, m] = await Promise.all([getLocale(), getMessages()]);
   return (
     <html
-      lang="en"
+      lang={locale}
       data-theme={theme}
       className={`${heading.variable} ${body.variable} h-full antialiased`}
     >
@@ -73,9 +81,11 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:rounded-md focus:bg-foreground focus:px-3 focus:py-2 focus:text-background"
         >
-          Skip to content
+          {m.common.skip}
         </a>
-        {children}
+        <I18nProvider locale={locale} messages={m.client}>
+          {children}
+        </I18nProvider>
         <RegisterServiceWorker />
       </body>
     </html>

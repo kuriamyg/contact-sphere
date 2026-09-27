@@ -45,6 +45,8 @@ export interface Me {
   id: string;
   email: string;
   displayName: string | null;
+  /** "en" or "sw". */
+  locale: string;
   /** When the account was created (ISO 8601). */
   createdAt: string;
   totpEnabled: boolean;
@@ -242,6 +244,7 @@ export class AuthService {
         id: true,
         email: true,
         displayName: true,
+        locale: true,
         createdAt: true,
         totpEnabledAt: true,
       },
@@ -253,6 +256,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
+      locale: user.locale,
       createdAt: user.createdAt.toISOString(),
       totpEnabled: user.totpEnabledAt !== null,
       recoveryCodesLeft: user.totpEnabledAt
@@ -275,6 +279,11 @@ export class AuthService {
       );
     });
     return this.me(userId);
+  }
+
+  /** The owner's language, for text the server writes (reminders). */
+  async setLocale(userId: string, locale: 'en' | 'sw'): Promise<void> {
+    await this.prisma.user.update({ where: { id: userId }, data: { locale } });
   }
 
   /** Changes the password and signs out every OTHER session. */

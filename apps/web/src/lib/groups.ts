@@ -1,34 +1,28 @@
 import 'server-only';
 
+import type { Messages } from '@/i18n/en';
+
 import { api } from './api';
 import { failedLoad } from './auth';
 import { UUID } from './contacts';
 
 /** Shapes returned by the API's /groups routes (apps/api groups.service). */
 export const GROUP_KINDS = [
-  { value: 'chama', label: 'Chama' },
-  { value: 'church', label: 'Church' },
-  { value: 'family', label: 'Family' },
-  { value: 'work', label: 'Work' },
-  { value: 'estate', label: 'Estate' },
-  { value: 'school', label: 'School / alumni' },
-  { value: 'other', label: 'Other' },
+  'chama',
+  'church',
+  'family',
+  'work',
+  'estate',
+  'school',
+  'other',
 ] as const;
-export type GroupKind = (typeof GROUP_KINDS)[number]['value'];
-export const kindLabel = (k: string) =>
-  GROUP_KINDS.find((x) => x.value === k)?.label ?? 'Other';
+export type GroupKind = (typeof GROUP_KINDS)[number];
 
-/** Suggestions for the role field; any text is allowed. */
-export const ROLE_SUGGESTIONS = [
-  'chair',
-  'vice chair',
-  'secretary',
-  'treasurer',
-  'member',
-  'pastor',
-  'elder',
-  'organiser',
-];
+/** A kind's name in the reader's language ("Other" for anything unknown). */
+export const kindLabel = (k: string, kinds: Messages['groups']['kinds']) =>
+  (GROUP_KINDS as readonly string[]).includes(k)
+    ? kinds[k as GroupKind]
+    : kinds.other;
 
 export interface GroupSummary {
   id: string;

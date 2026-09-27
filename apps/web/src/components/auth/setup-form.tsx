@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 
 import { type FormState, setup } from '@/app/actions/auth';
+import { useMessages } from '@/i18n/client';
 
 import { Field, FormMessage, SubmitButton } from './field';
 
@@ -11,36 +12,37 @@ export function SetupForm() {
     setup,
     {},
   );
+  const t = useMessages().setup;
   return (
     <form action={formAction} className="space-y-5" noValidate>
       <FormMessage error={state.error} />
       <Field
-        label="Setup token"
+        label={t.token}
         name="setupToken"
         type="password"
         autoComplete="off"
-        hint="The one-time token from the server configuration."
+        hint={t.tokenHint}
         required
         autoFocus
       />
       <Field
-        label="Email"
+        label={t.email}
         name="email"
         type="email"
         autoComplete="username"
         required
       />
       <Field
-        label="Password"
+        label={t.password}
         name="password"
         type="password"
         autoComplete="new-password"
         minLength={12}
-        hint="At least 12 characters. A few unrelated words work well."
+        hint={t.passwordHint}
         required
       />
-      <SubmitButton pending={pending} pendingText="Creating account…">
-        Create account
+      <SubmitButton pending={pending} pendingText={t.creating}>
+        {t.create}
       </SubmitButton>
     </form>
   );

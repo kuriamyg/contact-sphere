@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
+import { apiText, getMessages } from '@/i18n/server';
 import { api } from '@/lib/api';
 import {
   type ContactFormValues,
@@ -22,14 +23,13 @@ export interface ContactFormState {
   attempt?: number;
 }
 
-function message(status: number, apiMessage?: string): string {
-  if (status === 0 || status >= 500) {
-    return 'The service is unavailable. Try again shortly.';
-  }
-  if (status === 401) return 'Your session has ended. Sign in again.';
-  if (status === 404) return 'That contact no longer exists.';
-  if (status === 429) return 'Too many requests. Wait a minute and try again.';
-  return apiMessage ?? 'Something went wrong. Try again.';
+async function message(status: number, apiMessage?: string): Promise<string> {
+  const t = (await getMessages()).errors;
+  if (status === 0 || status >= 500) return t.unavailable;
+  if (status === 401) return t.sessionEnded;
+  if (status === 404) return t.contactGone;
+  if (status === 429) return t.tooManyRequests;
+  return (await apiText(apiMessage)) ?? t.generic;
 }
 
 const field = (form: FormData, name: string) => {
@@ -55,7 +55,7 @@ export async function createContact(
   });
   if (res.status !== 201 || !res.data) {
     return {
-      error: message(res.status, res.message),
+      error: await message(res.status, res.message),
       values,
       attempt: (prev.attempt ?? 0) + 1,
     };
@@ -75,7 +75,7 @@ export async function updateContact(
   });
   if (res.status !== 200) {
     return {
-      error: message(res.status, res.message),
+      error: await message(res.status, res.message),
       values,
       attempt: (prev.attempt ?? 0) + 1,
     };

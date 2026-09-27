@@ -1,13 +1,15 @@
 'use client';
 
+import { useMessages } from '@/i18n/client';
 import { SORT_OPTIONS, type SortValue } from '@/lib/contact-params';
 
 /** Changing the order re-submits the search form straight away. */
 export function SortSelect({ value }: { value: SortValue }) {
+  const t = useMessages().sort;
   return (
     <div className="space-y-1.5">
       <label htmlFor="sort" className="block text-sm font-medium">
-        Sort by
+        {t.label}
       </label>
       <select
         id="sort"
@@ -18,7 +20,7 @@ export function SortSelect({ value }: { value: SortValue }) {
       >
         {SORT_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t[o.value]}
           </option>
         ))}
       </select>

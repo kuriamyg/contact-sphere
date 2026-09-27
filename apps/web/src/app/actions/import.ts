@@ -1,5 +1,6 @@
 'use server';
 
+import { apiText, getMessages } from '@/i18n/server';
 import { api } from '@/lib/api';
 import { MAX_VCF_CHARS } from '@/lib/vcf-file';
 
@@ -21,16 +22,15 @@ export interface ImportPlan {
 
 export type ImportResult = { plan: ImportPlan } | { error: string };
 
-function failure(status: number, message?: string): { error: string } {
-  if (status === 0 || status >= 500) {
-    return { error: 'The service is unavailable. Try again shortly.' };
-  }
-  if (status === 401)
-    return { error: 'Your session has ended. Sign in again.' };
-  if (status === 429) {
-    return { error: 'Too many imports in a row. Wait a minute and try again.' };
-  }
-  return { error: message ?? 'That file could not be read.' };
+async function failure(
+  status: number,
+  message?: string,
+): Promise<{ error: string }> {
+  const t = (await getMessages()).errors;
+  if (status === 0 || status >= 500) return { error: t.unavailable };
+  if (status === 401) return { error: t.sessionEnded };
+  if (status === 429) return { error: t.tooManyImports };
+  return { error: (await apiText(message)) ?? t.fileUnreadable };
 }
 
 async function send(
@@ -39,13 +39,10 @@ async function send(
   ok: number,
 ): Promise<ImportResult> {
   if (typeof vcf !== 'string' || vcf.length === 0) {
-    return { error: 'Choose a .vcf file first.' };
+    return { error: (await getMessages()).errors.chooseFile };
   }
   if (vcf.length > MAX_VCF_CHARS) {
-    return {
-      error:
-        'That file is too large to import at once (over 4 MB without photos).',
-    };
+    return { error: (await getMessages()).client.importWizard.tooLarge };
   }
   const res = await api<ImportPlan>(path, { method: 'POST', body: { vcf } });
   if (res.status !== ok || !res.data) return failure(res.status, res.message);

@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Put,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
@@ -18,6 +19,7 @@ import { type AuthContext, CurrentAuth, Public } from './decorators';
 import {
   ChangePasswordDto,
   LoginDto,
+  LocaleDto,
   ProfileDto,
   SetupDto,
 } from './dto/credentials.dto';
@@ -116,6 +118,15 @@ export class AuthController {
     @Body() dto: ProfileDto,
   ): Promise<Me> {
     return this.auth.updateProfile(a.userId, dto.displayName);
+  }
+
+  @Put('locale')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  setLocale(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: LocaleDto,
+  ): Promise<void> {
+    return this.auth.setLocale(a.userId, dto.locale);
   }
 
   @Get('me')

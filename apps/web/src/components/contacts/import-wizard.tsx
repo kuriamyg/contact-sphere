@@ -14,6 +14,8 @@ import {
   MAX_VCF_CHARS,
   stripBinaryProperties,
 } from '@/lib/vcf-file';
+import { useMessages } from '@/i18n/client';
+import { fmt, plural } from '@/i18n/format';
 
 const primary =
   'rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-60';
@@ -25,14 +27,12 @@ type Stage =
   | { name: 'preview'; fileName: string; vcf: string; plan: ImportPlan }
   | { name: 'done'; plan: ImportPlan };
 
-const plural = (n: number, one: string, many: string) =>
-  `${n} ${n === 1 ? one : many}`;
-
 /**
  * Choose a .vcf → see what would happen → import. The file is read in the
  * browser; photos are removed before anything is uploaded.
  */
 export function ImportWizard() {
+  const t = useMessages().importWizard;
   const [stage, setStage] = useState<Stage>({ name: 'choose' });
   const [error, setError] = useState<string>();
   const [pending, start] = useTransition();
@@ -52,19 +52,15 @@ export function ImportWizard() {
       try {
         vcf = stripBinaryProperties(await file.text());
       } catch {
-        setError('That file could not be read.');
+        setError(t.unreadable);
         return;
       }
       if (countCards(vcf) === 0) {
-        setError(
-          'No contacts found. Choose a .vcf (vCard) file exported from your phone or address book.',
-        );
+        setError(t.noCards);
         return;
       }
       if (vcf.length > MAX_VCF_CHARS) {
-        setError(
-          'That file is too large to import at once (over 4 MB without photos).',
-        );
+        setError(t.tooLarge);
         return;
       }
       const res = await previewImport(vcf);
@@ -89,18 +85,16 @@ export function ImportWizard() {
       <div className="space-y-4">
         <FormMessage
           success={
-            p.toImport > 0
-              ? `Imported ${plural(p.toImport, 'contact', 'contacts')}.`
-              : 'Nothing new to import — everything in that file is already saved.'
+            p.toImport > 0 ? plural(p.toImport, t.imported) : t.nothingNewDone
           }
         />
         <Skipped plan={p} />
         <div className="flex flex-wrap gap-3">
           <Link href="/contacts" className={primary}>
-            View contacts
+            {t.viewContacts}
           </Link>
           <button type="button" onClick={reset} className={secondary}>
-            Import another file
+            {t.another}
           </button>
         </div>
       </div>
@@ -114,18 +108,15 @@ export function ImportWizard() {
         <FormMessage error={error} />
         <div className="space-y-1">
           <p className="font-medium break-all">{stage.fileName}</p>
-          <p className="text-muted">
-            {plural(p.cards, 'contact', 'contacts')} in the file.
-          </p>
+          <p className="text-muted">{plural(p.cards, t.inFile)}</p>
         </div>
         <p className="text-lg">
           {p.toImport > 0 ? (
             <>
-              <strong>{plural(p.toImport, 'contact', 'contacts')}</strong> will
-              be added.
+              <strong>{plural(p.toImport, t.willAdd)}</strong> {t.willAddSuffix}
             </>
           ) : (
-            'Nothing new to add — everything in this file is already saved.'
+            t.nothingNew
           )}
         </p>
         <Skipped plan={p} />
@@ -133,7 +124,7 @@ export function ImportWizard() {
         {p.preview.length > 0 && (
           <details className="rounded-xl card">
             <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
-              See who will be added
+              {t.seeWho}
             </summary>
             <ul className="max-h-80 divide-y divide-border overflow-y-auto border-t border-border text-sm">
               {p.preview.map((c, i) => (
@@ -146,7 +137,7 @@ export function ImportWizard() {
               ))}
               {p.toImport > p.preview.length && (
                 <li className="px-4 py-2 text-muted">
-                  …and {p.toImport - p.preview.length} more
+                  {fmt(t.andMore, { n: p.toImport - p.preview.length })}
                 </li>
               )}
             </ul>
@@ -159,7 +150,7 @@ export function ImportWizard() {
             className={secondary}
             disabled={pending}
           >
-            Choose another file
+            {t.chooseAnother}
           </button>
           {p.toImport > 0 && (
             <button
@@ -169,9 +160,7 @@ export function ImportWizard() {
               aria-busy={pending}
               className={`${primary} sm:ml-auto`}
             >
-              {pending
-                ? 'Importing…'
-                : `Import ${plural(p.toImport, 'contact', 'contacts')}`}
+              {pending ? t.importing : plural(p.toImport, t.importN)}
             </button>
           )}
         </div>
@@ -186,12 +175,8 @@ export function ImportWizard() {
         htmlFor="vcf"
         className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center bg-surface hover:bg-surface-hover focus-within:ring-2 focus-within:ring-foreground/40"
       >
-        <span className="font-medium">
-          {pending ? 'Reading the file…' : 'Choose a .vcf file'}
-        </span>
-        <span className="text-sm text-muted">
-          Nothing is saved until you confirm on the next step.
-        </span>
+        <span className="font-medium">{pending ? t.reading : t.choose}</span>
+        <span className="text-sm text-muted">{t.nothingSaved}</span>
         <input
           ref={input}
           id="vcf"
@@ -207,13 +192,11 @@ export function ImportWizard() {
 }
 
 function Skipped({ plan: p }: { plan: ImportPlan }) {
+  const t = useMessages().importWizard;
   const rows = [
-    p.alreadySaved > 0 &&
-      `${plural(p.alreadySaved, 'contact is', 'contacts are')} already saved (same name, numbers and emails) and will be skipped.`,
-    p.repeatedInFile > 0 &&
-      `${plural(p.repeatedInFile, 'contact appears', 'contacts appear')} twice in the file; the copy will be skipped.`,
-    p.empty > 0 &&
-      `${plural(p.empty, 'entry has', 'entries have')} no name, number or email and will be skipped.`,
+    p.alreadySaved > 0 && plural(p.alreadySaved, t.alreadySaved),
+    p.repeatedInFile > 0 && plural(p.repeatedInFile, t.repeated),
+    p.empty > 0 && plural(p.empty, t.empty),
   ].filter(Boolean) as string[];
   if (rows.length === 0) return null;
   return (
@@ -226,15 +209,12 @@ function Skipped({ plan: p }: { plan: ImportPlan }) {
 }
 
 function Warnings({ plan: { warnings: w } }: { plan: ImportPlan }) {
+  const t = useMessages().importWizard;
   const rows = [
-    w.invalidEmails > 0 &&
-      `${plural(w.invalidEmails, 'email address was', 'email addresses were')} not valid and will be left out.`,
-    w.unusableBirthdays > 0 &&
-      `${plural(w.unusableBirthdays, 'birthday has', 'birthdays have')} no year or are not real dates and will be left out.`,
-    w.truncatedFields > 0 &&
-      `${plural(w.truncatedFields, 'field is', 'fields are')} longer than allowed and will be shortened.`,
-    w.tooManyValues > 0 &&
-      `${plural(w.tooManyValues, 'number or email is', 'numbers or emails are')} beyond 20 on one contact and will be left out.`,
+    w.invalidEmails > 0 && plural(w.invalidEmails, t.invalidEmails),
+    w.unusableBirthdays > 0 && plural(w.unusableBirthdays, t.badBirthdays),
+    w.truncatedFields > 0 && plural(w.truncatedFields, t.truncated),
+    w.tooManyValues > 0 && plural(w.tooManyValues, t.tooMany),
   ].filter(Boolean) as string[];
   if (rows.length === 0) return null;
   return (

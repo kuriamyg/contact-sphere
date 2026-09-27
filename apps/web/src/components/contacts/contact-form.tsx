@@ -5,6 +5,8 @@ import { useActionState, useId, useState } from 'react';
 
 import type { ContactFormState } from '@/app/actions/contacts';
 import { Field, FormMessage, SubmitButton } from '@/components/auth/field';
+import { useMessages } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 import type { ContactFormValues } from '@/lib/contact-form';
 
 const MAX_ROWS = 20;
@@ -41,6 +43,8 @@ function RowList({
   autoComplete: string;
   addText: string;
 }) {
+  const all = useMessages();
+  const t = all.contactForm;
   const uid = useId();
   const [rows, setRows] = useState<Row[]>(() =>
     initial.map((r, key) => ({ key, ...r })),
@@ -55,7 +59,7 @@ function RowList({
           <div className="min-w-0 flex-[2_1_12rem] space-y-1.5">
             <label htmlFor={`${uid}-v${row.key}`} className="sr-only">
               {valueLabel} {i + 1}
-              {i === 0 ? ' (primary)' : ''}
+              {i === 0 ? t.primary : ''}
             </label>
             <input
               id={`${uid}-v${row.key}`}
@@ -70,13 +74,13 @@ function RowList({
           </div>
           <div className="min-w-0 flex-[1_1_7rem] space-y-1.5">
             <label htmlFor={`${uid}-l${row.key}`} className="sr-only">
-              Label for {valueLabel.toLowerCase()} {i + 1}
+              {fmt(t.labelFor, { what: valueLabel.toLowerCase(), n: i + 1 })}
             </label>
             <input
               id={`${uid}-l${row.key}`}
               name={labelName}
               defaultValue={row.label}
-              placeholder="Label (e.g. mobile)"
+              placeholder={t.labelPlaceholder}
               maxLength={40}
               className={inputClass}
             />
@@ -84,10 +88,13 @@ function RowList({
           <button
             type="button"
             className={smallButton}
-            aria-label={`Remove ${valueLabel.toLowerCase()} ${i + 1}`}
+            aria-label={fmt(t.removeRow, {
+              what: valueLabel.toLowerCase(),
+              n: i + 1,
+            })}
             onClick={() => setRows(rows.filter((r) => r.key !== row.key))}
           >
-            Remove
+            {all.form.remove}
           </button>
         </div>
       ))}
@@ -107,18 +114,19 @@ function RowList({
 }
 
 function Fields({ v }: { v: ContactFormValues }) {
+  const t = useMessages().contactForm;
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="First name"
+          label={t.firstName}
           name="givenName"
           autoComplete="off"
           maxLength={100}
           defaultValue={v.givenName}
         />
         <Field
-          label="Last name"
+          label={t.lastName}
           name="familyName"
           autoComplete="off"
           maxLength={100}
@@ -126,52 +134,52 @@ function Fields({ v }: { v: ContactFormValues }) {
         />
       </div>
       <Field
-        label="Display name (optional)"
+        label={t.displayName}
         name="displayName"
         autoComplete="off"
         maxLength={200}
-        hint="How the contact appears in lists. Leave blank to use the name."
+        hint={t.displayNameHint}
         defaultValue={v.displayName}
       />
       <Field
-        label="Nickname"
+        label={t.nickname}
         name="nickname"
         autoComplete="off"
         maxLength={100}
         defaultValue={v.nickname}
       />
       <RowList
-        legend="Phone numbers"
+        legend={t.phones}
         valueName="phoneRaw"
         labelName="phoneLabel"
-        valueLabel="Phone number"
+        valueLabel={t.phone}
         initial={v.phones.map((p) => ({ value: p.raw, label: p.label }))}
         inputType="tel"
         inputMode="tel"
         autoComplete="off"
-        addText="Add a number"
+        addText={t.addPhone}
       />
       <RowList
-        legend="Email addresses"
+        legend={t.emails}
         valueName="emailAddress"
         labelName="emailLabel"
-        valueLabel="Email address"
+        valueLabel={t.emailAddress}
         initial={v.emails.map((e) => ({ value: e.address, label: e.label }))}
         inputType="email"
         inputMode="email"
         autoComplete="off"
-        addText="Add an email"
+        addText={t.addEmail}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Organisation"
+          label={t.organization}
           name="organization"
           autoComplete="off"
           maxLength={200}
           defaultValue={v.organization}
         />
         <Field
-          label="Job title"
+          label={t.jobTitle}
           name="jobTitle"
           autoComplete="off"
           maxLength={200}
@@ -179,38 +187,36 @@ function Fields({ v }: { v: ContactFormValues }) {
         />
       </div>
       <fieldset className="space-y-4 rounded-xl card p-4">
-        <legend className="px-1 text-sm font-semibold">
-          Who they are to you
-        </legend>
+        <legend className="px-1 text-sm font-semibold">{t.whoTheyAre}</legend>
         <Field
-          label="Skills and services"
+          label={t.tags}
           name="tags"
           autoComplete="off"
           maxLength={900}
-          hint="Separate with commas, e.g. plumber, boda boda, lawyer. You can search by these."
+          hint={t.tagsHint}
           defaultValue={v.tags}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Area"
+            label={t.area}
             name="area"
             autoComplete="off"
             maxLength={100}
-            hint="Estate, town or stage"
+            hint={t.areaHint}
             defaultValue={v.area}
           />
           <Field
-            label="Met through"
+            label={t.metThrough}
             name="metThrough"
             autoComplete="off"
             maxLength={200}
-            hint="e.g. church, chama, work"
+            hint={t.metThroughHint}
             defaultValue={v.metThrough}
           />
         </div>
       </fieldset>
       <Field
-        label="Birthday"
+        label={t.birthday}
         name="birthday"
         type="date"
         min="1900-01-01"
@@ -218,7 +224,7 @@ function Fields({ v }: { v: ContactFormValues }) {
       />
       <div className="space-y-1.5">
         <label htmlFor="notes" className="block text-sm font-medium">
-          Notes
+          {t.notes}
         </label>
         <textarea
           id="notes"
@@ -251,6 +257,7 @@ export function ContactForm({
   submitText: string;
   cancelHref: string;
 }) {
+  const f = useMessages().form;
   const [state, formAction, pending] = useActionState(action, {});
   const values = state.values ?? initial;
   return (
@@ -268,10 +275,10 @@ export function ContactForm({
           href={cancelHref}
           className="rounded-lg px-4 py-2.5 text-center font-medium text-muted hover:underline"
         >
-          Cancel
+          {f.cancel}
         </Link>
         <div className="sm:ml-auto sm:w-48">
-          <SubmitButton pending={pending} pendingText="Saving…">
+          <SubmitButton pending={pending} pendingText={f.saving}>
             {submitText}
           </SubmitButton>
         </div>

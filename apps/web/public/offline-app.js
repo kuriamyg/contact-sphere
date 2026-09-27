@@ -18,6 +18,220 @@
     themeMatch ? themeMatch[1] : 'auto',
   );
 
+  // The language chosen in the app (cookie cs-lang), else the phone's.
+  var langMatch = /(?:^|; )cs-lang=(en|sw)/.exec(document.cookie);
+  var LANG = langMatch
+    ? langMatch[1]
+    : /^sw\b/i.test(navigator.language || '')
+      ? 'sw'
+      : 'en';
+  document.documentElement.setAttribute('lang', LANG);
+  var STRINGS = {
+    en: {
+      title: 'Contact Sphere (offline)',
+      main: 'Main',
+      today: 'Today',
+      contacts: 'Contacts',
+      groups: 'Groups',
+      loading: 'Loading…',
+      done: 'Done',
+      doneWith: 'Done: {x}',
+      waiting:
+        'Waiting to send — saved on this phone, sent when you have data.',
+      waitingShort: 'waiting to send',
+      relToday: 'today',
+      relTomorrow: 'tomorrow',
+      relIn: 'in {n} days',
+      relLate: ['{n} day late', '{n} days late'],
+      justNow: 'just now',
+      minAgo: '{n} min ago',
+      hoursAgo: '{n} h ago',
+      daysAgo: '{n} days ago',
+      call: 'Call',
+      callName: 'Call {x}',
+      sms: 'SMS',
+      smsName: 'SMS {x}',
+      searchPlaceholder: 'Name, skill, area, number…',
+      searchLabel: 'Search contacts',
+      count: ['{n} contact', '{n} contacts'],
+      first100: ' — showing the first 100, search to narrow',
+      newContact: 'New contact',
+      notInCopy: 'Not in the offline copy',
+      notInCopyBody:
+        'It may be archived, in the trash, or added after the copy was made.',
+      backContacts: '← Contacts',
+      backGroups: '← Groups',
+      skills: 'Skills and services',
+      phone: 'Phone',
+      primary: 'primary',
+      email: 'Email',
+      area: 'Area: ',
+      metThrough: 'Met through: ',
+      birthday: 'Birthday: ',
+      followUps: 'Follow-ups',
+      notes: 'Notes',
+      editNeedsData: 'Editing details (name, numbers, skills) needs data.',
+      inTouchToday: 'I was in touch today',
+      lastInTouch: 'Last in touch: {x}',
+      notContacted: 'Not marked as contacted yet',
+      followDate: 'Follow-up date',
+      followNote: 'Follow-up note',
+      followPlaceholder: 'e.g. Ask about the harambee',
+      addFollowTitle: 'Add a follow-up',
+      addFollow: 'Add follow-up',
+      name: 'Name',
+      phoneNumber: 'Phone number',
+      note: 'Note',
+      noteOptional: 'Note (optional)',
+      saveContact: 'Save contact',
+      newContactNote:
+        'Saved on this phone now; added to your account when you have data. Add more details later in the full app.',
+      nothingDue: 'Nothing due today.',
+      followUp: 'Follow up',
+      keepInTouch: 'Keep in touch',
+      dueToday: 'due today',
+      overdue: ['{n} day overdue', '{n} days overdue'],
+      inTouchWith: 'I was in touch with {x}',
+      birthdays: 'Birthdays',
+      birthdayToday: 'Today 🎉',
+      turns: ' · turns {n}',
+      members: ['{n} member', '{n} members'],
+      noGroups: 'No groups in the offline copy.',
+      textEveryone: 'Text everyone (SMS)',
+      offlineTitle: 'You’re offline',
+      noCopy: 'There is no copy of your contacts on this phone yet.',
+      noCopyHow:
+        'When you have data or Wi-Fi: open Profile → “Use it without data” → Keep a copy on this phone. After that, your contacts open here even with no bundle.',
+      tryAgain: 'Try again',
+      noConnection: 'No connection.',
+      bannerFirst: 'No connection — showing the copy on this phone.',
+      banner: 'No connection — your copy from {x}. Calls and SMS use airtime.',
+      earlier: 'earlier',
+      queued: [' {n} change waiting to send.', ' {n} changes waiting to send.'],
+      notSaved: ' Not saved: {x}',
+      otherAccount: 'changes made by another account were discarded.',
+      refused: 'a change was refused.',
+      sent: ['Sent {n} change. ', 'Sent {n} changes. '],
+      backOnline: 'You’re back online — open the full app',
+    },
+    sw: {
+      title: 'Contact Sphere (bila mtandao)',
+      main: 'Kuu',
+      today: 'Leo',
+      contacts: 'Anwani',
+      groups: 'Vikundi',
+      loading: 'Inapakia…',
+      done: 'Imekamilika',
+      doneWith: 'Imekamilika: {x}',
+      waiting:
+        'Inasubiri kutumwa — imehifadhiwa kwenye simu hii, itatumwa ukipata data.',
+      waitingShort: 'inasubiri kutumwa',
+      relToday: 'leo',
+      relTomorrow: 'kesho',
+      relIn: 'baada ya siku {n}',
+      relLate: ['imechelewa siku {n}', 'imechelewa siku {n}'],
+      justNow: 'sasa hivi',
+      minAgo: 'dakika {n} zilizopita',
+      hoursAgo: 'saa {n} zilizopita',
+      daysAgo: 'siku {n} zilizopita',
+      call: 'Piga simu',
+      callName: 'Mpigie {x}',
+      sms: 'SMS',
+      smsName: 'Mtumie {x} SMS',
+      searchPlaceholder: 'Jina, ujuzi, eneo, nambari…',
+      searchLabel: 'Tafuta anwani',
+      count: ['anwani {n}', 'anwani {n}'],
+      first100: ' — zinaonyeshwa 100 za kwanza, tafuta ili kupunguza',
+      newContact: 'Anwani mpya',
+      notInCopy: 'Haipo kwenye nakala ya simu',
+      notInCopyBody:
+        'Huenda imewekwa kando, iko kwenye tupio, au iliongezwa baada ya nakala kutengenezwa.',
+      backContacts: '← Anwani',
+      backGroups: '← Vikundi',
+      skills: 'Ujuzi na huduma',
+      phone: 'Simu',
+      primary: 'kuu',
+      email: 'Barua pepe',
+      area: 'Eneo: ',
+      metThrough: 'Tulikutana kupitia: ',
+      birthday: 'Siku ya kuzaliwa: ',
+      followUps: 'Ufuatiliaji',
+      notes: 'Maelezo',
+      editNeedsData: 'Kuhariri taarifa (jina, nambari, ujuzi) kunahitaji data.',
+      inTouchToday: 'Nimewasiliana naye leo',
+      lastInTouch: 'Mliwasiliana mara ya mwisho: {x}',
+      notContacted: 'Bado hajawekwa kuwa mliwasiliana',
+      followDate: 'Tarehe ya ufuatiliaji',
+      followNote: 'Maelezo ya ufuatiliaji',
+      followPlaceholder: 'k.m. Uliza kuhusu harambee',
+      addFollowTitle: 'Ongeza ufuatiliaji',
+      addFollow: 'Ongeza ufuatiliaji',
+      name: 'Jina',
+      phoneNumber: 'Nambari ya simu',
+      note: 'Maelezo',
+      noteOptional: 'Maelezo (si lazima)',
+      saveContact: 'Hifadhi anwani',
+      newContactNote:
+        'Imehifadhiwa kwenye simu hii sasa; itaongezwa kwenye akaunti yako ukipata data. Ongeza taarifa zaidi baadaye kwenye programu kamili.',
+      nothingDue: 'Hakuna cha kufanya leo.',
+      followUp: 'Fuatilia',
+      keepInTouch: 'Endelea kuwasiliana',
+      dueToday: 'inatakiwa leo',
+      overdue: ['imechelewa siku {n}', 'imechelewa siku {n}'],
+      inTouchWith: 'Nimewasiliana na {x}',
+      birthdays: 'Siku za kuzaliwa',
+      birthdayToday: 'Leo 🎉',
+      turns: ' · anatimiza miaka {n}',
+      members: ['mwanachama {n}', 'wanachama {n}'],
+      noGroups: 'Hakuna vikundi kwenye nakala ya simu.',
+      textEveryone: 'Tuma SMS kwa wote',
+      offlineTitle: 'Huna mtandao',
+      noCopy: 'Bado hakuna nakala ya anwani zako kwenye simu hii.',
+      noCopyHow:
+        'Ukipata data au Wi-Fi: fungua Wasifu → “Tumia bila data” → Hifadhi nakala kwenye simu hii. Baada ya hapo, anwani zako zitafunguka hapa hata bila kifurushi.',
+      tryAgain: 'Jaribu tena',
+      noConnection: 'Hakuna mtandao.',
+      bannerFirst: 'Hakuna mtandao — inaonyesha nakala iliyo kwenye simu hii.',
+      banner:
+        'Hakuna mtandao — nakala yako ya {x}. Simu na SMS hutumia salio la muda wa maongezi.',
+      earlier: 'awali',
+      queued: [
+        ' Badiliko {n} linasubiri kutumwa.',
+        ' Mabadiliko {n} yanasubiri kutumwa.',
+      ],
+      notSaved: ' Haijahifadhiwa: {x}',
+      otherAccount: 'mabadiliko yaliyofanywa na akaunti nyingine yametupwa.',
+      refused: 'badiliko moja limekataliwa.',
+      sent: ['Badiliko {n} limetumwa. ', 'Mabadiliko {n} yametumwa. '],
+      backOnline: 'Mtandao umerudi — fungua programu kamili',
+    },
+  };
+  var T = STRINGS[LANG];
+  var INTL = LANG === 'sw' ? 'sw-KE' : 'en-KE';
+  /** T[key] with {n} and {x} filled; a [one, other] pair picks by n. */
+  function tr(key, n, x) {
+    var v = T[key];
+    if (Array.isArray(v)) v = n === 1 ? v[0] : v[1];
+    return String(v)
+      .replace('{n}', n === undefined ? '' : String(n))
+      .replace('{x}', x === undefined ? '' : String(x));
+  }
+  document.title = T.title;
+  (function staticText() {
+    var nav = document.querySelector('.top nav');
+    if (nav) {
+      nav.setAttribute('aria-label', T.main);
+      var links = nav.querySelectorAll('a');
+      ['today', 'contacts', 'groups'].forEach(function (k, i) {
+        if (links[i]) links[i].textContent = T[k];
+      });
+    }
+    var b = document.getElementById('banner');
+    if (b) b.textContent = T.bannerFirst;
+    var loading = document.querySelector('#main .muted');
+    if (loading) loading.textContent = T.loading;
+  })();
+
   var DB_NAME = 'cs-offline';
   var FLAG = 'cs-offline';
   var data = null;
@@ -151,17 +365,13 @@
     var b = h(
       'button',
       { type: 'button', class: 'btn', 'aria-label': label },
-      'Done',
+      T.done,
     );
     b.addEventListener('click', onClick);
     return b;
   }
   function waitingNote() {
-    return h(
-      'p',
-      { class: 'pending small' },
-      'Waiting to send — saved on this phone, sent when you have data.',
-    );
+    return h('p', { class: 'pending small' }, T.waiting);
   }
 
   function isPending(id) {
@@ -242,7 +452,7 @@
   }
   function fmtDay(d) {
     try {
-      return new Intl.DateTimeFormat('en-KE', {
+      return new Intl.DateTimeFormat(INTL, {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -254,18 +464,18 @@
   }
   function rel(n) {
     return n === 0
-      ? 'today'
+      ? T.relToday
       : n === 1
-        ? 'tomorrow'
+        ? T.relTomorrow
         : n > 0
-          ? 'in ' + n + ' days'
-          : -n + (n === -1 ? ' day' : ' days') + ' late';
+          ? tr('relIn', n)
+          : tr('relLate', -n);
   }
   function ago(iso) {
     var m = Math.round((Date.now() - Date.parse(iso)) / 60000);
-    if (m < 60) return m <= 1 ? 'just now' : m + ' min ago';
+    if (m < 60) return m <= 1 ? T.justNow : tr('minAgo', m);
     var hrs = Math.round(m / 60);
-    return hrs < 24 ? hrs + ' h ago' : Math.round(hrs / 24) + ' days ago';
+    return hrs < 24 ? tr('hoursAgo', hrs) : tr('daysAgo', Math.round(hrs / 24));
   }
 
   // ---- search: every word must match, accents folded ---------------------
@@ -334,14 +544,18 @@
         {
           class: 'btn',
           href: 'tel:' + dial(p),
-          'aria-label': 'Call ' + c.name,
+          'aria-label': tr('callName', undefined, c.name),
         },
-        'Call',
+        T.call,
       ),
       h(
         'a',
-        { class: 'btn', href: 'sms:' + dial(p), 'aria-label': 'SMS ' + c.name },
-        'SMS',
+        {
+          class: 'btn',
+          href: 'sms:' + dial(p),
+          'aria-label': tr('smsName', undefined, c.name),
+        },
+        T.sms,
       ),
     );
   }
@@ -368,8 +582,8 @@
   function contactsScreen(q) {
     var input = h('input', {
       type: 'search',
-      placeholder: 'Name, skill, area, number…',
-      'aria-label': 'Search contacts',
+      placeholder: T.searchPlaceholder,
+      'aria-label': T.searchLabel,
       value: q || '',
     });
     var list = h('ul', { class: 'list' });
@@ -386,7 +600,7 @@
               p ? p[0] : c.emails[0] ? c.emails[0][0] : '',
               c.organization,
               c.tags.slice(0, 2).join(', '),
-              isPending(c.id) ? 'waiting to send' : '',
+              isPending(c.id) ? T.waitingShort : '',
             ]
               .filter(Boolean)
               .join(' · '),
@@ -394,11 +608,7 @@
         );
       });
       count.textContent =
-        found.length +
-        (found.length === 1 ? ' contact' : ' contacts') +
-        (found.length > 100
-          ? ' — showing the first 100, search to narrow'
-          : '');
+        tr('count', found.length) + (found.length > 100 ? T.first100 : '');
     }
     input.addEventListener('input', render);
     render();
@@ -406,8 +616,8 @@
       h(
         'div',
         { class: 'titlebar' },
-        h('h1', null, 'Contacts'),
-        h('a', { class: 'btn primary', href: '#/new' }, 'New contact'),
+        h('h1', null, T.contacts),
+        h('a', { class: 'btn primary', href: '#/new' }, T.newContact),
       ),
       input,
       count,
@@ -419,12 +629,8 @@
     var c = byId(id);
     if (!c)
       return show(
-        h('h1', null, 'Not in the offline copy'),
-        h(
-          'p',
-          { class: 'muted' },
-          'It may be archived, in the trash, or added after the copy was made.',
-        ),
+        h('h1', null, T.notInCopy),
+        h('p', { class: 'muted' }, T.notInCopyBody),
       );
     var groups = data.groups.filter(function (g) {
       return g.members.some(function (m) {
@@ -439,7 +645,7 @@
       h(
         'p',
         null,
-        h('a', { href: '#/contacts', class: 'muted small' }, '← Contacts'),
+        h('a', { href: '#/contacts', class: 'muted small' }, T.backContacts),
       ),
       h('h1', null, c.name),
       c.nickname ? h('p', { class: 'muted' }, '“' + c.nickname + '”') : null,
@@ -453,13 +659,13 @@
       c.tags.length
         ? h(
             'ul',
-            { class: 'chips', 'aria-label': 'Skills and services' },
+            { class: 'chips', 'aria-label': T.skills },
             c.tags.map(function (x) {
               return h('li', null, x);
             }),
           )
         : null,
-      c.phones.length ? h('h2', null, 'Phone') : null,
+      c.phones.length ? h('h2', null, T.phone) : null,
       c.phones.length
         ? h(
             'ul',
@@ -478,7 +684,7 @@
                     h(
                       'span',
                       { class: 'sub' },
-                      [p[2], i === 0 ? 'primary' : '']
+                      [p[2], i === 0 ? T.primary : '']
                         .filter(Boolean)
                         .join(' · '),
                     ),
@@ -488,25 +694,25 @@
                     {
                       class: 'btn primary',
                       href: 'tel:' + dial(p),
-                      'aria-label': 'Call ' + p[0],
+                      'aria-label': tr('callName', undefined, p[0]),
                     },
-                    'Call',
+                    T.call,
                   ),
                   h(
                     'a',
                     {
                       class: 'btn',
                       href: 'sms:' + dial(p),
-                      'aria-label': 'SMS ' + p[0],
+                      'aria-label': tr('smsName', undefined, p[0]),
                     },
-                    'SMS',
+                    T.sms,
                   ),
                 ),
               );
             }),
           )
         : null,
-      c.emails.length ? h('h2', null, 'Email') : null,
+      c.emails.length ? h('h2', null, T.email) : null,
       c.emails.length
         ? h(
             'ul',
@@ -529,13 +735,13 @@
             'div',
             { class: 'card', style: null },
             c.area
-              ? h('p', null, h('span', { class: 'muted' }, 'Area: '), c.area)
+              ? h('p', null, h('span', { class: 'muted' }, T.area), c.area)
               : null,
             c.metThrough
               ? h(
                   'p',
                   null,
-                  h('span', { class: 'muted' }, 'Met through: '),
+                  h('span', { class: 'muted' }, T.metThrough),
                   c.metThrough,
                 )
               : null,
@@ -543,13 +749,13 @@
               ? h(
                   'p',
                   null,
-                  h('span', { class: 'muted' }, 'Birthday: '),
+                  h('span', { class: 'muted' }, T.birthday),
                   fmtDay(c.birthday) + ' ' + c.birthday.slice(0, 4),
                 )
               : null,
           )
         : null,
-      groups.length ? h('h2', null, 'Groups') : null,
+      groups.length ? h('h2', null, T.groups) : null,
       groups.length
         ? h(
             'ul',
@@ -562,7 +768,7 @@
             }),
           )
         : null,
-      follow.length ? h('h2', null, 'Follow-ups') : null,
+      follow.length ? h('h2', null, T.followUps) : null,
       follow.length
         ? h(
             'ul',
@@ -585,10 +791,10 @@
                       fmtDay(f.dueOn) +
                         ' · ' +
                         rel(d) +
-                        (isPending(f.id) ? ' · waiting to send' : ''),
+                        (isPending(f.id) ? ' · ' + T.waitingShort : ''),
                     ),
                   ),
-                  doneButton('Done: ' + f.note, function () {
+                  doneButton(tr('doneWith', undefined, f.note), function () {
                     followDone(f);
                   }),
                 ),
@@ -596,25 +802,17 @@
             }),
           )
         : null,
-      c.notes ? h('h2', null, 'Notes') : null,
+      c.notes ? h('h2', null, T.notes) : null,
       c.notes ? h('p', { class: 'pre' }, c.notes) : null,
       isPending(c.id) ? waitingNote() : null,
       touchSection(c),
       followForm(c),
-      h(
-        'p',
-        { class: 'muted small' },
-        'Editing details (name, numbers, skills) needs data.',
-      ),
+      h('p', { class: 'muted small' }, T.editNeedsData),
     );
   }
 
   function touchSection(c) {
-    var b = h(
-      'button',
-      { type: 'button', class: 'btn' },
-      'I was in touch today',
-    );
+    var b = h('button', { type: 'button', class: 'btn' }, T.inTouchToday);
     b.addEventListener('click', function () {
       markContacted(c);
     });
@@ -625,8 +823,8 @@
         'p',
         { class: 'small muted' },
         c.lastContactedOn
-          ? 'Last in touch: ' + fmtDay(c.lastContactedOn)
-          : 'Not marked as contacted yet',
+          ? tr('lastInTouch', undefined, fmtDay(c.lastContactedOn))
+          : T.notContacted,
       ),
       b,
     );
@@ -636,23 +834,23 @@
     var date = h('input', {
       type: 'date',
       required: 'required',
-      'aria-label': 'Follow-up date',
+      'aria-label': T.followDate,
       value: today(),
     });
     var note = h('input', {
       type: 'text',
       required: 'required',
       maxlength: '200',
-      placeholder: 'e.g. Ask about the harambee',
-      'aria-label': 'Follow-up note',
+      placeholder: T.followPlaceholder,
+      'aria-label': T.followNote,
     });
     var form = h(
       'form',
       { class: 'stack' },
-      h('h2', null, 'Add a follow-up'),
+      h('h2', null, T.addFollowTitle),
       date,
       note,
-      h('button', { type: 'submit', class: 'btn primary' }, 'Add follow-up'),
+      h('button', { type: 'submit', class: 'btn primary' }, T.addFollow),
     );
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -668,21 +866,21 @@
       type: 'text',
       required: 'required',
       maxlength: '200',
-      'aria-label': 'Name',
-      placeholder: 'Name',
+      'aria-label': T.name,
+      placeholder: T.name,
     });
     var phone = h('input', {
       type: 'tel',
       inputmode: 'tel',
       maxlength: '64',
-      'aria-label': 'Phone number',
-      placeholder: 'Phone number',
+      'aria-label': T.phoneNumber,
+      placeholder: T.phoneNumber,
     });
     var note = h('textarea', {
       rows: '3',
       maxlength: '2000',
-      'aria-label': 'Note',
-      placeholder: 'Note (optional)',
+      'aria-label': T.note,
+      placeholder: T.noteOptional,
     });
     var form = h(
       'form',
@@ -690,7 +888,7 @@
       name,
       phone,
       note,
-      h('button', { type: 'submit', class: 'btn primary' }, 'Save contact'),
+      h('button', { type: 'submit', class: 'btn primary' }, T.saveContact),
     );
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -706,14 +904,10 @@
       h(
         'p',
         null,
-        h('a', { href: '#/contacts', class: 'muted small' }, '← Contacts'),
+        h('a', { href: '#/contacts', class: 'muted small' }, T.backContacts),
       ),
-      h('h1', null, 'New contact'),
-      h(
-        'p',
-        { class: 'muted small' },
-        'Saved on this phone now; added to your account when you have data. Add more details later in the full app.',
-      ),
+      h('h1', null, T.newContact),
+      h('p', { class: 'muted small' }, T.newContactNote),
       form,
     );
   }
@@ -754,14 +948,12 @@
       .sort(function (a, b) {
         return a.b.daysAway - b.b.daysAway;
       });
-    var parts = [h('h1', null, 'Today'), h('p', { class: 'muted' }, fmtDay(t))];
+    var parts = [h('h1', null, T.today), h('p', { class: 'muted' }, fmtDay(t))];
     if (!fu.length && !kit.length && !bd.length)
-      parts.push(
-        h('div', { class: 'card' }, h('p', null, 'Nothing due today.')),
-      );
+      parts.push(h('div', { class: 'card' }, h('p', null, T.nothingDue)));
     if (fu.length)
       parts.push(
-        h('h2', null, 'Follow up'),
+        h('h2', null, T.followUp),
         h(
           'ul',
           { class: 'list' },
@@ -769,7 +961,7 @@
             return personRow(
               x.c,
               x.f.note + ' · ' + rel(x.d),
-              doneButton('Done: ' + x.f.note, function () {
+              doneButton(tr('doneWith', undefined, x.f.note), function () {
                 followDone(x.f);
               }),
             );
@@ -778,17 +970,15 @@
       );
     if (kit.length)
       parts.push(
-        h('h2', null, 'Keep in touch'),
+        h('h2', null, T.keepInTouch),
         h(
           'ul',
           { class: 'list' },
           kit.map(function (x) {
             return personRow(
               x.c,
-              x.over === 0
-                ? 'due today'
-                : x.over + (x.over === 1 ? ' day' : ' days') + ' overdue',
-              doneButton('I was in touch with ' + x.c.name, function () {
+              x.over === 0 ? T.dueToday : tr('overdue', x.over),
+              doneButton(tr('inTouchWith', undefined, x.c.name), function () {
                 markContacted(x.c);
               }),
             );
@@ -797,7 +987,7 @@
       );
     if (bd.length)
       parts.push(
-        h('h2', null, 'Birthdays'),
+        h('h2', null, T.birthdays),
         h(
           'ul',
           { class: 'list' },
@@ -805,10 +995,10 @@
             return personRow(
               x.c,
               (x.b.daysAway === 0
-                ? 'Today 🎉'
+                ? T.birthdayToday
                 : fmtDay(x.b.on) + ' · ' + rel(x.b.daysAway)) +
                 (x.b.turning > 0 && x.b.turning < 130
-                  ? ' · turns ' + x.b.turning
+                  ? tr('turns', x.b.turning)
                   : ''),
             );
           }),
@@ -819,7 +1009,7 @@
 
   function groupsScreen() {
     show(
-      h('h1', null, 'Groups'),
+      h('h1', null, T.groups),
       data.groups.length
         ? h(
             'ul',
@@ -838,15 +1028,14 @@
                     h(
                       'span',
                       { class: 'sub' },
-                      g.members.length +
-                        (g.members.length === 1 ? ' member' : ' members'),
+                      tr('members', g.members.length),
                     ),
                   ),
                 ),
               );
             }),
           )
-        : h('p', { class: 'muted' }, 'No groups in the offline copy.'),
+        : h('p', { class: 'muted' }, T.noGroups),
     );
   }
 
@@ -854,7 +1043,7 @@
     var g = data.groups.find(function (x) {
       return x.id === id;
     });
-    if (!g) return show(h('h1', null, 'Not in the offline copy'));
+    if (!g) return show(h('h1', null, T.notInCopy));
     var people = g.members
       .map(function (m) {
         return { c: byId(m[0]), role: m[1] };
@@ -871,14 +1060,10 @@
       h(
         'p',
         null,
-        h('a', { href: '#/groups', class: 'muted small' }, '← Groups'),
+        h('a', { href: '#/groups', class: 'muted small' }, T.backGroups),
       ),
       h('h1', null, g.name),
-      h(
-        'p',
-        { class: 'muted' },
-        people.length + (people.length === 1 ? ' member' : ' members'),
-      ),
+      h('p', { class: 'muted' }, tr('members', people.length)),
       nums.length
         ? h(
             'div',
@@ -886,7 +1071,7 @@
             h(
               'a',
               { class: 'btn primary', href: 'sms:' + nums.join(',') },
-              'Text everyone (SMS)',
+              T.textEveryone,
             ),
           )
         : null,
@@ -907,20 +1092,16 @@
 
   function noCopy() {
     show(
-      h('h1', null, 'You’re offline'),
-      h('p', null, 'There is no copy of your contacts on this phone yet.'),
-      h(
-        'p',
-        { class: 'muted' },
-        'When you have data or Wi-Fi: open Profile → “Use it without data” → Keep a copy on this phone. After that, your contacts open here even with no bundle.',
-      ),
+      h('h1', null, T.offlineTitle),
+      h('p', null, T.noCopy),
+      h('p', { class: 'muted' }, T.noCopyHow),
       h(
         'p',
         null,
-        h('a', { class: 'btn primary', href: '/today' }, 'Try again'),
+        h('a', { class: 'btn primary', href: '/today' }, T.tryAgain),
       ),
     );
-    banner.textContent = 'No connection.';
+    banner.textContent = T.noConnection;
     document.querySelector('.top nav').style.display = 'none';
   }
 
@@ -1015,24 +1196,18 @@
 
   function updateBanner() {
     if (!data) return;
-    banner.textContent =
-      'No connection — your copy from ' +
-      (info ? ago(info.savedAt) : 'earlier') +
-      '. Calls and SMS use airtime.';
+    banner.textContent = tr(
+      'banner',
+      undefined,
+      info ? ago(info.savedAt) : T.earlier,
+    );
     if (queue.ops.length) {
-      banner.appendChild(
-        h(
-          'strong',
-          null,
-          ' ' +
-            queue.ops.length +
-            (queue.ops.length === 1 ? ' change' : ' changes') +
-            ' waiting to send.',
-        ),
-      );
+      banner.appendChild(h('strong', null, tr('queued', queue.ops.length)));
     }
     lastProblems.forEach(function (m) {
-      banner.appendChild(h('span', { class: 'late' }, ' Not saved: ' + m));
+      banner.appendChild(
+        h('span', { class: 'late' }, tr('notSaved', undefined, m)),
+      );
     });
   }
 
@@ -1050,7 +1225,7 @@
         }).then(function (r) {
           if (r.status === 409) {
             queue = { ownerId: null, ops: [] };
-            lastProblems = ['changes made by another account were discarded.'];
+            lastProblems = [T.otherAccount];
             return;
           }
           if (!r.ok) throw new Error('send ' + r.status);
@@ -1061,7 +1236,7 @@
               if (x.status === 'retry') keep[x.opId] = true;
               if (x.status === 'ok') sent++;
               if (x.status === 'rejected')
-                lastProblems.push(x.message || 'a change was refused.');
+                lastProblems.push(x.message || T.refused);
             });
             queue.ops = queue.ops.filter(function (o) {
               return keep[o.opId];
@@ -1105,21 +1280,8 @@
         updateBanner();
         if (navigator.onLine) {
           banner.appendChild(document.createTextNode(' '));
-          if (sent)
-            banner.appendChild(
-              h(
-                'strong',
-                null,
-                'Sent ' + sent + (sent === 1 ? ' change. ' : ' changes. '),
-              ),
-            );
-          banner.appendChild(
-            h(
-              'a',
-              { href: '/today' },
-              'You’re back online — open the full app',
-            ),
-          );
+          if (sent) banner.appendChild(h('strong', null, tr('sent', sent)));
+          banner.appendChild(h('a', { href: '/today' }, T.backOnline));
         }
         route();
       });

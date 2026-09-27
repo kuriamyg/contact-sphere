@@ -1,14 +1,15 @@
 import Link from 'next/link';
 
-export default function GroupNotFound() {
+import { getMessages } from '@/i18n/server';
+
+export default async function GroupNotFound() {
+  const t = (await getMessages()).missing;
   return (
     <div className="max-w-xl space-y-3">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        That group does not exist
-      </h1>
-      <p className="text-muted">It may have been deleted.</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t.groupTitle}</h1>
+      <p className="text-muted">{t.groupBody}</p>
       <Link href="/groups" className="underline">
-        Back to groups
+        {t.groupBack}
       </Link>
     </div>
   );

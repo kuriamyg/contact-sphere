@@ -21,15 +21,14 @@ import {
   listSavedSearches,
   listTags,
 } from '@/lib/contacts';
+import type { Messages } from '@/i18n/en';
+import { fmt, plural } from '@/i18n/format';
+import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { formatDate } from '@/lib/format';
 
-export const metadata: Metadata = { title: 'Contacts · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('contacts');
 
-const VIEWS: { view: View; label: string }[] = [
-  { view: 'active', label: 'Contacts' },
-  { view: 'archived', label: 'Archived' },
-  { view: 'trash', label: 'Trash' },
-];
+const VIEWS: View[] = ['active', 'archived', 'trash'];
 
 const primaryButton =
   'rounded-lg btn-primary px-4 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none';
@@ -42,11 +41,16 @@ export default async function ContactsPage({
   const sp = await searchParams;
   const p = parseListParams(sp);
   const active = p.view === 'active';
-  const [{ items, total, page }, tags, searches] = await Promise.all([
-    listContacts(p),
-    active ? listTags() : Promise.resolve([]),
-    active ? listSavedSearches() : Promise.resolve([]),
-  ]);
+  const [{ items, total, page }, tags, searches, m, locale] = await Promise.all(
+    [
+      listContacts(p),
+      active ? listTags() : Promise.resolve([]),
+      active ? listSavedSearches() : Promise.resolve([]),
+      getMessages(),
+      getLocale(),
+    ],
+  );
+  const t = m.contacts.list;
   const chip =
     'inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -56,21 +60,21 @@ export default async function ContactsPage({
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Contacts</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
         <div className="flex flex-wrap gap-2">
           <Link href="/contacts/duplicates" className={secondaryButton}>
-            Clean up
+            {t.cleanUp}
           </Link>
           <Link href="/contacts/import" className={secondaryButton}>
-            Import
+            {t.import}
           </Link>
           {/* A file download from a route handler, not a page: a plain link
               (Link would try client-side navigation). */}
           <a href="/contacts/export" download className={secondaryButton}>
-            Export
+            {t.export}
           </a>
           <Link href="/contacts/new" className={primaryButton}>
-            New contact
+            {t.newContact}
           </Link>
         </div>
       </header>
@@ -79,10 +83,10 @@ export default async function ContactsPage({
       <FocusSearch when={sp.find === '1'} />
 
       <nav
-        aria-label="Contact lists"
+        aria-label={t.listsNav}
         className="flex gap-1 border-b border-border"
       >
-        {VIEWS.map(({ view, label }) => {
+        {VIEWS.map((view) => {
           const current = p.view === view;
           return (
             <Link
@@ -95,7 +99,7 @@ export default async function ContactsPage({
                   : 'border-transparent text-muted hover:text-foreground'
               }`}
             >
-              {label}
+              {t.views[view]}
             </Link>
           );
         })}
@@ -112,7 +116,7 @@ export default async function ContactsPage({
         {p.tag && <input type="hidden" name="tag" value={p.tag} />}
         <div className="space-y-1.5">
           <label htmlFor="q" className="block text-sm font-medium">
-            Search
+            {t.search}
           </label>
           <input
             id="q"
@@ -120,19 +124,19 @@ export default async function ContactsPage({
             type="search"
             defaultValue={p.q}
             maxLength={100}
-            placeholder="Name, skill, area, number…"
+            placeholder={t.searchPlaceholder}
             className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
           />
         </div>
         <SortSelect value={p.sort} />
         <button type="submit" className={secondaryButton}>
-          Search
+          {t.search}
         </button>
       </form>
 
       {searches.length > 0 && (
         <nav
-          aria-label="Saved searches"
+          aria-label={t.savedNav}
           className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
         >
           {searches.map((s) => (
@@ -153,13 +157,13 @@ export default async function ContactsPage({
 
       {(tags.length > 0 || p.tag) && (
         <nav
-          aria-label="Skills and services"
+          aria-label={t.skillsNav}
           className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
         >
           {p.tag && (
             <Link
               href={listHref(p, { tag: '', page: 1 })}
-              aria-label={`Stop filtering by ${p.tag}`}
+              aria-label={fmt(t.stopFilter, { tag: p.tag })}
               className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-background"
             >
               {p.tag}
@@ -186,7 +190,7 @@ export default async function ContactsPage({
               href="/contacts/tags"
               className="inline-flex shrink-0 items-center px-2 py-1.5 text-sm font-medium text-accent underline"
             >
-              Manage
+              {t.manage}
             </Link>
           )}
         </nav>
@@ -197,13 +201,13 @@ export default async function ContactsPage({
         !searches.some((s) => s.query === p.q && (s.tag ?? '') === p.tag) && (
           <details className="rounded-xl card px-4 py-3">
             <summary className="cursor-pointer text-sm font-medium">
-              Save this search
+              {t.saveThis}
             </summary>
             <form action={saveSearch} className="mt-3 flex gap-2">
               <input type="hidden" name="q" value={p.q} />
               <input type="hidden" name="tag" value={p.tag} />
               <label htmlFor="saved-name" className="sr-only">
-                Name for this search
+                {t.nameForSearch}
               </label>
               <input
                 id="saved-name"
@@ -214,29 +218,26 @@ export default async function ContactsPage({
                 className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
               />
               <button type="submit" className={secondaryButton}>
-                Save
+                {t.save}
               </button>
             </form>
           </details>
         )}
 
       {p.view === 'trash' && (
-        <p className="text-sm text-muted">
-          Contacts in the trash are deleted for good 30 days after they were
-          moved there.
-        </p>
+        <p className="text-sm text-muted">{t.trashNote}</p>
       )}
 
       {items.length === 0 ? (
-        <EmptyState view={p.view} q={p.q} tag={p.tag} />
+        <EmptyState view={p.view} q={p.q} tag={p.tag} m={m} />
       ) : (
         <>
           <p className="text-sm text-muted" aria-live="polite">
             {from === 1 && to === total
-              ? `${total} ${total === 1 ? 'contact' : 'contacts'}`
-              : `${from}–${to} of ${total}`}
-            {p.q ? ` matching “${p.q}”` : ''}
-            {p.tag ? ` tagged “${p.tag}”` : ''}
+              ? plural(total, m.common.contacts)
+              : fmt(t.range, { from, to, total })}
+            {p.q ? fmt(t.matching, { q: p.q }) : ''}
+            {p.tag ? fmt(t.tagged, { tag: p.tag }) : ''}
           </p>
           <div className="space-y-4">
             {groupByLetter(
@@ -264,7 +265,9 @@ export default async function ContactsPage({
                           </span>
                           <span className="block truncate text-sm text-muted">
                             {p.view === 'trash' && c.deletedAt
-                              ? `Deleted ${formatDate(c.deletedAt)}`
+                              ? fmt(t.deletedOn, {
+                                  date: formatDate(c.deletedAt, locale),
+                                })
                               : [
                                   c.primaryPhone?.raw ?? c.primaryEmail,
                                   c.organization,
@@ -284,7 +287,7 @@ export default async function ContactsPage({
           </div>
           {lastPage > 1 && (
             <nav
-              aria-label="Pages"
+              aria-label={t.pagesNav}
               className="flex items-center justify-between gap-3"
             >
               {page > 1 ? (
@@ -292,20 +295,20 @@ export default async function ContactsPage({
                   href={listHref(p, { page: page - 1 })}
                   className={secondaryButton}
                 >
-                  Previous
+                  {m.common.previous}
                 </Link>
               ) : (
                 <span />
               )}
               <span className="text-sm text-muted">
-                Page {page} of {lastPage}
+                {fmt(t.pageOf, { page, last: lastPage })}
               </span>
               {page < lastPage ? (
                 <Link
                   href={listHref(p, { page: page + 1 })}
                   className={secondaryButton}
                 >
-                  Next
+                  {m.common.next}
                 </Link>
               ) : (
                 <span />
@@ -318,19 +321,15 @@ export default async function ContactsPage({
       {p.view === 'trash' && total > 0 && (
         <details className="rounded-xl border border-red-300 p-4 dark:border-red-900">
           <summary className="cursor-pointer text-sm font-medium text-red-700 dark:text-red-300">
-            Empty the trash
+            {t.emptyTrash}
           </summary>
           <form action={emptyTrash} className="mt-3 space-y-3">
-            <p className="text-sm">
-              This deletes all {total} {total === 1 ? 'contact' : 'contacts'} in
-              the trash for good, with their numbers and emails. It cannot be
-              undone.
-            </p>
+            <p className="text-sm">{plural(total, t.emptyTrashBody)}</p>
             <button
               type="submit"
               className="rounded-lg bg-red-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
             >
-              Delete {total} for good
+              {fmt(t.deleteN, { n: total })}
             </button>
           </form>
         </details>
@@ -339,25 +338,35 @@ export default async function ContactsPage({
   );
 }
 
-function EmptyState({ view, q, tag }: { view: View; q: string; tag: string }) {
+function EmptyState({
+  view,
+  q,
+  tag,
+  m,
+}: {
+  view: View;
+  q: string;
+  tag: string;
+  m: Messages;
+}) {
+  const e = m.contacts.list.empty;
   let title: string;
   let body: string;
   if (tag && !q) {
-    title = `No contacts tagged “${tag}”`;
-    body = 'Add skills and services when you edit a contact.';
+    title = fmt(e.taggedTitle, { tag });
+    body = e.taggedBody;
   } else if (q) {
-    title = `No contacts match “${q}”`;
-    body =
-      'Try part of a name, a skill, an area, a few digits of the number, or an email.';
+    title = fmt(e.queryTitle, { q });
+    body = e.queryBody;
   } else if (view === 'archived') {
-    title = 'Nothing archived';
-    body = 'Archive contacts you want to keep but not see every day.';
+    title = e.archivedTitle;
+    body = e.archivedBody;
   } else if (view === 'trash') {
-    title = 'The trash is empty';
-    body = 'Deleted contacts stay here for 30 days before they are removed.';
+    title = e.trashTitle;
+    body = e.trashBody;
   } else {
-    title = 'No contacts yet';
-    body = 'Import the contacts from your phone, or add one by hand.';
+    title = e.noneTitle;
+    body = e.noneBody;
   }
   return (
     <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
@@ -366,10 +375,10 @@ function EmptyState({ view, q, tag }: { view: View; q: string; tag: string }) {
       {!q && !tag && view === 'active' && (
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link href="/contacts/import" className={primaryButton}>
-            Import from a .vcf file
+            {e.importVcf}
           </Link>
           <Link href="/contacts/new" className={secondaryButton}>
-            New contact
+            {m.contacts.list.newContact}
           </Link>
         </div>
       )}

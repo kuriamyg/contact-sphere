@@ -1,0 +1,606 @@
+import { section } from '../section';
+
+/** Strings used by client components (sent to the browser). */
+export const client = section(
+  {
+    form: {
+      saving: 'Saving…',
+      save: 'Save',
+      cancel: 'Cancel',
+      remove: 'Remove',
+    },
+    login: {
+      email: 'Email',
+      password: 'Password',
+      signIn: 'Sign in',
+      signingIn: 'Signing in…',
+    },
+    setup: {
+      token: 'Setup token',
+      tokenHint: 'The one-time token from the server configuration.',
+      email: 'Email',
+      password: 'Password',
+      passwordHint: 'At least 12 characters. A few unrelated words work well.',
+      create: 'Create account',
+      creating: 'Creating account…',
+    },
+    mfa: {
+      code: 'Code',
+      codeHint:
+        'The 6-digit code from your authenticator app, or one of your recovery codes.',
+      verify: 'Verify',
+      checking: 'Checking…',
+    },
+    password: {
+      current: 'Current password',
+      next: 'New password',
+      nextHint: 'At least 12 characters.',
+      confirm: 'Confirm new password',
+      change: 'Change password',
+      changing: 'Changing…',
+    },
+    twoFactor: {
+      onNow: 'Two-factor is on. Other devices were signed out.',
+      saveCodes: 'Save your recovery codes now.',
+      codesExplain:
+        'Each works once if you lose your phone. They will not be shown again. Keep them somewhere safe and offline — not in this app.',
+      codesLabel: 'Recovery codes',
+      intro:
+        'Adds a second step to signing in: a code from an authenticator app (such as Google Authenticator, Microsoft Authenticator or Aegis).',
+      preparing: 'Preparing…',
+      setUp: 'Set up two-factor',
+      scan: 'Scan this code with your authenticator app',
+      orOpen: '— or, on this phone,',
+      openInApp: 'open it in the app',
+      enterCode: 'Enter the 6-digit code it shows.',
+      qrAlt: 'QR code for your authenticator app',
+      cantScan: 'Can’t scan? Enter this key:',
+      codeFromApp: 'Code from the app',
+      turnOn: 'Turn on two-factor',
+      turningOn: 'Turning on…',
+      isOn: 'Two-factor is on.',
+      codesLeft: {
+        one: '{n} recovery code left.',
+        other: '{n} recovery codes left.',
+      },
+      turnOffSummary: 'Turn two-factor off',
+      passwordLabel: 'Password',
+      codeOrRecovery: 'Code from the app (or a recovery code)',
+      turnOff: 'Turn off two-factor',
+      turningOff: 'Turning off…',
+    },
+    name: {
+      label: 'Your name',
+      placeholder: 'e.g. Kuria Mwangi',
+    },
+    error: {
+      title: 'Can’t reach Contact Sphere right now',
+      body: 'The service may be starting up (up to a minute) or busy. Nothing was changed — try again in a moment.',
+      retry: 'Try again',
+    },
+    sort: {
+      label: 'Sort by',
+      'name-asc': 'Name A–Z',
+      'name-desc': 'Name Z–A',
+      'lastUsed-desc': 'Recently opened',
+      'created-desc': 'Newest saved',
+      'created-asc': 'Oldest saved',
+    },
+    contactForm: {
+      primary: ' (primary)',
+      labelFor: 'Label for {what} {n}',
+      labelPlaceholder: 'Label (e.g. mobile)',
+      removeRow: 'Remove {what} {n}',
+      firstName: 'First name',
+      lastName: 'Last name',
+      displayName: 'Display name (optional)',
+      displayNameHint:
+        'How the contact appears in lists. Leave blank to use the name.',
+      nickname: 'Nickname',
+      phones: 'Phone numbers',
+      phone: 'Phone number',
+      addPhone: 'Add a number',
+      emails: 'Email addresses',
+      emailAddress: 'Email address',
+      addEmail: 'Add an email',
+      organization: 'Organisation',
+      jobTitle: 'Job title',
+      whoTheyAre: 'Who they are to you',
+      tags: 'Skills and services',
+      tagsHint:
+        'Separate with commas, e.g. plumber, boda boda, lawyer. You can search by these.',
+      area: 'Area',
+      areaHint: 'Estate, town or stage',
+      metThrough: 'Met through',
+      metThroughHint: 'e.g. church, chama, work',
+      birthday: 'Birthday',
+      notes: 'Notes',
+    },
+    importWizard: {
+      unreadable: 'That file could not be read.',
+      noCards:
+        'No contacts found. Choose a .vcf (vCard) file exported from your phone or address book.',
+      tooLarge:
+        'That file is too large to import at once (over 4 MB without photos).',
+      imported: {
+        one: 'Imported {n} contact.',
+        other: 'Imported {n} contacts.',
+      },
+      nothingNewDone:
+        'Nothing new to import — everything in that file is already saved.',
+      viewContacts: 'View contacts',
+      another: 'Import another file',
+      inFile: {
+        one: '{n} contact in the file.',
+        other: '{n} contacts in the file.',
+      },
+      willAdd: { one: '{n} contact', other: '{n} contacts' },
+      willAddSuffix: 'will be added.',
+      nothingNew:
+        'Nothing new to add — everything in this file is already saved.',
+      seeWho: 'See who will be added',
+      andMore: '…and {n} more',
+      chooseAnother: 'Choose another file',
+      importing: 'Importing…',
+      importN: { one: 'Import {n} contact', other: 'Import {n} contacts' },
+      reading: 'Reading the file…',
+      choose: 'Choose a .vcf file',
+      nothingSaved: 'Nothing is saved until you confirm on the next step.',
+      alreadySaved: {
+        one: '{n} contact is already saved (same name, numbers and emails) and will be skipped.',
+        other:
+          '{n} contacts are already saved (same name, numbers and emails) and will be skipped.',
+      },
+      repeated: {
+        one: '{n} contact appears twice in the file; the copy will be skipped.',
+        other:
+          '{n} contacts appear twice in the file; the copy will be skipped.',
+      },
+      empty: {
+        one: '{n} entry has no name, number or email and will be skipped.',
+        other: '{n} entries have no name, number or email and will be skipped.',
+      },
+      invalidEmails: {
+        one: '{n} email address was not valid and will be left out.',
+        other: '{n} email addresses were not valid and will be left out.',
+      },
+      badBirthdays: {
+        one: '{n} birthday has no year or is not a real date and will be left out.',
+        other:
+          '{n} birthdays have no year or are not real dates and will be left out.',
+      },
+      truncated: {
+        one: '{n} field is longer than allowed and will be shortened.',
+        other: '{n} fields are longer than allowed and will be shortened.',
+      },
+      tooMany: {
+        one: '{n} number or email is beyond 20 on one contact and will be left out.',
+        other:
+          '{n} numbers or emails are beyond 20 on one contact and will be left out.',
+      },
+    },
+    offline: {
+      justNow: 'just now',
+      minAgo: '{n} min ago',
+      hoursAgo: '{n} h ago',
+      daysAgo: '{n} days ago',
+      noStorage: 'This browser does not allow saving data (private mode?).',
+      signedOut: 'You are signed out. Sign in again, then switch this on.',
+      downloadFailed:
+        'Could not download the copy. Check your connection and try again.',
+      refreshFailed: 'Could not refresh now; your last copy is still there.',
+      confirmDelete:
+        '{n} change(s) made without data have not been sent yet. Delete them?',
+      on: 'On.',
+      onDetail: {
+        one: '{n} contact ({size}) saved on this phone, updated {ago}. It refreshes by itself when you have data.',
+        other:
+          '{n} contacts ({size}) saved on this phone, updated {ago}. It refreshes by itself when you have data.',
+      },
+      off: 'Off. Without data you only see a “You’re offline” page.',
+      waiting: {
+        one: '{n} change made without data waiting to be sent.',
+        other: '{n} changes made without data waiting to be sent.',
+      },
+      updating: 'Updating…',
+      updateNow: 'Update now',
+      turnOff: 'Turn off and delete the copy',
+      saving: 'Saving…',
+      keepCopy: 'Keep a copy on this phone',
+      confirmSignOut:
+        '{n} change(s) made without data have not been sent yet. Sign out and lose them?',
+    },
+    install: {
+      installed: 'Installed — you are using the app from your home screen.',
+      install: 'Install on this phone',
+      ios: 'On iPhone: tap Share, then “Add to Home Screen”.',
+      other:
+        'In your browser menu (⋮), choose “Install app” or “Add to Home screen”.',
+    },
+    copyNumbers: {
+      copied: { one: 'Copied {n} number', other: 'Copied {n} numbers' },
+      failed: 'Could not copy — try again',
+      copy: 'Copy all numbers',
+    },
+    reminders: {
+      unsupported:
+        'This browser cannot show reminders. On Android, open Contact Sphere in Chrome and install it.',
+      iosInstall:
+        'On iPhone, first add Contact Sphere to your Home Screen (Share → Add to Home Screen), then open it from there to turn reminders on.',
+      blocked:
+        'Notifications are blocked for this site. Allow them in your browser’s site settings, then come back.',
+      turnOn: 'Turn on morning reminders',
+      onNow:
+        'On — each morning, if something is due, this phone gets one notification. It shows counts only, never names.',
+      test: 'Send a test',
+      turnOff: 'Turn off',
+      failed: 'Could not turn reminders on. Try again.',
+      browserFailed: 'This browser could not turn on reminders.',
+      testSent: 'Sent. It should appear in a few seconds.',
+      testFailed: 'Could not send a test. Turn reminders off and on again.',
+    },
+    texter: {
+      message: 'Message',
+      placeholder: 'Habari! Our meeting is on Saturday at 3pm…',
+      counter: '{chars} characters · {parts} SMS each ·',
+      total: '{total} SMS for {people}',
+      unicode:
+        'An emoji or special character makes each SMS hold 70 characters instead of 160. Remove it to send fewer SMS.',
+      fromPhone: 'Send from my phone',
+      cheapest: '· cheapest',
+      bundle:
+        'With a Safaricom SMS bundle (dial *188#, e.g. {bundleSms} SMS for KES {bundleKes} a week):',
+      about: 'about KES {kes}',
+      noBundle: 'Without a bundle: about KES {kes} (about KES {rate} per SMS).',
+      personal:
+        'Bundles are for personal messages — your chama, church or family — up to {limit} SMS a day. For adverts, use a bulk SMS service.',
+      perTap: 'People per tap',
+      openOne: 'Open Messages ({n})',
+      openRange: 'Open Messages: {from}–{to}',
+      howTo:
+        'Each tap opens your Messages app with the numbers and the text filled in; press send there. If it offers a “group conversation” or MMS, choose separate texts instead — in Google Messages: Settings → Advanced → Group messaging → “Send an SMS reply to all recipients and get individual replies (mass text)”.',
+      viaUs: 'Send through Contact Sphere',
+      viaUsDetail:
+        'One tap, from our sender name, at {price} per SMS. {left} SMS left this month.',
+      checkCost: 'Check the cost',
+      sendAll: 'Send to everyone',
+      quote: '{people} × {parts} SMS = {total} SMS, about {cost}.',
+      quoteSkipped: '{n} without a Kenyan mobile are left out.',
+      quoteLeft: '{n} SMS left this month.',
+      quoteFailed: 'Could not work out the cost. Try again.',
+      confirm: 'Send this to {people} now?',
+      people: { one: '{n} person', other: '{n} people' },
+    },
+    shell: {
+      menuFor: 'Menu for {name}',
+      accountTools: 'Account and tools',
+      profile: 'Profile & security',
+      card: 'My QR card',
+      reminders: 'Morning reminders',
+      tags: 'Skills & tags',
+      duplicates: 'Clean up duplicates',
+      import: 'Import contacts',
+      export: 'Export contacts',
+      appearance: 'Appearance',
+      language: 'Language',
+      signOut: 'Sign out',
+      auto: 'Auto',
+      light: 'Light',
+      dark: 'Dark',
+      main: 'Main',
+      today: 'Today',
+      contacts: 'Contacts',
+      groups: 'Groups',
+      search: 'Search',
+      sections: 'Sections',
+      loadingContacts: 'Loading contacts…',
+      loadingContact: 'Loading contact…',
+    },
+  },
+  {
+    form: {
+      saving: 'Inahifadhi…',
+      save: 'Hifadhi',
+      cancel: 'Ghairi',
+      remove: 'Ondoa',
+    },
+    login: {
+      email: 'Barua pepe',
+      password: 'Nenosiri',
+      signIn: 'Ingia',
+      signingIn: 'Inaingia…',
+    },
+    setup: {
+      token: 'Tokeni ya kuanzisha',
+      tokenHint: 'Tokeni ya mara moja kutoka kwenye mipangilio ya seva.',
+      email: 'Barua pepe',
+      password: 'Nenosiri',
+      passwordHint:
+        'Angalau herufi 12. Maneno machache yasiyohusiana hufanya kazi vizuri.',
+      create: 'Unda akaunti',
+      creating: 'Inaunda akaunti…',
+    },
+    mfa: {
+      code: 'Msimbo',
+      codeHint:
+        'Msimbo wa tarakimu 6 kutoka kwenye programu yako ya uthibitishaji, au mmoja wa misimbo yako ya kurejesha.',
+      verify: 'Thibitisha',
+      checking: 'Inakagua…',
+    },
+    password: {
+      current: 'Nenosiri la sasa',
+      next: 'Nenosiri jipya',
+      nextHint: 'Angalau herufi 12.',
+      confirm: 'Thibitisha nenosiri jipya',
+      change: 'Badilisha nenosiri',
+      changing: 'Inabadilisha…',
+    },
+    twoFactor: {
+      onNow:
+        'Uthibitisho wa hatua mbili umewashwa. Vifaa vingine vimetolewa kwenye akaunti.',
+      saveCodes: 'Hifadhi misimbo yako ya kurejesha sasa.',
+      codesExplain:
+        'Kila mmoja hufanya kazi mara moja ukipoteza simu yako. Haitaonyeshwa tena. Iweke mahali salama nje ya mtandao — si ndani ya programu hii.',
+      codesLabel: 'Misimbo ya kurejesha',
+      intro:
+        'Huongeza hatua ya pili unapoingia: msimbo kutoka kwenye programu ya uthibitishaji (kama Google Authenticator, Microsoft Authenticator au Aegis).',
+      preparing: 'Inaandaa…',
+      setUp: 'Weka uthibitisho wa hatua mbili',
+      scan: 'Changanua msimbo huu kwa programu yako ya uthibitishaji',
+      orOpen: '— au, kwenye simu hii,',
+      openInApp: 'ufungue ndani ya programu',
+      enterCode: 'Weka msimbo wa tarakimu 6 unaoonyeshwa.',
+      qrAlt: 'Msimbo wa QR wa programu yako ya uthibitishaji',
+      cantScan: 'Huwezi kuchanganua? Weka ufunguo huu:',
+      codeFromApp: 'Msimbo kutoka kwenye programu',
+      turnOn: 'Washa uthibitisho wa hatua mbili',
+      turningOn: 'Inawasha…',
+      isOn: 'Uthibitisho wa hatua mbili umewashwa.',
+      codesLeft: {
+        one: 'Umebakiwa na msimbo {n} wa kurejesha.',
+        other: 'Umebakiwa na misimbo {n} ya kurejesha.',
+      },
+      turnOffSummary: 'Zima uthibitisho wa hatua mbili',
+      passwordLabel: 'Nenosiri',
+      codeOrRecovery: 'Msimbo kutoka kwenye programu (au msimbo wa kurejesha)',
+      turnOff: 'Zima uthibitisho wa hatua mbili',
+      turningOff: 'Inazima…',
+    },
+    name: {
+      label: 'Jina lako',
+      placeholder: 'k.m. Kuria Mwangi',
+    },
+    error: {
+      title: 'Hatuwezi kufikia Contact Sphere kwa sasa',
+      body: 'Huduma huenda inaanza (hadi dakika moja) au ina shughuli nyingi. Hakuna kilichobadilishwa — jaribu tena baada ya muda mfupi.',
+      retry: 'Jaribu tena',
+    },
+    sort: {
+      label: 'Panga kwa',
+      'name-asc': 'Jina A–Z',
+      'name-desc': 'Jina Z–A',
+      'lastUsed-desc': 'Zilizofunguliwa karibuni',
+      'created-desc': 'Zilizohifadhiwa karibuni',
+      'created-asc': 'Zilizohifadhiwa zamani',
+    },
+    contactForm: {
+      primary: ' (kuu)',
+      labelFor: 'Lebo ya {what} {n}',
+      labelPlaceholder: 'Lebo (k.m. rununu)',
+      removeRow: 'Ondoa {what} {n}',
+      firstName: 'Jina la kwanza',
+      lastName: 'Jina la mwisho',
+      displayName: 'Jina la kuonyeshwa (si lazima)',
+      displayNameHint:
+        'Jinsi anwani inavyoonekana kwenye orodha. Acha wazi kutumia jina.',
+      nickname: 'Jina la utani',
+      phones: 'Nambari za simu',
+      phone: 'Nambari ya simu',
+      addPhone: 'Ongeza nambari',
+      emails: 'Anwani za barua pepe',
+      emailAddress: 'Anwani ya barua pepe',
+      addEmail: 'Ongeza barua pepe',
+      organization: 'Shirika',
+      jobTitle: 'Cheo kazini',
+      whoTheyAre: 'Yeye ni nani kwako',
+      tags: 'Ujuzi na huduma',
+      tagsHint:
+        'Tenganisha kwa koma, k.m. fundi bomba, boda boda, wakili. Unaweza kutafuta kwa haya.',
+      area: 'Eneo',
+      areaHint: 'Mtaa, mji au kituo',
+      metThrough: 'Mlikutana kupitia',
+      metThroughHint: 'k.m. kanisa, chama, kazi',
+      birthday: 'Siku ya kuzaliwa',
+      notes: 'Maelezo',
+    },
+    importWizard: {
+      unreadable: 'Faili hiyo haikuweza kusomwa.',
+      noCards:
+        'Hakuna anwani zilizopatikana. Chagua faili ya .vcf (vCard) iliyotolewa kutoka kwenye simu yako au kitabu cha anwani.',
+      tooLarge:
+        'Faili hiyo ni kubwa mno kuleta kwa mara moja (zaidi ya MB 4 bila picha).',
+      imported: {
+        one: 'Anwani {n} imeletwa.',
+        other: 'Anwani {n} zimeletwa.',
+      },
+      nothingNewDone:
+        'Hakuna kipya cha kuleta — kila kitu kwenye faili hiyo tayari kimehifadhiwa.',
+      viewContacts: 'Tazama anwani',
+      another: 'Leta faili nyingine',
+      inFile: {
+        one: 'Anwani {n} kwenye faili.',
+        other: 'Anwani {n} kwenye faili.',
+      },
+      willAdd: { one: 'Anwani {n}', other: 'Anwani {n}' },
+      willAddSuffix: 'zitaongezwa.',
+      nothingNew:
+        'Hakuna kipya cha kuongeza — kila kitu kwenye faili hii tayari kimehifadhiwa.',
+      seeWho: 'Tazama wanaoongezwa',
+      andMore: '…na wengine {n}',
+      chooseAnother: 'Chagua faili nyingine',
+      importing: 'Inaleta…',
+      importN: { one: 'Leta anwani {n}', other: 'Leta anwani {n}' },
+      reading: 'Inasoma faili…',
+      choose: 'Chagua faili ya .vcf',
+      nothingSaved:
+        'Hakuna kitakachohifadhiwa hadi uthibitishe kwenye hatua inayofuata.',
+      alreadySaved: {
+        one: 'Anwani {n} tayari imehifadhiwa (jina, nambari na barua pepe sawa) na itarukwa.',
+        other:
+          'Anwani {n} tayari zimehifadhiwa (jina, nambari na barua pepe sawa) na zitarukwa.',
+      },
+      repeated: {
+        one: 'Anwani {n} inaonekana mara mbili kwenye faili; nakala itarukwa.',
+        other:
+          'Anwani {n} zinaonekana mara mbili kwenye faili; nakala zitarukwa.',
+      },
+      empty: {
+        one: 'Kipengele {n} hakina jina, nambari wala barua pepe na kitarukwa.',
+        other:
+          'Vipengele {n} havina jina, nambari wala barua pepe na vitarukwa.',
+      },
+      invalidEmails: {
+        one: 'Barua pepe {n} si sahihi na itaachwa.',
+        other: 'Barua pepe {n} si sahihi na zitaachwa.',
+      },
+      badBirthdays: {
+        one: 'Siku {n} ya kuzaliwa haina mwaka au si tarehe halisi na itaachwa.',
+        other:
+          'Siku {n} za kuzaliwa hazina mwaka au si tarehe halisi na zitaachwa.',
+      },
+      truncated: {
+        one: 'Sehemu {n} ni ndefu kuliko inavyoruhusiwa na itafupishwa.',
+        other: 'Sehemu {n} ni ndefu kuliko inavyoruhusiwa na zitafupishwa.',
+      },
+      tooMany: {
+        one: 'Nambari au barua pepe {n} imezidi 20 kwa anwani moja na itaachwa.',
+        other:
+          'Nambari au barua pepe {n} zimezidi 20 kwa anwani moja na zitaachwa.',
+      },
+    },
+    offline: {
+      justNow: 'sasa hivi',
+      minAgo: 'dakika {n} zilizopita',
+      hoursAgo: 'saa {n} zilizopita',
+      daysAgo: 'siku {n} zilizopita',
+      noStorage: 'Kivinjari hiki hakiruhusu kuhifadhi data (hali ya faragha?).',
+      signedOut: 'Umetoka. Ingia tena, kisha uwashe hiki.',
+      downloadFailed:
+        'Imeshindwa kupakua nakala. Angalia muunganisho wako ujaribu tena.',
+      refreshFailed:
+        'Imeshindwa kusasisha sasa; nakala yako ya mwisho bado ipo.',
+      confirmDelete:
+        'Mabadiliko {n} uliyofanya bila data bado hayajatumwa. Uyafute?',
+      on: 'Imewashwa.',
+      onDetail: {
+        one: 'Anwani {n} ({size}) imehifadhiwa kwenye simu hii, ilisasishwa {ago}. Hujisasisha yenyewe ukiwa na data.',
+        other:
+          'Anwani {n} ({size}) zimehifadhiwa kwenye simu hii, zilisasishwa {ago}. Hujisasisha yenyewe ukiwa na data.',
+      },
+      off: 'Imezimwa. Bila data utaona ukurasa wa “Huna mtandao” pekee.',
+      waiting: {
+        one: 'Badiliko {n} ulilofanya bila data linasubiri kutumwa.',
+        other: 'Mabadiliko {n} uliyofanya bila data yanasubiri kutumwa.',
+      },
+      updating: 'Inasasisha…',
+      updateNow: 'Sasisha sasa',
+      turnOff: 'Zima na ufute nakala',
+      saving: 'Inahifadhi…',
+      keepCopy: 'Weka nakala kwenye simu hii',
+      confirmSignOut:
+        'Mabadiliko {n} uliyofanya bila data bado hayajatumwa. Utoke na uyapoteze?',
+    },
+    install: {
+      installed:
+        'Imesakinishwa — unatumia programu kutoka skrini yako ya nyumbani.',
+      install: 'Sakinisha kwenye simu hii',
+      ios: 'Kwenye iPhone: gusa Shiriki, kisha “Ongeza kwenye Skrini ya Nyumbani”.',
+      other:
+        'Kwenye menyu ya kivinjari (⋮), chagua “Sakinisha programu” au “Ongeza kwenye skrini ya nyumbani”.',
+    },
+    copyNumbers: {
+      copied: {
+        one: 'Nambari {n} imenakiliwa',
+        other: 'Nambari {n} zimenakiliwa',
+      },
+      failed: 'Imeshindwa kunakili — jaribu tena',
+      copy: 'Nakili nambari zote',
+    },
+    reminders: {
+      unsupported:
+        'Kivinjari hiki hakiwezi kuonyesha vikumbusho. Kwenye Android, fungua Contact Sphere kwenye Chrome na uisakinishe.',
+      iosInstall:
+        'Kwenye iPhone, kwanza ongeza Contact Sphere kwenye Skrini ya Nyumbani (Shiriki → Ongeza kwenye Skrini ya Nyumbani), kisha uifungue kutoka hapo kuwasha vikumbusho.',
+      blocked:
+        'Arifa zimezuiwa kwa tovuti hii. Ziruhusu kwenye mipangilio ya tovuti ya kivinjari chako, kisha urudi.',
+      turnOn: 'Washa vikumbusho vya asubuhi',
+      onNow:
+        'Vimewashwa — kila asubuhi, kukiwa na jambo la kufanya, simu hii hupata arifa moja. Huonyesha idadi tu, kamwe si majina.',
+      test: 'Tuma jaribio',
+      turnOff: 'Zima',
+      failed: 'Imeshindwa kuwasha vikumbusho. Jaribu tena.',
+      browserFailed: 'Kivinjari hiki kimeshindwa kuwasha vikumbusho.',
+      testSent: 'Imetumwa. Inapaswa kuonekana baada ya sekunde chache.',
+      testFailed:
+        'Imeshindwa kutuma jaribio. Zima vikumbusho kisha uviwashe tena.',
+    },
+    texter: {
+      message: 'Ujumbe',
+      placeholder: 'Habari! Mkutano wetu ni Jumamosi saa tisa mchana…',
+      counter: 'Herufi {chars} · SMS {parts} kila mmoja ·',
+      total: 'SMS {total} kwa {people}',
+      unicode:
+        'Emoji au herufi maalum hufanya kila SMS ibebe herufi 70 badala ya 160. Iondoe ili utume SMS chache.',
+      fromPhone: 'Tuma kutoka simu yangu',
+      cheapest: '· nafuu zaidi',
+      bundle:
+        'Ukiwa na kifurushi cha SMS cha Safaricom (piga *188#, k.m. SMS {bundleSms} kwa KES {bundleKes} kwa wiki):',
+      about: 'takriban KES {kes}',
+      noBundle:
+        'Bila kifurushi: takriban KES {kes} (takriban KES {rate} kwa SMS).',
+      personal:
+        'Vifurushi ni kwa jumbe za binafsi — chama, kanisa au familia yako — hadi SMS {limit} kwa siku. Kwa matangazo, tumia huduma ya SMS za jumla.',
+      perTap: 'Watu kwa kila mguso',
+      openOne: 'Fungua Ujumbe ({n})',
+      openRange: 'Fungua Ujumbe: {from}–{to}',
+      howTo:
+        'Kila mguso hufungua programu yako ya Ujumbe ikiwa na nambari na maandishi tayari; bonyeza tuma hapo. Ikipendekeza “mazungumzo ya kikundi” au MMS, chagua ujumbe tofauti badala yake — kwenye Google Messages: Mipangilio → Mahiri → Ujumbe wa kikundi → “Tuma jibu la SMS kwa wapokeaji wote na upate majibu binafsi”.',
+      viaUs: 'Tuma kupitia Contact Sphere',
+      viaUsDetail:
+        'Mguso mmoja, kwa jina letu la mtumaji, kwa {price} kwa SMS. SMS {left} zimebaki mwezi huu.',
+      checkCost: 'Angalia gharama',
+      sendAll: 'Tuma kwa wote',
+      quote: '{people} × SMS {parts} = SMS {total}, takriban {cost}.',
+      quoteSkipped: '{n} wasio na nambari ya simu ya Kenya wameachwa.',
+      quoteLeft: 'SMS {n} zimebaki mwezi huu.',
+      quoteFailed: 'Imeshindwa kukokotoa gharama. Jaribu tena.',
+      confirm: 'Tuma hii kwa {people} sasa?',
+      people: { one: 'mtu {n}', other: 'watu {n}' },
+    },
+    shell: {
+      menuFor: 'Menyu ya {name}',
+      accountTools: 'Akaunti na zana',
+      profile: 'Wasifu na usalama',
+      card: 'Kadi yangu ya QR',
+      reminders: 'Vikumbusho vya asubuhi',
+      tags: 'Ujuzi na lebo',
+      duplicates: 'Safisha nakala',
+      import: 'Leta anwani',
+      export: 'Pakua anwani',
+      appearance: 'Mwonekano',
+      language: 'Lugha',
+      signOut: 'Toka',
+      auto: 'Otomatiki',
+      light: 'Mwanga',
+      dark: 'Giza',
+      main: 'Kuu',
+      today: 'Leo',
+      contacts: 'Anwani',
+      groups: 'Vikundi',
+      search: 'Tafuta',
+      sections: 'Sehemu',
+      loadingContacts: 'Inapakia anwani…',
+      loadingContact: 'Inapakia anwani…',
+    },
+  },
+);

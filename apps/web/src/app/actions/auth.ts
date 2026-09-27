@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 
 import QRCode from 'qrcode';
 
+import { apiText, getMessages } from '@/i18n/server';
 import { api, isProduction } from '@/lib/api';
 import {
   mfaCookieName,
@@ -75,16 +76,11 @@ async function endMfaChallenge(): Promise<void> {
   );
 }
 
-function failure(status: number, message?: string): FormState {
-  if (status === 429) {
-    return {
-      error: message ?? 'Too many attempts. Wait a minute and try again.',
-    };
-  }
-  if (status >= 500 || status === 0) {
-    return { error: 'The service is unavailable. Try again shortly.' };
-  }
-  return { error: message ?? 'Something went wrong. Try again.' };
+async function failure(status: number, message?: string): Promise<FormState> {
+  const t = (await getMessages()).errors;
+  if (status >= 500 || status === 0) return { error: t.unavailable };
+  const said = await apiText(message);
+  return { error: said ?? (status === 429 ? t.tooMany : t.generic) };
 }
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
@@ -161,7 +157,7 @@ export async function changePassword(
 ): Promise<FormState> {
   const newPassword = field(form, 'newPassword');
   if (newPassword !== field(form, 'confirmPassword')) {
-    return { error: 'The two new passwords do not match.' };
+    return { error: (await getMessages()).errors.passwordsDiffer };
   }
   const res = await api('/auth/password', {
     method: 'POST',
@@ -169,9 +165,7 @@ export async function changePassword(
   });
   if (res.status === 401 && !res.message) redirect('/login');
   if (res.status !== 204) return failure(res.status, res.message);
-  return {
-    success: 'Password changed. Every other device has been signed out.',
-  };
+  return { success: (await getMessages()).errors.passwordChanged };
 }
 
 export interface TotpSetupState extends FormState {
@@ -208,7 +202,7 @@ export async function enableTotp(
     body: { code: field(form, 'code').replace(/\s/g, '') },
   });
   if (res.status !== 200 || !res.data) {
-    return { ...prev, ...failure(res.status, res.message) };
+    return { ...prev, ...(await failure(res.status, res.message)) };
   }
   return { recoveryCodes: res.data.recoveryCodes };
 }
@@ -225,7 +219,7 @@ export async function disableTotp(
     },
   });
   if (res.status !== 204) return failure(res.status, res.message);
-  return { success: 'Two-factor is off.' };
+  return { success: (await getMessages()).errors.twoFactorOff };
 }
 
 export async function updateProfile(
@@ -240,5 +234,5 @@ export async function updateProfile(
   if (res.status !== 200) return failure(res.status, res.message);
   // The header shows the name too: refresh everything under the app layout.
   revalidatePath('/', 'layout');
-  return { success: 'Saved.' };
+  return { success: (await getMessages()).errors.nameSaved };
 }

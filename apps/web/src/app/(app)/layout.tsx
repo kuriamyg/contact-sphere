@@ -6,12 +6,14 @@ import { NavLink } from '@/components/nav-link';
 import { OfflineSync } from '@/components/offline/offline-sync';
 import { BottomNav } from '@/components/shell/bottom-nav';
 import { ProfileMenu } from '@/components/shell/profile-menu';
+import { getMessages } from '@/i18n/server';
 import { requireUser } from '@/lib/auth';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
 /** Everything under (app) requires a signed-in user, checked with the API on each request. */
 export default async function AppLayout({ children }: LayoutProps<'/'>) {
-  const user = await requireUser();
+  const [user, m] = await Promise.all([requireUser(), getMessages()]);
+  const t = m.client.shell;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   const name = user.displayName ?? user.email;
   return (
@@ -30,12 +32,12 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
           </Link>
           <div className="flex items-center gap-1 text-sm sm:gap-2">
             <nav
-              aria-label="Sections"
+              aria-label={t.sections}
               className="hidden items-center gap-1 sm:flex"
             >
-              <NavLink href="/today">Today</NavLink>
-              <NavLink href="/contacts">Contacts</NavLink>
-              <NavLink href="/groups">Groups</NavLink>
+              <NavLink href="/today">{t.today}</NavLink>
+              <NavLink href="/contacts">{t.contacts}</NavLink>
+              <NavLink href="/groups">{t.groups}</NavLink>
             </nav>
             <ProfileMenu
               name={name}

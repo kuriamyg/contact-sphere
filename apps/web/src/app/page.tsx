@@ -5,15 +5,20 @@ import { Suspense } from 'react';
 import { ApiStatusBadge } from '@/components/api-status-badge';
 import { OrbitMark } from '@/components/brand/orbit-mark';
 import { checkApiHealth } from '@/lib/api-health';
+import { getMessages } from '@/i18n/server';
 
 async function ApiStatus() {
   // Checked per request, never baked in at build time.
   await connection();
-  const status = await checkApiHealth(process.env.API_URL);
-  return <ApiStatusBadge status={status} />;
+  const [status, m] = await Promise.all([
+    checkApiHealth(process.env.API_URL),
+    getMessages(),
+  ]);
+  return <ApiStatusBadge status={status} t={m.home} />;
 }
 
-export default function Home() {
+export default async function Home() {
+  const t = (await getMessages()).home;
   return (
     <main
       id="main"
@@ -22,22 +27,19 @@ export default function Home() {
       <header className="space-y-3">
         <OrbitMark className="size-16" />
         <p className="text-sm font-medium tracking-wide text-muted uppercase">
-          Private · Contacts
+          {t.eyebrow}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Contact Sphere
         </h1>
-        <p className="max-w-prose text-lg text-muted">
-          A privacy-first home for your contacts, groups and relationships. Your
-          data is never sold or used for advertising.
-        </p>
+        <p className="max-w-prose text-lg text-muted">{t.lead}</p>
       </header>
 
       <Link
         href="/login"
         className="self-start rounded-lg btn-primary px-5 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
       >
-        Sign in
+        {t.signIn}
       </Link>
 
       <section
@@ -45,15 +47,15 @@ export default function Home() {
         className="card rounded-2xl p-6"
       >
         <h2 id="status-heading" className="text-base font-semibold">
-          System status
+          {t.status}
         </h2>
         <dl className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <dt className="text-muted">API</dt>
+          <dt className="text-muted">{t.api}</dt>
           <dd>
             <Suspense
               fallback={
                 <span className="text-sm text-muted" role="status">
-                  Checking…
+                  {t.checking}
                 </span>
               }
             >

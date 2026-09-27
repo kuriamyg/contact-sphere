@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { createGroup } from '@/app/actions/groups';
 import { Notice } from '@/components/contacts/notice';
 import { ChevronRightIcon } from '@/components/icons';
+import { plural } from '@/i18n/format';
+import { getMessages, pageTitle } from '@/i18n/server';
 import { GROUP_KINDS, kindLabel, listGroups } from '@/lib/groups';
 
-export const metadata: Metadata = { title: 'Groups · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('groups');
 
 const input =
   'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
@@ -16,22 +18,20 @@ export default async function GroupsPage({
 }: PageProps<'/groups'>) {
   const { done } = await searchParams;
   const groups = await listGroups();
+  const m = await getMessages();
+  const t = m.groups.list;
   return (
     <div className="max-w-xl space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Groups</h1>
-        <p className="text-muted">
-          Your chama, church, family, estate — who is in each, and their role.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
+        <p className="text-muted">{t.lead}</p>
       </header>
       <Notice code={done} />
 
       {groups.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
-          <h2 className="text-lg font-semibold">No groups yet</h2>
-          <p className="mt-1 text-muted">
-            Start with the one you run or message most — your chama or church.
-          </p>
+          <h2 className="text-lg font-semibold">{t.noneTitle}</h2>
+          <p className="mt-1 text-muted">{t.noneBody}</p>
         </div>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl card">
@@ -44,8 +44,8 @@ export default async function GroupsPage({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{g.name}</span>
                   <span className="block truncate text-sm text-muted">
-                    {kindLabel(g.kind)} · {g.memberCount}{' '}
-                    {g.memberCount === 1 ? 'member' : 'members'}
+                    {kindLabel(g.kind, m.groups.kinds)} ·{' '}
+                    {plural(g.memberCount, m.common.members)}
                   </span>
                 </span>
                 <ChevronRightIcon className="size-4 shrink-0 text-muted" />
@@ -56,24 +56,24 @@ export default async function GroupsPage({
       )}
 
       <details className="rounded-xl card p-4" open={groups.length === 0}>
-        <summary className="cursor-pointer font-medium">New group</summary>
+        <summary className="cursor-pointer font-medium">{t.newGroup}</summary>
         <form action={createGroup} className="mt-4 space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="name" className="block text-sm font-medium">
-              Name
+              {t.name}
             </label>
             <input
               id="name"
               name="name"
               required
               maxLength={80}
-              placeholder="e.g. Kasarani Chama"
+              placeholder={t.namePlaceholder}
               className={input}
             />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="kind" className="block text-sm font-medium">
-              Kind
+              {t.kind}
             </label>
             <select
               id="kind"
@@ -82,21 +82,21 @@ export default async function GroupsPage({
               className={input}
             >
               {GROUP_KINDS.map((k) => (
-                <option key={k.value} value={k.value}>
-                  {k.label}
+                <option key={k} value={k}>
+                  {m.groups.kinds[k]}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
             <label htmlFor="description" className="block text-sm font-medium">
-              Notes (optional)
+              {t.notes}
             </label>
             <input
               id="description"
               name="description"
               maxLength={500}
-              placeholder="e.g. Meets first Sunday, KES 1,000 a month"
+              placeholder={t.notesPlaceholder}
               className={input}
             />
           </div>
@@ -104,7 +104,7 @@ export default async function GroupsPage({
             type="submit"
             className="w-full rounded-lg btn-primary px-4 py-2.5 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            Create group
+            {t.create}
           </button>
         </form>
       </details>

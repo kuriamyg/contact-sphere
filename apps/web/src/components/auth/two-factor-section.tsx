@@ -10,6 +10,9 @@ import {
   type TotpSetupState,
 } from '@/app/actions/auth';
 
+import { plural } from '@/i18n/format';
+import { useMessages } from '@/i18n/client';
+
 import { Field, FormMessage, SubmitButton } from './field';
 
 const buttonClass =
@@ -21,6 +24,7 @@ function grouped(secret: string): string {
 }
 
 function Enrol() {
+  const t = useMessages().twoFactor;
   const [setup, setSetup] = useState<TotpSetupState | null>(null);
   const [starting, startTransition] = useTransition();
   const [state, formAction, pending] = useActionState<TotpSetupState, FormData>(
@@ -31,14 +35,11 @@ function Enrol() {
   if (state.recoveryCodes) {
     return (
       <div className="space-y-3">
-        <FormMessage success="Two-factor is on. Other devices were signed out." />
-        <p className="font-medium">Save your recovery codes now.</p>
-        <p className="text-sm text-muted">
-          Each works once if you lose your phone. They will not be shown again.
-          Keep them somewhere safe and offline — not in this app.
-        </p>
+        <FormMessage success={t.onNow} />
+        <p className="font-medium">{t.saveCodes}</p>
+        <p className="text-sm text-muted">{t.codesExplain}</p>
         <ul
-          aria-label="Recovery codes"
+          aria-label={t.codesLabel}
           className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface p-4 font-mono text-sm"
         >
           {state.recoveryCodes.map((c) => (
@@ -53,10 +54,7 @@ function Enrol() {
     return (
       <div className="space-y-3">
         <FormMessage error={setup?.error} />
-        <p className="text-sm text-muted">
-          Adds a second step to signing in: a code from an authenticator app
-          (such as Google Authenticator, Microsoft Authenticator or Aegis).
-        </p>
+        <p className="text-sm text-muted">{t.intro}</p>
         <button
           type="button"
           className={buttonClass}
@@ -65,7 +63,7 @@ function Enrol() {
             startTransition(async () => setSetup(await startTotpSetup()))
           }
         >
-          {starting ? 'Preparing…' : 'Set up two-factor'}
+          {starting ? t.preparing : t.setUp}
         </button>
       </div>
     );
@@ -75,30 +73,30 @@ function Enrol() {
     <div className="space-y-4">
       <ol className="list-decimal space-y-2 pl-5 text-sm">
         <li>
-          Scan this code with your authenticator app
+          {t.scan}
           {setup.uri && (
             <>
               {' '}
-              — or, on this phone,{' '}
+              {t.orOpen}{' '}
               <a href={setup.uri} className="underline">
-                open it in the app
+                {t.openInApp}
               </a>
             </>
           )}
           .
         </li>
-        <li>Enter the 6-digit code it shows.</li>
+        <li>{t.enterCode}</li>
       </ol>
       {/* eslint-disable-next-line @next/next/no-img-element -- a data URI, nothing to optimise */}
       <img
         src={setup.qr}
-        alt="QR code for your authenticator app"
+        alt={t.qrAlt}
         width={192}
         height={192}
         className="rounded-lg border border-border bg-white p-2"
       />
       <p className="text-sm text-muted">
-        Can’t scan? Enter this key:{' '}
+        {t.cantScan}{' '}
         <code className="font-mono text-foreground">
           {grouped(setup.secret)}
         </code>
@@ -106,15 +104,15 @@ function Enrol() {
       <form action={formAction} className="space-y-4" noValidate>
         <FormMessage error={state.error} />
         <Field
-          label="Code from the app"
+          label={t.codeFromApp}
           name="code"
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={7}
           required
         />
-        <SubmitButton pending={pending} pendingText="Turning on…">
-          Turn on two-factor
+        <SubmitButton pending={pending} pendingText={t.turningOn}>
+          {t.turnOn}
         </SubmitButton>
       </form>
     </div>
@@ -122,6 +120,7 @@ function Enrol() {
 }
 
 function Disable({ recoveryCodesLeft }: { recoveryCodesLeft: number }) {
+  const t = useMessages().twoFactor;
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     disableTotp,
     {},
@@ -130,33 +129,32 @@ function Disable({ recoveryCodesLeft }: { recoveryCodesLeft: number }) {
   return (
     <div className="space-y-4">
       <p className="text-sm">
-        <span className="font-medium">Two-factor is on.</span>{' '}
+        <span className="font-medium">{t.isOn}</span>{' '}
         <span className="text-muted">
-          {recoveryCodesLeft} recovery code{recoveryCodesLeft === 1 ? '' : 's'}{' '}
-          left.
+          {plural(recoveryCodesLeft, t.codesLeft)}
         </span>
       </p>
       <details className="space-y-4">
         <summary className="cursor-pointer text-sm underline">
-          Turn two-factor off
+          {t.turnOffSummary}
         </summary>
         <form action={formAction} className="mt-4 space-y-4" noValidate>
           <FormMessage error={state.error} />
           <Field
-            label="Password"
+            label={t.passwordLabel}
             name="password"
             type="password"
             autoComplete="current-password"
             required
           />
           <Field
-            label="Code from the app (or a recovery code)"
+            label={t.codeOrRecovery}
             name="code"
             autoComplete="one-time-code"
             required
           />
-          <SubmitButton pending={pending} pendingText="Turning off…">
-            Turn off two-factor
+          <SubmitButton pending={pending} pendingText={t.turningOff}>
+            {t.turnOff}
           </SubmitButton>
         </form>
       </details>

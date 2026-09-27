@@ -2,6 +2,8 @@
 
 import { redirect } from 'next/navigation';
 
+import { fmt, plural } from '@/i18n/format';
+import { apiText, getMessages } from '@/i18n/server';
 import { api } from '@/lib/api';
 import { UUID } from '@/lib/contacts';
 import type { SmsQuote } from '@/lib/reach';
@@ -89,28 +91,27 @@ export async function sendGroupSms(
   message: string,
 ): Promise<SendResult> {
   if (!UUID.test(groupId) || typeof message !== 'string' || !message.trim()) {
-    return { ok: false, message: 'Write a message first.' };
+    return { ok: false, message: (await getMessages()).errors.writeMessage };
   }
   const res = await api<{ recipients: number; accepted: number }>(
     `/reach/groups/${groupId}/sms`,
     { method: 'POST', body: { message: message.slice(0, 900) } },
   );
+  const t = (await getMessages()).errors;
   if (res.status === 200 && res.data) {
     const { accepted, recipients } = res.data;
     return {
       ok: true,
       message:
         accepted === recipients
-          ? `Sent to ${accepted} ${accepted === 1 ? 'person' : 'people'}.`
-          : `Sent to ${accepted} of ${recipients}. The rest could not be delivered.`,
+          ? plural(accepted, t.sentAll)
+          : fmt(t.sentSome, { n: accepted, total: recipients }),
     };
   }
   return {
     ok: false,
     message:
-      res.message ??
-      (res.status === 0
-        ? 'Could not reach Contact Sphere. Try again.'
-        : 'Could not send. Try again.'),
+      (await apiText(res.message)) ??
+      (res.status === 0 ? t.unreachable : t.sendFailed),
   };
 }

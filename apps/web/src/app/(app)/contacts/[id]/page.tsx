@@ -34,8 +34,11 @@ import {
   type Phone,
   undoableMerges,
 } from '@/lib/contacts';
+import type { Messages } from '@/i18n/en';
 import { groupsForContact, listGroupsQuietly } from '@/lib/groups';
-import { CADENCES, relativeDay, remindersFor } from '@/lib/remember';
+import { fmt, plural } from '@/i18n/format';
+import { getLocale, getMessages, pageTitle } from '@/i18n/server';
+import { CADENCE_DAYS, relativeDay, remindersFor } from '@/lib/remember';
 import {
   formatBirthday,
   formatDate,
@@ -44,7 +47,7 @@ import {
   whatsappHref,
 } from '@/lib/format';
 
-export const metadata: Metadata = { title: 'Contact · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('contact');
 
 const button =
   'rounded-lg border border-border px-4 py-2.5 text-sm font-medium bg-surface hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:outline-none';
@@ -67,6 +70,8 @@ export default async function ContactPage({
         listGroupsQuietly(),
         remindersFor(c.id),
       ]);
+  const [m, locale] = await Promise.all([getMessages(), getLocale()]);
+  const t = m.contacts.detail;
   const back = `/contacts/${c.id}`;
   const joinable = allGroups.filter((g) => !groups.some((x) => x.id === g.id));
 
@@ -78,7 +83,7 @@ export default async function ContactPage({
   return (
     <article className="max-w-xl space-y-8">
       <Link href="/contacts" className="text-sm text-muted hover:underline">
-        ← Contacts
+        {t.back}
       </Link>
 
       <Notice code={done} />
@@ -89,31 +94,27 @@ export default async function ContactPage({
           className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100"
         >
           <p>
-            In the trash. It will be deleted for good on{' '}
-            <strong>{formatDate(c.purgeAt)}</strong>.
+            {t.inTrash} <strong>{formatDate(c.purgeAt, locale)}</strong>.
           </p>
           <div className="flex flex-wrap gap-3">
             <form action={restoreContact}>
               <input type="hidden" name="id" value={c.id} />
               <button type="submit" className={button}>
-                Restore
+                {t.restore}
               </button>
             </form>
             <details>
               <summary className={`${button} cursor-pointer list-none`}>
-                Delete for good
+                {t.deleteForGood}
               </summary>
               <form action={deleteContactForGood} className="mt-3 space-y-2">
                 <input type="hidden" name="id" value={c.id} />
-                <p className="text-sm">
-                  This removes the contact, its numbers and emails. It cannot be
-                  undone.
-                </p>
+                <p className="text-sm">{t.deleteWarning}</p>
                 <button
                   type="submit"
                   className="rounded-lg bg-red-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
                 >
-                  Delete for good
+                  {t.deleteForGood}
                 </button>
               </form>
             </details>
@@ -130,7 +131,7 @@ export default async function ContactPage({
           {c.nickname && <p className="text-muted">“{c.nickname}”</p>}
           {subtitle && <p className="text-muted">{subtitle}</p>}
           {c.archivedAt && !c.deletedAt && (
-            <p className="text-sm text-muted">Archived</p>
+            <p className="text-sm text-muted">{t.archived}</p>
           )}
         </div>
         {!c.deletedAt && (primary || c.emails[0]) && (
@@ -139,20 +140,20 @@ export default async function ContactPage({
               <>
                 <QuickAction
                   href={`tel:${primary.e164 ?? primary.raw}`}
-                  label="Call"
+                  label={m.common.call}
                 >
                   <PhoneIcon />
                 </QuickAction>
                 <QuickAction
                   href={`sms:${primary.e164 ?? primary.raw}`}
-                  label="SMS"
+                  label={m.common.sms}
                 >
                   <MessageIcon />
                 </QuickAction>
                 {primary.e164 && (
                   <QuickAction
                     href={whatsappHref(primary.e164)}
-                    label="WhatsApp"
+                    label={m.common.whatsapp}
                     external
                   >
                     <WhatsAppIcon />
@@ -161,7 +162,10 @@ export default async function ContactPage({
               </>
             )}
             {c.emails[0] && (
-              <QuickAction href={`mailto:${c.emails[0].address}`} label="Email">
+              <QuickAction
+                href={`mailto:${c.emails[0].address}`}
+                label={m.common.email}
+              >
                 <MailIcon />
               </QuickAction>
             )}
@@ -175,11 +179,11 @@ export default async function ContactPage({
             id="phones"
             className="text-sm font-semibold text-muted uppercase"
           >
-            Phone
+            {t.phone}
           </h2>
           <ul className="space-y-4">
             {c.phones.map((p, i) => (
-              <PhoneRow key={i} phone={p} primary={i === 0} />
+              <PhoneRow key={i} phone={p} primary={i === 0} t={t} />
             ))}
           </ul>
         </section>
@@ -191,7 +195,7 @@ export default async function ContactPage({
             id="emails"
             className="text-sm font-semibold text-muted uppercase"
           >
-            Email
+            {t.email}
           </h2>
           <ul className="space-y-3">
             {c.emails.map((e, i) => (
@@ -207,7 +211,7 @@ export default async function ContactPage({
                 </span>
                 <IconAction
                   href={`mailto:${e.address}`}
-                  label={`Email ${e.address}`}
+                  label={fmt(t.emailTo, { address: e.address })}
                 >
                   <MailIcon className="size-4" />
                 </IconAction>
@@ -220,13 +224,10 @@ export default async function ContactPage({
       {(tags.length > 0 || c.area || c.metThrough) && (
         <section aria-labelledby="know" className="space-y-3">
           <h2 id="know" className="text-sm font-semibold text-muted uppercase">
-            Who they are to you
+            {t.whoTheyAre}
           </h2>
           {tags.length > 0 && (
-            <ul
-              aria-label="Skills and services"
-              className="flex flex-wrap gap-2"
-            >
+            <ul aria-label={t.skills} className="flex flex-wrap gap-2">
               {tags.map((t) => (
                 <li key={t}>
                   <Link
@@ -243,13 +244,13 @@ export default async function ContactPage({
             <dl className="grid gap-3 sm:grid-cols-2">
               {c.area && (
                 <div>
-                  <dt className="text-sm text-muted">Area</dt>
+                  <dt className="text-sm text-muted">{t.area}</dt>
                   <dd className="break-words">{c.area}</dd>
                 </div>
               )}
               {c.metThrough && (
                 <div>
-                  <dt className="text-sm text-muted">Met through</dt>
+                  <dt className="text-sm text-muted">{t.metThrough}</dt>
                   <dd className="break-words">{c.metThrough}</dd>
                 </div>
               )}
@@ -264,7 +265,7 @@ export default async function ContactPage({
             id="groups"
             className="text-sm font-semibold text-muted uppercase"
           >
-            Groups
+            {t.groups}
           </h2>
           {groups.length > 0 && (
             <ul className="flex flex-wrap gap-2">
@@ -284,12 +285,12 @@ export default async function ContactPage({
           {joinable.length > 0 && (
             <details>
               <summary className="cursor-pointer text-sm font-medium text-accent">
-                Add to a group
+                {t.addToGroup}
               </summary>
               <form action={addToGroup} className="mt-2 flex flex-wrap gap-2">
                 <input type="hidden" name="contactId" value={c.id} />
                 <label htmlFor="groupId" className="sr-only">
-                  Group
+                  {t.group}
                 </label>
                 <select
                   id="groupId"
@@ -303,17 +304,17 @@ export default async function ContactPage({
                   ))}
                 </select>
                 <label htmlFor="role" className="sr-only">
-                  Role (optional)
+                  {t.roleOptional}
                 </label>
                 <input
                   id="role"
                   name="role"
                   maxLength={40}
-                  placeholder="Role (optional)"
+                  placeholder={t.roleOptional}
                   className="w-40 rounded-lg border border-border bg-surface px-3 py-2 text-base"
                 />
                 <button type="submit" className={button}>
-                  Add
+                  {t.add}
                 </button>
               </form>
             </details>
@@ -324,30 +325,34 @@ export default async function ContactPage({
       {reminders && (
         <section aria-labelledby="touch" className="space-y-4">
           <h2 id="touch" className="text-sm font-semibold text-muted uppercase">
-            Stay in touch
+            {t.stayInTouch}
           </h2>
           <div className="space-y-3 rounded-xl card p-4">
             <p className="text-sm">
               {reminders.lastContactedAt
-                ? `Last in touch ${formatDate(reminders.lastContactedAt)}`
-                : 'Not marked as contacted yet'}
+                ? fmt(t.lastInTouch, {
+                    date: formatDate(reminders.lastContactedAt, locale),
+                  })
+                : t.notYet}
               {reminders.due &&
                 (reminders.due.overdueDays >= 0 ? (
                   <strong className="text-red-700 dark:text-red-300">
                     {' · '}
                     {reminders.due.overdueDays === 0
-                      ? 'due today'
-                      : `${reminders.due.overdueDays} days overdue`}
+                      ? t.dueToday
+                      : plural(reminders.due.overdueDays, t.overdue)}
                   </strong>
                 ) : (
-                  ` · next ${relativeDay(-reminders.due.overdueDays)}`
+                  fmt(t.nextDue, {
+                    when: relativeDay(-reminders.due.overdueDays, m.remember),
+                  })
                 ))}
             </p>
             <div className="flex flex-wrap items-end gap-2">
               <form action={setKeepInTouch} className="flex gap-2">
                 <input type="hidden" name="contactId" value={c.id} />
                 <label htmlFor="days" className="sr-only">
-                  Keep in touch
+                  {t.keepInTouch}
                 </label>
                 <select
                   id="days"
@@ -355,29 +360,33 @@ export default async function ContactPage({
                   defaultValue={reminders.keepInTouchDays ?? ''}
                   className="rounded-lg border border-border bg-surface px-3 py-2 text-base"
                 >
-                  <option value="">No reminder</option>
-                  {CADENCES.map((k) => (
-                    <option key={k.days} value={k.days}>
-                      {k.label}
+                  <option value="">{t.noReminder}</option>
+                  {CADENCE_DAYS.map((d) => (
+                    <option key={d} value={d}>
+                      {
+                        m.remember.cadences[
+                          String(d) as keyof typeof m.remember.cadences
+                        ]
+                      }
                     </option>
                   ))}
                 </select>
                 <button type="submit" className={button}>
-                  Save
+                  {t.save}
                 </button>
               </form>
               <form action={markContacted}>
                 <input type="hidden" name="contactId" value={c.id} />
                 <input type="hidden" name="back" value={back} />
                 <button type="submit" className={button}>
-                  I was in touch today
+                  {t.inTouchToday}
                 </button>
               </form>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h3 className="font-medium">Follow-ups</h3>
+            <h3 className="font-medium">{t.followUps}</h3>
             {reminders.followUps.length > 0 && (
               <ul className="divide-y divide-border rounded-xl card">
                 {reminders.followUps.map((f) => (
@@ -390,8 +399,8 @@ export default async function ContactPage({
                     >
                       <span className="block break-words">{f.note}</span>
                       <span className="block text-sm text-muted">
-                        {formatDay(f.dueOn)}
-                        {f.doneAt && ' · done'}
+                        {formatDay(f.dueOn, locale)}
+                        {f.doneAt && t.doneSuffix}
                       </span>
                     </span>
                     <span className="flex gap-2">
@@ -401,10 +410,10 @@ export default async function ContactPage({
                           <input type="hidden" name="back" value={back} />
                           <button
                             type="submit"
-                            aria-label={`Done: ${f.note}`}
+                            aria-label={fmt(t.doneLabel, { note: f.note })}
                             className={button}
                           >
-                            Done
+                            {t.done}
                           </button>
                         </form>
                       )}
@@ -413,10 +422,10 @@ export default async function ContactPage({
                         <input type="hidden" name="back" value={back} />
                         <button
                           type="submit"
-                          aria-label={`Delete follow-up: ${f.note}`}
+                          aria-label={fmt(t.deleteFollowUp, { note: f.note })}
                           className={button}
                         >
-                          Delete
+                          {t.delete}
                         </button>
                       </form>
                     </span>
@@ -427,7 +436,7 @@ export default async function ContactPage({
             <form action={addFollowUp} className="flex flex-wrap gap-2">
               <input type="hidden" name="contactId" value={c.id} />
               <label htmlFor="dueOn" className="sr-only">
-                Follow-up date
+                {t.followUpDate}
               </label>
               <input
                 id="dueOn"
@@ -438,18 +447,18 @@ export default async function ContactPage({
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-base"
               />
               <label htmlFor="note" className="sr-only">
-                Follow-up note
+                {t.followUpNote}
               </label>
               <input
                 id="note"
                 name="note"
                 required
                 maxLength={200}
-                placeholder="e.g. Ask about the harambee"
+                placeholder={t.followUpPlaceholder}
                 className="min-w-0 flex-1 basis-48 rounded-lg border border-border bg-surface px-3 py-2 text-base"
               />
               <button type="submit" className={button}>
-                Add follow-up
+                {t.addFollowUp}
               </button>
             </form>
           </div>
@@ -462,18 +471,18 @@ export default async function ContactPage({
             id="details"
             className="text-sm font-semibold text-muted uppercase"
           >
-            Details
+            {t.details}
           </h2>
           <dl className="space-y-3">
             {c.birthday && (
               <div>
-                <dt className="text-sm text-muted">Birthday</dt>
-                <dd>{formatBirthday(c.birthday)}</dd>
+                <dt className="text-sm text-muted">{t.birthday}</dt>
+                <dd>{formatBirthday(c.birthday, locale)}</dd>
               </div>
             )}
             {c.notes && (
               <div>
-                <dt className="text-sm text-muted">Notes</dt>
+                <dt className="text-sm text-muted">{t.notes}</dt>
                 <dd className="whitespace-pre-wrap break-words">{c.notes}</dd>
               </div>
             )}
@@ -487,33 +496,32 @@ export default async function ContactPage({
           className="space-y-3 rounded-xl card p-4"
         >
           <h2 id="merges" className="font-semibold">
-            Merged contacts
+            {t.merged}
           </h2>
-          <p className="text-sm text-muted">
-            Undo puts both contacts back exactly as they were before the merge.
-            Changes made to this contact since then are lost.
-          </p>
+          <p className="text-sm text-muted">{t.mergedExplain}</p>
           <ul className="space-y-2">
-            {merges.map((m) => (
+            {merges.map((mg) => (
               <li
-                key={m.id}
+                key={mg.id}
                 className="flex flex-wrap items-center justify-between gap-2"
               >
                 <span className="min-w-0 break-words">
-                  {m.mergedName}
+                  {mg.mergedName}
                   <span className="ml-2 text-sm text-muted">
-                    merged {formatDateTime(m.createdAt)}
+                    {fmt(t.mergedOn, {
+                      date: formatDateTime(mg.createdAt, locale),
+                    })}
                   </span>
                 </span>
                 <form action={undoMerge}>
-                  <input type="hidden" name="mergeRecordId" value={m.id} />
+                  <input type="hidden" name="mergeRecordId" value={mg.id} />
                   <input type="hidden" name="contactId" value={c.id} />
                   <button
                     type="submit"
                     className={button}
-                    aria-label={`Undo merge with ${m.mergedName}`}
+                    aria-label={fmt(t.undoMergeWith, { name: mg.mergedName })}
                   >
-                    Undo merge
+                    {t.undoMerge}
                   </button>
                 </form>
               </li>
@@ -523,30 +531,33 @@ export default async function ContactPage({
       )}
 
       <p className="text-sm text-muted">
-        Saved {formatDate(c.createdAt)} · Edited {formatDateTime(c.updatedAt)}
+        {fmt(t.savedEdited, {
+          created: formatDate(c.createdAt, locale),
+          updated: formatDateTime(c.updatedAt, locale),
+        })}
       </p>
 
       {!c.deletedAt && (
         <div className="flex flex-wrap gap-3 border-t border-border pt-6">
           <Link href={`/contacts/${c.id}/edit`} className={button}>
-            Edit
+            {t.edit}
           </Link>
           {(c.phones.length > 0 || c.emails.length > 0) && (
             <Link href={`/contacts/${c.id}/qr`} className={button}>
               <QrIcon className="size-4" />
-              Share as QR
+              {t.shareQr}
             </Link>
           )}
           <form action={setCard}>
             <input type="hidden" name="contactId" value={c.id} />
             <button type="submit" className={button}>
-              This is me
+              {t.thisIsMe}
             </button>
           </form>
           <form action={c.archivedAt ? unarchiveContact : archiveContact}>
             <input type="hidden" name="id" value={c.id} />
             <button type="submit" className={button}>
-              {c.archivedAt ? 'Unarchive' : 'Archive'}
+              {c.archivedAt ? t.unarchive : t.archive}
             </button>
           </form>
           <form action={trashContact}>
@@ -555,7 +566,7 @@ export default async function ContactPage({
               type="submit"
               className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
             >
-              Move to trash
+              {t.moveToTrash}
             </button>
           </form>
         </div>
@@ -565,7 +576,15 @@ export default async function ContactPage({
 }
 
 /** A number with compact one-tap actions, each labelled with the number. */
-function PhoneRow({ phone, primary }: { phone: Phone; primary: boolean }) {
+function PhoneRow({
+  phone,
+  primary,
+  t,
+}: {
+  phone: Phone;
+  primary: boolean;
+  t: Messages['contacts']['detail'];
+}) {
   const dial = phone.e164 ?? phone.raw;
   return (
     <li className="flex items-center justify-between gap-3">
@@ -573,23 +592,29 @@ function PhoneRow({ phone, primary }: { phone: Phone; primary: boolean }) {
         <span className="block text-lg break-all">{phone.raw}</span>
         {(phone.label || primary) && (
           <span className="text-sm text-muted">
-            {[phone.label, primary ? 'primary' : null]
+            {[phone.label, primary ? t.primary : null]
               .filter(Boolean)
               .join(' · ')}
           </span>
         )}
       </p>
       <div className="flex shrink-0 gap-1.5">
-        <IconAction href={`tel:${dial}`} label={`Call ${phone.raw}`}>
+        <IconAction
+          href={`tel:${dial}`}
+          label={fmt(t.callNumber, { number: phone.raw })}
+        >
           <PhoneIcon className="size-4" />
         </IconAction>
-        <IconAction href={`sms:${dial}`} label={`SMS ${phone.raw}`}>
+        <IconAction
+          href={`sms:${dial}`}
+          label={fmt(t.smsNumber, { number: phone.raw })}
+        >
           <MessageIcon className="size-4" />
         </IconAction>
         {phone.e164 && (
           <IconAction
             href={whatsappHref(phone.e164)}
-            label={`WhatsApp ${phone.raw}`}
+            label={fmt(t.whatsappNumber, { number: phone.raw })}
             external
           >
             <WhatsAppIcon className="size-4" />

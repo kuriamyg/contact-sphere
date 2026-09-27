@@ -8,6 +8,7 @@ import { Avatar } from '@/components/avatar';
 import {
   BellIcon,
   DownloadIcon,
+  GlobeIcon,
   LogOutIcon,
   QrIcon,
   ShieldIcon,
@@ -16,6 +17,7 @@ import {
 } from '@/components/icons';
 import { NameForm } from '@/components/profile/name-form';
 import { InstallApp } from '@/components/pwa/install-app';
+import { LanguageSwitch } from '@/components/shell/language-switch';
 import { PhoneReminders } from '@/components/reach/phone-reminders';
 import {
   OfflineToggle,
@@ -25,8 +27,10 @@ import { requireUser } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
+import { fmt } from '@/i18n/format';
+import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 
-export const metadata: Metadata = { title: 'Profile · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('profile');
 
 const card = 'rounded-2xl card p-5 sm:p-6';
 const button =
@@ -55,30 +59,35 @@ function CardTitle({
  */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [stats, reach] = await Promise.all([
+  const [stats, reach, m, locale] = await Promise.all([
     getContactStats(),
     getReachStatus(),
+    getMessages(),
+    getLocale(),
   ]);
+  const t = m.account;
   const name = user.displayName ?? user.email;
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="sr-only">Profile</h1>
+      <h1 className="sr-only">{t.title}</h1>
 
       <section
-        aria-label="Your profile"
+        aria-label={t.yourProfile}
         className={`${card} flex flex-col items-center gap-4 bg-gradient-to-b from-accent-soft to-transparent text-center`}
       >
         <Avatar name={name} colourKey={user.id} size="xl" ring />
         <div className="space-y-1">
           <p className="text-2xl font-semibold tracking-tight break-words">
-            {user.displayName ?? 'Welcome'}
+            {user.displayName ?? t.welcome}
           </p>
           <p className="break-all text-muted">{user.email}</p>
           {/* Absent only while an older API is still deploying. */}
           {user.createdAt && (
             <p className="text-sm text-muted">
-              Member since {formatDate(user.createdAt)}
+              {fmt(t.memberSince, {
+                date: formatDate(user.createdAt, locale),
+              })}
             </p>
           )}
         </div>
@@ -90,20 +99,18 @@ export default async function ProfilePage() {
           }`}
         >
           <ShieldIcon className="size-4" />
-          {user.totpEnabled
-            ? 'Two-factor sign-in is on'
-            : 'Two-factor sign-in is off'}
+          {user.totpEnabled ? t.twoFactorOn : t.twoFactorOff}
         </p>
         {stats && (
           <ul
-            aria-label="Your contacts"
+            aria-label={t.yourContacts}
             className="grid w-full grid-cols-3 divide-x divide-border rounded-xl card bg-background"
           >
             {(
               [
-                ['Contacts', stats.active, '/contacts'],
-                ['Archived', stats.archived, '/contacts?view=archived'],
-                ['Trash', stats.trash, '/contacts?view=trash'],
+                [t.stats.contacts, stats.active, '/contacts'],
+                [t.stats.archived, stats.archived, '/contacts?view=archived'],
+                [t.stats.trash, stats.trash, '/contacts?view=trash'],
               ] as const
             ).map(([label, n, href]) => (
               <li key={label}>
@@ -127,11 +134,11 @@ export default async function ProfilePage() {
         className={`${card} space-y-4`}
       >
         <CardTitle id="details-heading" icon={<UserIcon />}>
-          Personal details
+          {t.personal}
         </CardTitle>
         <NameForm current={user.displayName ?? null} />
         <div className="space-y-1">
-          <p className="text-sm font-medium">Email</p>
+          <p className="text-sm font-medium">{t.email}</p>
           <p className="break-all text-muted">{user.email}</p>
         </div>
       </section>
@@ -141,10 +148,10 @@ export default async function ProfilePage() {
         className={`${card} space-y-5`}
       >
         <CardTitle id="security-heading" icon={<ShieldIcon />}>
-          Security
+          {t.security}
         </CardTitle>
         <div className="space-y-3">
-          <h3 className="font-medium">Two-factor sign-in</h3>
+          <h3 className="font-medium">{t.twoFactor}</h3>
           <TwoFactorSection
             enabled={user.totpEnabled}
             recoveryCodesLeft={user.recoveryCodesLeft}
@@ -152,7 +159,7 @@ export default async function ProfilePage() {
         </div>
         <details className="border-t border-border pt-4">
           <summary className="cursor-pointer font-medium">
-            Change password
+            {t.changePassword}
           </summary>
           <div className="mt-4">
             <ChangePasswordForm />
@@ -165,12 +172,9 @@ export default async function ProfilePage() {
         className={`${card} space-y-3`}
       >
         <CardTitle id="install-heading" icon={<DownloadIcon />}>
-          Use it like an app
+          {t.installTitle}
         </CardTitle>
-        <p className="text-sm text-muted">
-          Put Contact Sphere on your home screen: it opens full screen, straight
-          into Today, like any other app.
-        </p>
+        <p className="text-sm text-muted">{t.installBody}</p>
         <InstallApp />
       </section>
 
@@ -179,31 +183,36 @@ export default async function ProfilePage() {
         className={`${card} space-y-3`}
       >
         <CardTitle id="reminders-heading" icon={<BellIcon />}>
-          Morning reminders
+          {t.remindersTitle}
         </CardTitle>
-        <p className="text-sm text-muted">
-          A free notification on this phone each morning when a follow-up,
-          birthday or keep-in-touch is due. No SMS, no cost.
-        </p>
+        <p className="text-sm text-muted">{t.remindersBody}</p>
         {reach?.push.enabled && reach.push.publicKey ? (
           <PhoneReminders publicKey={reach.push.publicKey} />
         ) : (
-          <p className="text-sm text-muted">Not available right now.</p>
+          <p className="text-sm text-muted">{t.notAvailable}</p>
         )}
       </section>
 
       <section aria-labelledby="card-heading" className={`${card} space-y-3`}>
         <CardTitle id="card-heading" icon={<QrIcon />}>
-          Your QR business card
+          {t.cardTitle}
         </CardTitle>
-        <p className="text-sm text-muted">
-          Let someone scan your card with their phone camera to save your number
-          — no typing, no mistakes.
-        </p>
+        <p className="text-sm text-muted">{t.cardBody}</p>
         <Link href="/card" className={button}>
           <QrIcon className="size-4" />
-          Show my card
+          {t.showCard}
         </Link>
+      </section>
+
+      <section
+        aria-labelledby="language-heading"
+        className={`${card} space-y-3`}
+      >
+        <CardTitle id="language-heading" icon={<GlobeIcon />}>
+          {t.languageTitle}
+        </CardTitle>
+        <p className="text-sm text-muted">{t.languageBody}</p>
+        <LanguageSwitch />
       </section>
 
       <section
@@ -211,33 +220,25 @@ export default async function ProfilePage() {
         className={`${card} space-y-3`}
       >
         <CardTitle id="offline-heading" icon={<DownloadIcon />}>
-          Use it without data
+          {t.offlineTitle}
         </CardTitle>
-        <p className="text-sm text-muted">
-          Keep a copy of your contacts, groups and Today on this phone. With no
-          data bundle you can still search, open a contact, and call or SMS
-          (that uses airtime, like your phone book). Adding or changing things
-          and WhatsApp still need data. Signing out deletes the copy.
-        </p>
+        <p className="text-sm text-muted">{t.offlineBody}</p>
         <OfflineToggle />
       </section>
 
       <section aria-labelledby="data-heading" className={`${card} space-y-4`}>
         <CardTitle id="data-heading" icon={<DownloadIcon />}>
-          Your data
+          {t.dataTitle}
         </CardTitle>
-        <p className="text-sm text-muted">
-          Your contacts are yours: never sold, shared or used for advertising.
-          Take a copy any time.
-        </p>
+        <p className="text-sm text-muted">{t.dataBody}</p>
         <div className="flex flex-wrap gap-3">
           <a href="/contacts/export" download className={button}>
             <DownloadIcon className="size-4" />
-            Export contacts (.vcf)
+            {t.exportVcf}
           </a>
           <Link href="/contacts/import" className={button}>
             <UploadIcon className="size-4" />
-            Import contacts
+            {t.importContacts}
           </Link>
         </div>
       </section>
@@ -247,28 +248,25 @@ export default async function ProfilePage() {
         className={`${card} space-y-4`}
       >
         <CardTitle id="sessions-heading" icon={<LogOutIcon />}>
-          Sign out
+          {t.signOutTitle}
         </CardTitle>
         <WipeOnSubmit>
           <form action={logout}>
             <button type="submit" className={`${button} w-full justify-center`}>
               <LogOutIcon className="size-4" />
-              Sign out of this device
+              {t.signOutHere}
             </button>
           </form>
         </WipeOnSubmit>
         <div className="space-y-2 border-t border-border pt-4">
-          <p className="text-sm text-muted">
-            Lost a phone, or signed in somewhere you shouldn’t have? This signs
-            out every device, including this one.
-          </p>
+          <p className="text-sm text-muted">{t.signOutAllBody}</p>
           <WipeOnSubmit>
             <form action={logoutEverywhere}>
               <button
                 type="submit"
                 className="w-full rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950"
               >
-                Sign out everywhere
+                {t.signOutAll}
               </button>
             </form>
           </WipeOnSubmit>

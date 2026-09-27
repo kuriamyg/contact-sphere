@@ -17,8 +17,11 @@ import {
   UserIcon,
 } from '@/components/icons';
 import { WipeOnSubmit } from '@/components/offline/offline-toggle';
+import { useMessages } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 import type { Theme } from '@/lib/theme';
 
+import { LanguageSwitch } from './language-switch';
 import { ThemeSwitch } from './theme-switch';
 
 const item =
@@ -40,6 +43,7 @@ export function ProfileMenu({
   colourKey: string;
   theme: Theme;
 }) {
+  const t = useMessages().shell;
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -78,7 +82,7 @@ export function ProfileMenu({
         type="button"
         aria-expanded={open}
         aria-controls="profile-menu"
-        aria-label={`Menu for ${name}`}
+        aria-label={fmt(t.menuFor, { name })}
         onClick={() => setOpen((o) => !o)}
         className={`rounded-full focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${
           open
@@ -103,42 +107,46 @@ export function ProfileMenu({
             </div>
           </div>
           <div className="mx-2 my-1 h-px bg-border" />
-          <nav aria-label="Account and tools" className="flex flex-col">
+          <nav aria-label={t.accountTools} className="flex flex-col">
             <Link href="/account" className={item}>
               <UserIcon className="size-[18px] text-accent" />
-              Profile &amp; security
+              {t.profile}
             </Link>
             <Link href="/card" className={item}>
               <QrIcon className="size-[18px] text-sky-500" />
-              My QR card
+              {t.card}
             </Link>
             <Link href="/account#reminders-heading" className={item}>
               <BellIcon className="size-[18px] text-amber-500" />
-              Morning reminders
+              {t.reminders}
             </Link>
             <Link href="/contacts/tags" className={item}>
               <TagIcon className="size-[18px] text-violet" />
-              Skills &amp; tags
+              {t.tags}
             </Link>
             <Link href="/contacts/duplicates" className={item}>
               <MergeIcon className="size-[18px] text-pink-500" />
-              Clean up duplicates
+              {t.duplicates}
             </Link>
             <Link href="/contacts/import" className={item}>
               <UploadIcon className="size-[18px] text-muted" />
-              Import contacts
+              {t.import}
             </Link>
             <a href="/contacts/export" download className={item}>
               <DownloadIcon className="size-[18px] text-muted" />
-              Export contacts
+              {t.export}
             </a>
           </nav>
           <div className="mx-2 my-1 h-px bg-border" />
           <div className="space-y-2 px-3 pt-2 pb-2">
             <p className="text-xs font-bold tracking-wider text-muted uppercase">
-              Appearance
+              {t.appearance}
             </p>
             <ThemeSwitch initial={theme} />
+            <p className="pt-2 text-xs font-bold tracking-wider text-muted uppercase">
+              {t.language}
+            </p>
+            <LanguageSwitch />
           </div>
           <div className="mx-2 my-1 h-px bg-border" />
           <WipeOnSubmit>
@@ -148,7 +156,7 @@ export function ProfileMenu({
                 className={`${item} w-full text-red-700 dark:text-red-300`}
               >
                 <LogOutIcon className="size-[18px]" />
-                Sign out
+                {t.signOut}
               </button>
             </form>
           </WipeOnSubmit>

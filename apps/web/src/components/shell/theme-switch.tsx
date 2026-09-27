@@ -2,13 +2,8 @@
 
 import { useState } from 'react';
 
+import { useMessages } from '@/i18n/client';
 import { applyTheme, type Theme, THEMES } from '@/lib/theme';
-
-const LABELS: Record<Theme, string> = {
-  auto: 'Auto',
-  light: 'Light',
-  dark: 'Dark',
-};
 
 function Icon({ theme }: { theme: Theme }) {
   const common = {
@@ -49,6 +44,7 @@ function Icon({ theme }: { theme: Theme }) {
  */
 export function ThemeSwitch({ initial }: { initial: Theme }) {
   const [theme, setTheme] = useState<Theme>(initial);
+  const t = useMessages().shell;
 
   function choose(next: Theme) {
     setTheme(next);
@@ -58,26 +54,26 @@ export function ThemeSwitch({ initial }: { initial: Theme }) {
   return (
     <div
       role="radiogroup"
-      aria-label="Appearance"
+      aria-label={t.appearance}
       className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-surface p-1"
     >
-      {THEMES.map((t) => {
-        const on = t === theme;
+      {THEMES.map((th) => {
+        const on = th === theme;
         return (
           <button
-            key={t}
+            key={th}
             type="button"
             role="radio"
             aria-checked={on}
-            onClick={() => choose(t)}
+            onClick={() => choose(th)}
             className={`flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${
               on
                 ? 'border border-accent/40 bg-accent-soft text-foreground'
                 : 'text-muted hover:text-foreground'
             }`}
           >
-            <Icon theme={t} />
-            {LABELS[t]}
+            <Icon theme={th} />
+            {t[th]}
           </button>
         );
       })}

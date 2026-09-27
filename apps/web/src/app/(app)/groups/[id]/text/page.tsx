@@ -6,8 +6,9 @@ import { GroupTexter } from '@/components/reach/group-texter';
 import { UUID } from '@/lib/contacts';
 import { getGroup } from '@/lib/groups';
 import { getReachStatus } from '@/lib/reach';
+import { getMessages, pageTitle } from '@/i18n/server';
 
-export const metadata: Metadata = { title: 'Text the group · Contact Sphere' };
+export const generateMetadata = (): Promise<Metadata> => pageTitle('textGroup');
 
 export default async function TextGroupPage({
   params,
@@ -16,6 +17,7 @@ export default async function TextGroupPage({
   if (!UUID.test(id)) notFound();
   const [g, reach] = await Promise.all([getGroup(id), getReachStatus()]);
   if (!g) notFound();
+  const t = (await getMessages()).groups.text;
   const numbers = [
     ...new Set(
       g.members
@@ -32,9 +34,9 @@ export default async function TextGroupPage({
       >
         ← {g.name}
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Text the group</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
       {numbers.length === 0 ? (
-        <p className="text-muted">No one in this group has a number yet.</p>
+        <p className="text-muted">{t.noNumbers}</p>
       ) : (
         <GroupTexter
           groupId={g.id}

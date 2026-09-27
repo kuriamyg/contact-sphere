@@ -4,18 +4,12 @@ import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
 import { Notice } from '@/components/contacts/notice';
 import { ChevronRightIcon } from '@/components/icons';
+import { plural } from '@/i18n/format';
+import { getMessages, pageTitle } from '@/i18n/server';
 import { type DuplicatePair, listDuplicates } from '@/lib/contacts';
 
-export const metadata: Metadata = {
-  title: 'Clean up duplicates · Contact Sphere',
-};
-
-const REASON_TEXT: Record<DuplicatePair['reasons'][number], string> = {
-  same_phone: 'Same phone number',
-  same_email: 'Same email',
-  same_name: 'Same name',
-  similar_name: 'Same name, different order',
-};
+export const generateMetadata = (): Promise<Metadata> =>
+  pageTitle('duplicates');
 
 function Person({ c }: { c: DuplicatePair['a'] }) {
   return (
@@ -35,36 +29,32 @@ export default async function DuplicatesPage({
   searchParams,
 }: PageProps<'/contacts/duplicates'>) {
   const { done } = await searchParams;
-  const { pairs, total } = await listDuplicates();
+  const [{ pairs, total }, m] = await Promise.all([
+    listDuplicates(),
+    getMessages(),
+  ]);
+  const t = m.duplicates;
   return (
     <div className="space-y-6">
       <Link href="/contacts" className="text-sm text-muted hover:underline">
-        ← Contacts
+        {t.back}
       </Link>
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Clean up duplicates
-        </h1>
-        <p className="text-muted">
-          Contacts that may be the same person, and why. Nothing is merged until
-          you review a pair and confirm — and every merge can be undone for 30
-          days.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
+        <p className="text-muted">{t.lead}</p>
       </header>
       <Notice code={done} />
 
       {total === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
-          <h2 className="text-lg font-semibold">No duplicates found</h2>
-          <p className="mt-1 text-muted">
-            Your contacts look clean. New imports are checked the same way.
-          </p>
+          <h2 className="text-lg font-semibold">{t.noneTitle}</h2>
+          <p className="mt-1 text-muted">{t.noneBody}</p>
         </div>
       ) : (
         <>
           <p className="text-sm text-muted" aria-live="polite">
-            {total} possible {total === 1 ? 'duplicate' : 'duplicates'}
-            {total >= 200 ? ' shown (merge some to see more)' : ''}
+            {plural(total, t.count)}
+            {total >= 200 ? t.capped : ''}
           </p>
           <ul className="space-y-3">
             {pairs.map((p) => (
@@ -82,14 +72,14 @@ export default async function DuplicatesPage({
                           : 'bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100'
                       }`}
                     >
-                      {p.confidence === 'high' ? 'Likely' : 'Possible'}
+                      {p.confidence === 'high' ? t.likely : t.possible}
                     </span>
                     {p.reasons.map((r) => (
                       <span
                         key={r}
                         className="rounded-full border border-border px-2 py-0.5 text-muted"
                       >
-                        {REASON_TEXT[r]}
+                        {t.reasons[r]}
                       </span>
                     ))}
                   </div>
@@ -99,7 +89,7 @@ export default async function DuplicatesPage({
                       <Person c={p.b} />
                     </div>
                     <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
-                      Review
+                      {t.review}
                       <ChevronRightIcon className="size-4" />
                     </span>
                   </div>

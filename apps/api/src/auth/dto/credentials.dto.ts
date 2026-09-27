@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
   Length,
@@ -61,4 +62,11 @@ export class ProfileDto {
   @IsString()
   @MaxLength(100)
   displayName?: string;
+}
+
+export const LOCALES = ['en', 'sw'] as const;
+
+export class LocaleDto {
+  @IsIn(LOCALES)
+  locale!: (typeof LOCALES)[number];
 }

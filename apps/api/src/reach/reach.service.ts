@@ -54,24 +54,61 @@ export interface CardView {
   emails: { address: string; label: string | null }[];
 }
 
+type Locale = 'en' | 'sw';
+
+const DIGEST: Record<
+  Locale,
+  {
+    follow: (n: number) => string;
+    birthdays: (n: number) => string;
+    touch: (n: number) => string;
+    and: string;
+    today: string;
+  }
+> = {
+  en: {
+    follow: (n) => `${n} follow-up${n === 1 ? '' : 's'}`,
+    birthdays: (n) => `${n} birthday${n === 1 ? '' : 's'}`,
+    touch: (n) => `${n} ${n === 1 ? 'person' : 'people'} to keep in touch with`,
+    and: 'and',
+    today: 'Today',
+  },
+  sw: {
+    follow: (n) => `ufuatiliaji ${n}`,
+    birthdays: (n) => `siku ${n} ${n === 1 ? 'ya' : 'za'} kuzaliwa`,
+    touch: (n) =>
+      n === 1 ? `mtu ${n} wa kuwasiliana naye` : `watu ${n} wa kuwasiliana nao`,
+    and: 'na',
+    today: 'Leo',
+  },
+};
+
+export const TEST_PUSH: Record<Locale, string> = {
+  en: 'Reminders are on. You will get one each morning when something is due.',
+  sw: 'Vikumbusho vimewashwa. Utapata kimoja kila asubuhi kukiwa na jambo la kufanya.',
+};
+
 /** The digest never names anyone: it shows on a locked screen. */
-export function digestText(v: TodayView): string | null {
+export function digestText(v: TodayView, locale: Locale = 'en'): string | null {
+  const w = DIGEST[locale] ?? DIGEST.en;
   const follow = v.followUps.filter((f) => f.daysAway <= 0).length;
   const birthdays = v.birthdays.filter((b) => b.daysAway === 0).length;
   const touch = v.keepInTouch.length;
   const parts = [
-    follow && `${follow} follow-up${follow === 1 ? '' : 's'}`,
-    birthdays && `${birthdays} birthday${birthdays === 1 ? '' : 's'}`,
-    touch &&
-      `${touch} ${touch === 1 ? 'person' : 'people'} to keep in touch with`,
+    follow && w.follow(follow),
+    birthdays && w.birthdays(birthdays),
+    touch && w.touch(touch),
   ].filter((p): p is string => !!p);
   if (parts.length === 0) return null;
   const list =
     parts.length === 1
       ? parts[0]
-      : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
-  return `Today: ${list}.`;
+      : `${parts.slice(0, -1).join(', ')} ${w.and} ${parts[parts.length - 1]}`;
+  return `${w.today}: ${list}.`;
 }
+
+const asLocale = (l: string | null | undefined): Locale =>
+  l === 'sw' ? 'sw' : 'en';
 
 const monthStart = (now: Date) => {
   // Calendar month in Nairobi (UTC+3, no daylight saving).
@@ -152,9 +189,13 @@ export class ReachService {
     if (!this.push.enabled) {
       throw new ForbiddenException('Reminders on the phone are not set up.');
     }
+    const user = await this.prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { locale: true },
+    });
     const sent = await this.pushToOwner(ownerId, {
       title: 'Contact Sphere',
-      body: 'Reminders are on. You will get one each morning when something is due.',
+      body: TEST_PUSH[asLocale(user?.locale)],
       url: '/today',
       tag: 'test',
     });
@@ -174,12 +215,12 @@ export class ReachService {
         pushDevices: { some: {} },
         OR: [{ digestSentOn: null }, { digestSentOn: { lt: todayDate } }],
       },
-      select: { id: true },
+      select: { id: true, locale: true },
       take: 5000,
     });
     let sent = 0;
     let reached = 0;
-    for (const { id } of owners) {
+    for (const { id, locale } of owners) {
       // Claim the day first: a second, overlapping run skips this owner.
       const claimed = await this.prisma.user.updateMany({
         where: {
@@ -189,7 +230,10 @@ export class ReachService {
         data: { digestSentOn: todayDate },
       });
       if (claimed.count === 0) continue;
-      const body = digestText(await this.remember.today(id, now));
+      const body = digestText(
+        await this.remember.today(id, now),
+        asLocale(locale),
+      );
       if (!body) continue;
       const n = await this.pushToOwner(id, {
         title: 'Contact Sphere',

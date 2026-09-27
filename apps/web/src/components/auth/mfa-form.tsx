@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 
 import { type FormState, verifyMfa } from '@/app/actions/auth';
+import { useMessages } from '@/i18n/client';
 
 import { Field, FormMessage, SubmitButton } from './field';
 
@@ -11,20 +12,21 @@ export function MfaForm() {
     verifyMfa,
     {},
   );
+  const t = useMessages().mfa;
   return (
     <form action={formAction} className="space-y-5" noValidate>
       <FormMessage error={state.error} />
       <Field
-        label="Code"
+        label={t.code}
         name="code"
         inputMode="text"
         autoComplete="one-time-code"
-        hint="The 6-digit code from your authenticator app, or one of your recovery codes."
+        hint={t.codeHint}
         required
         autoFocus
       />
-      <SubmitButton pending={pending} pendingText="Checking…">
-        Verify
+      <SubmitButton pending={pending} pendingText={t.checking}>
+        {t.verify}
       </SubmitButton>
     </form>
   );
