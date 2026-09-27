@@ -154,3 +154,9 @@ export const AlertIcon = (p: IconProps) => (
     <path d="M12 10v4M12 17h.01" />
   </Svg>
 );
+export const SunIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5" />
+  </Svg>
+);

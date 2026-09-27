@@ -71,3 +71,10 @@ export function listHref(p: ListParams, change: Partial<ListParams> = {}) {
   const s = qs.toString();
   return s ? `/contacts?${s}` : '/contacts';
 }
+
+/** A contact's page, carrying the list it was opened from (its pane shows the same list). */
+export function detailHref(p: ListParams, id: string) {
+  const list = listHref(p);
+  const i = list.indexOf('?');
+  return i < 0 ? `/contacts/${id}` : `/contacts/${id}${list.slice(i)}`;
+}

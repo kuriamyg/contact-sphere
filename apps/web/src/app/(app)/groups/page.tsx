@@ -7,6 +7,7 @@ import { ChevronRightIcon } from '@/components/icons';
 import { plural } from '@/i18n/format';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { GROUP_KINDS, kindLabel, listGroups } from '@/lib/groups';
+import { isWide } from '@/lib/wide';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('groups');
 
@@ -18,6 +19,8 @@ export default async function GroupsPage({
 }: PageProps<'/groups'>) {
   const { done } = await searchParams;
   const groups = await listGroups();
+  // On a laptop the list sits in the pane beside this page (groups layout).
+  const paned = groups.length > 0 && (await isWide());
   const m = await getMessages();
   const t = m.groups.list;
   return (
@@ -28,7 +31,13 @@ export default async function GroupsPage({
       </header>
       <Notice code={done} />
 
-      {groups.length === 0 ? (
+      {paned ? (
+        <div className="card flex flex-col items-center gap-2 rounded-3xl px-6 py-14 text-center">
+          <ChevronRightIcon className="size-8 rotate-180 text-accent" />
+          <h2 className="font-display text-xl font-semibold">{t.pickTitle}</h2>
+          <p className="max-w-sm text-sm text-muted">{t.pickBody}</p>
+        </div>
+      ) : groups.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
           <h2 className="text-lg font-semibold">{t.noneTitle}</h2>
           <p className="mt-1 text-muted">{t.noneBody}</p>
@@ -55,7 +64,11 @@ export default async function GroupsPage({
         </ul>
       )}
 
-      <details className="rounded-xl card p-4" open={groups.length === 0}>
+      <details
+        id="new-group"
+        className="rounded-xl card p-4"
+        open={groups.length === 0 || paned}
+      >
         <summary className="cursor-pointer font-medium">{t.newGroup}</summary>
         <form action={createGroup} className="mt-4 space-y-4">
           <div className="space-y-1.5">

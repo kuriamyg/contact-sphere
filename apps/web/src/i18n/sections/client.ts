@@ -310,6 +310,9 @@ export const client = section(
       sections: 'Sections',
       loadingContacts: 'Loading contacts…',
       loadingContact: 'Loading contact…',
+      tools: 'Tools',
+      profileSettings: 'Profile & settings',
+      searchPlaceholder: 'Search contacts…',
     },
   },
   {
@@ -635,6 +638,9 @@ export const client = section(
       sections: 'Sehemu',
       loadingContacts: 'Inapakia anwani…',
       loadingContact: 'Inapakia anwani…',
+      tools: 'Zana',
+      profileSettings: 'Wasifu na mipangilio',
+      searchPlaceholder: 'Tafuta anwani…',
     },
   },
 );

@@ -40,8 +40,11 @@ export default async function GroupPage({
     .filter((n): n is string => Boolean(n));
 
   return (
-    <div className="max-w-xl space-y-6">
-      <Link href="/groups" className="text-sm text-muted hover:underline">
+    <div className="max-w-xl space-y-6 lg:max-w-3xl">
+      <Link
+        href="/groups"
+        className="text-sm text-muted hover:underline lg:hidden"
+      >
         {t.back}
       </Link>
       <header className="space-y-1">

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { listHref, parseListParams, toApiQuery } from '@/lib/contact-params';
+import {
+  detailHref,
+  listHref,
+  parseListParams,
+  toApiQuery,
+} from '@/lib/contact-params';
 
 describe('parseListParams', () => {
   it('defaults everything', () => {
@@ -68,5 +73,15 @@ describe('listHref', () => {
     expect(listHref({ ...p, q: 'ann' }, { page: 2 })).toBe(
       '/contacts?q=ann&page=2',
     );
+  });
+});
+
+describe('detailHref', () => {
+  const id = '01a0e38f-768a-728e-a7e7-4c063149fc39';
+  it('carries the list the contact was opened from', () => {
+    expect(detailHref(parseListParams({}), id)).toBe(`/contacts/${id}`);
+    expect(
+      detailHref(parseListParams({ q: 'ot', tag: 'Fundi', page: '2' }), id),
+    ).toBe(`/contacts/${id}?q=ot&tag=fundi&page=2`);
   });
 });

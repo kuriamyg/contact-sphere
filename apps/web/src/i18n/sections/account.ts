@@ -4,6 +4,7 @@ export const account = section(
   {
     title: 'Profile',
     yourProfile: 'Your profile',
+    settingsNav: 'Settings sections',
     welcome: 'Welcome',
     memberSince: 'Member since {date}',
     twoFactorOn: 'Two-factor sign-in is on',
@@ -46,6 +47,7 @@ export const account = section(
   {
     title: 'Wasifu',
     yourProfile: 'Wasifu wako',
+    settingsNav: 'Sehemu za mipangilio',
     welcome: 'Karibu',
     memberSince: 'Mwanachama tangu {date}',
     twoFactorOn: 'Kuingia kwa hatua mbili kumewashwa',

@@ -26,6 +26,10 @@ export const contacts = section(
       tagged: ' tagged “{tag}”',
       deletedOn: 'Deleted {date}',
       pagesNav: 'Pages',
+      pickTitle: 'Choose a contact',
+      pickBody:
+        'Pick someone on the left to see their numbers, notes and reminders here.',
+      listPane: 'Contact list',
       pageOf: 'Page {page} of {last}',
       emptyTrash: 'Empty the trash',
       emptyTrashBody: {
@@ -142,6 +146,10 @@ export const contacts = section(
       tagged: ' zenye lebo “{tag}”',
       deletedOn: 'Ilifutwa {date}',
       pagesNav: 'Kurasa',
+      pickTitle: 'Chagua anwani',
+      pickBody:
+        'Chagua mtu upande wa kushoto kuona nambari, maelezo na vikumbusho vyake hapa.',
+      listPane: 'Orodha ya anwani',
       pageOf: 'Ukurasa {page} kati ya {last}',
       emptyTrash: 'Safisha tupio',
       emptyTrashBody: {
