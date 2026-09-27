@@ -9,6 +9,7 @@ import { Notice } from '@/components/contacts/notice';
 import { FocusSearch } from '@/components/contacts/focus-search';
 import { SortSelect } from '@/components/contacts/sort-select';
 import {
+  detailHref,
   listHref,
   PAGE_SIZE,
   parseListParams,
@@ -25,6 +26,7 @@ import type { Messages } from '@/i18n/en';
 import { fmt, plural } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { formatDate } from '@/lib/format';
+import { isWide } from '@/lib/wide';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('contacts');
 
@@ -40,6 +42,7 @@ export default async function ContactsPage({
 }: PageProps<'/contacts'>) {
   const sp = await searchParams;
   const p = parseListParams(sp);
+  const wide = await isWide();
   const active = p.view === 'active';
   const [{ items, total, page }, tags, searches, m, locale] = await Promise.all(
     [
@@ -57,8 +60,8 @@ export default async function ContactsPage({
   const to = Math.min(page * PAGE_SIZE, total);
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  return (
-    <div className="space-y-6">
+  const headerEl = (
+    <>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
         <div className="flex flex-wrap gap-2">
@@ -78,62 +81,16 @@ export default async function ContactsPage({
           </Link>
         </div>
       </header>
-
+    </>
+  );
+  const noticeEl = (
+    <>
       <Notice code={sp.done} />
       <FocusSearch when={sp.find === '1'} />
-
-      <nav
-        aria-label={t.listsNav}
-        className="flex gap-1 border-b border-border"
-      >
-        {VIEWS.map((view) => {
-          const current = p.view === view;
-          return (
-            <Link
-              key={view}
-              href={listHref(p, { view, page: 1 })}
-              aria-current={current ? 'page' : undefined}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${
-                current
-                  ? 'border-foreground text-foreground'
-                  : 'border-transparent text-muted hover:text-foreground'
-              }`}
-            >
-              {t.views[view]}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <form
-        role="search"
-        action="/contacts"
-        className="grid gap-3 sm:grid-cols-[1fr_12rem_auto] sm:items-end"
-      >
-        {p.view !== 'active' && (
-          <input type="hidden" name="view" value={p.view} />
-        )}
-        {p.tag && <input type="hidden" name="tag" value={p.tag} />}
-        <div className="space-y-1.5">
-          <label htmlFor="q" className="block text-sm font-medium">
-            {t.search}
-          </label>
-          <input
-            id="q"
-            name="q"
-            type="search"
-            defaultValue={p.q}
-            maxLength={100}
-            placeholder={t.searchPlaceholder}
-            className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
-          />
-        </div>
-        <SortSelect value={p.sort} />
-        <button type="submit" className={secondaryButton}>
-          {t.search}
-        </button>
-      </form>
-
+    </>
+  );
+  const chipsEl = (
+    <>
       {searches.length > 0 && (
         <nav
           aria-label={t.savedNav}
@@ -227,7 +184,102 @@ export default async function ContactsPage({
       {p.view === 'trash' && (
         <p className="text-sm text-muted">{t.trashNote}</p>
       )}
+    </>
+  );
+  const emptyTrashEl = (
+    <>
+      {p.view === 'trash' && total > 0 && (
+        <details className="rounded-xl border border-red-300 p-4 dark:border-red-900">
+          <summary className="cursor-pointer text-sm font-medium text-red-700 dark:text-red-300">
+            {t.emptyTrash}
+          </summary>
+          <form action={emptyTrash} className="mt-3 space-y-3">
+            <p className="text-sm">{plural(total, t.emptyTrashBody)}</p>
+            <button
+              type="submit"
+              className="rounded-lg bg-red-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
+            >
+              {fmt(t.deleteN, { n: total })}
+            </button>
+          </form>
+        </details>
+      )}
+    </>
+  );
 
+  if (wide) {
+    return (
+      <div className="space-y-6">
+        {headerEl}
+        {noticeEl}
+        {chipsEl}
+        <div className="card flex flex-col items-center gap-2 rounded-3xl px-6 py-16 text-center">
+          <ChevronRightIcon className="size-8 rotate-180 text-accent" />
+          <h2 className="font-display text-xl font-semibold">{t.pickTitle}</h2>
+          <p className="max-w-sm text-sm text-muted">{t.pickBody}</p>
+        </div>
+        {emptyTrashEl}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {headerEl}
+      {noticeEl}
+      <nav
+        aria-label={t.listsNav}
+        className="flex gap-1 border-b border-border"
+      >
+        {VIEWS.map((view) => {
+          const current = p.view === view;
+          return (
+            <Link
+              key={view}
+              href={listHref(p, { view, page: 1 })}
+              aria-current={current ? 'page' : undefined}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${
+                current
+                  ? 'border-foreground text-foreground'
+                  : 'border-transparent text-muted hover:text-foreground'
+              }`}
+            >
+              {t.views[view]}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <form
+        role="search"
+        action="/contacts"
+        className="grid gap-3 sm:grid-cols-[1fr_12rem_auto] sm:items-end"
+      >
+        {p.view !== 'active' && (
+          <input type="hidden" name="view" value={p.view} />
+        )}
+        {p.tag && <input type="hidden" name="tag" value={p.tag} />}
+        <div className="space-y-1.5">
+          <label htmlFor="q" className="block text-sm font-medium">
+            {t.search}
+          </label>
+          <input
+            id="q"
+            name="q"
+            type="search"
+            defaultValue={p.q}
+            maxLength={100}
+            placeholder={t.searchPlaceholder}
+            className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+          />
+        </div>
+        <SortSelect value={p.sort} />
+        <button type="submit" className={secondaryButton}>
+          {t.search}
+        </button>
+      </form>
+
+      {chipsEl}
       {items.length === 0 ? (
         <EmptyState view={p.view} q={p.q} tag={p.tag} m={m} />
       ) : (
@@ -254,7 +306,7 @@ export default async function ContactsPage({
                   {rows.map((c) => (
                     <li key={c.id}>
                       <Link
-                        href={`/contacts/${c.id}`}
+                        href={detailHref(p, c.id)}
                         prefetch={false}
                         className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface focus-visible:bg-surface focus-visible:outline-none sm:px-4"
                       >
@@ -318,22 +370,7 @@ export default async function ContactsPage({
         </>
       )}
 
-      {p.view === 'trash' && total > 0 && (
-        <details className="rounded-xl border border-red-300 p-4 dark:border-red-900">
-          <summary className="cursor-pointer text-sm font-medium text-red-700 dark:text-red-300">
-            {t.emptyTrash}
-          </summary>
-          <form action={emptyTrash} className="mt-3 space-y-3">
-            <p className="text-sm">{plural(total, t.emptyTrashBody)}</p>
-            <button
-              type="submit"
-              className="rounded-lg bg-red-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none"
-            >
-              {fmt(t.deleteN, { n: total })}
-            </button>
-          </form>
-        </details>
-      )}
+      {emptyTrashEl}
     </div>
   );
 }

@@ -322,23 +322,40 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
     : null;
 
   return (
-    <div className="max-w-xl space-y-6">
-      <header className="space-y-1">
-        <p className="text-xs font-bold tracking-wider text-accent uppercase">
-          {formatDay(t.today, locale)}
-        </p>
-        <h1 className="text-[28px] leading-tight font-semibold">
-          {greeting(w)}
-          {name ? `, ${name}` : ''}
-        </h1>
-        <p className="text-muted">
-          {people > 0
-            ? plural(people, w.toReach)
-            : nothing
-              ? w.caughtUp
-              : w.comingUp}
-        </p>
-      </header>
+    <div className="max-w-xl space-y-6 lg:max-w-none">
+      <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
+        <header className="space-y-1">
+          <p className="text-xs font-bold tracking-wider text-accent uppercase">
+            {formatDay(t.today, locale)}
+          </p>
+          <h1 className="text-[28px] leading-tight font-semibold">
+            {greeting(w)}
+            {name ? `, ${name}` : ''}
+          </h1>
+          <p className="text-muted">
+            {people > 0
+              ? plural(people, w.toReach)
+              : nothing
+                ? w.caughtUp
+                : w.comingUp}
+          </p>
+        </header>
+        <div className="hidden shrink-0 gap-2.5 lg:flex">
+          <Link
+            href="/groups"
+            className="inline-flex h-11 items-center rounded-xl border border-border bg-surface px-4 text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
+            {w.textGroup}
+          </Link>
+          <Link
+            href="/contacts/new"
+            className="btn-primary inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            <PlusIcon className="size-4" />
+            {w.newContact}
+          </Link>
+        </div>
+      </div>
       <Notice code={doneCode} />
 
       {!nothing && (
@@ -361,202 +378,211 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
         </div>
       )}
 
-      {first && (
-        <div className="space-y-3 rounded-2xl border border-accent/30 bg-gradient-to-br from-emerald-500/15 to-violet-500/10 p-4 shadow-[var(--card-shadow)]">
-          <Link
-            href={`/contacts/${first.id}`}
-            className="flex items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
-          >
-            <Avatar name={first.name} colourKey={first.id} />
-            <span className="min-w-0">
-              <span className="block truncate text-lg font-bold">
-                {first.name}
-              </span>
-              <span className="block truncate text-sm font-medium text-accent">
-                {first.line}
-              </span>
-            </span>
-          </Link>
-          {first.phone && (
-            <div className="flex gap-2">
-              <a
-                href={`tel:${first.phone.e164 ?? first.phone.raw}`}
-                className="btn-primary inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+      <div className="space-y-6 lg:grid lg:grid-cols-3 lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-6 lg:col-span-2">
+          {first && (
+            <div className="space-y-3 rounded-2xl border border-accent/30 bg-gradient-to-br from-emerald-500/15 to-violet-500/10 p-4 shadow-[var(--card-shadow)]">
+              <Link
+                href={`/contacts/${first.id}`}
+                className="flex items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
               >
-                <PhoneIcon className="size-4" />
-                {m.common.call}
-              </a>
-              {first.phone.e164 && (
-                <a
-                  href={whatsappHref(first.phone.e164, first.text)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
-                >
-                  <WhatsAppIcon className="size-4" />
-                  {first.message}
-                </a>
+                <Avatar name={first.name} colourKey={first.id} />
+                <span className="min-w-0">
+                  <span className="block truncate text-lg font-bold">
+                    {first.name}
+                  </span>
+                  <span className="block truncate text-sm font-medium text-accent">
+                    {first.line}
+                  </span>
+                </span>
+              </Link>
+              {first.phone && (
+                <div className="flex gap-2">
+                  <a
+                    href={`tel:${first.phone.e164 ?? first.phone.raw}`}
+                    className="btn-primary inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+                  >
+                    <PhoneIcon className="size-4" />
+                    {m.common.call}
+                  </a>
+                  {first.phone.e164 && (
+                    <a
+                      href={whatsappHref(first.phone.e164, first.text)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-semibold hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+                    >
+                      <WhatsAppIcon className="size-4" />
+                      {first.message}
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           )}
-        </div>
-      )}
 
-      {nothing && (
-        <div className="card flex flex-col items-center gap-2 rounded-3xl px-6 py-7 text-center">
-          <svg
-            aria-hidden="true"
-            width="120"
-            height="84"
-            viewBox="0 0 120 84"
-            fill="none"
+          {nothing && (
+            <div className="card flex flex-col items-center gap-2 rounded-3xl px-6 py-7 text-center">
+              <svg
+                aria-hidden="true"
+                width="120"
+                height="84"
+                viewBox="0 0 120 84"
+                fill="none"
+              >
+                <ellipse
+                  cx="60"
+                  cy="42"
+                  rx="54"
+                  ry="16"
+                  stroke="#a78bfa"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 5"
+                  transform="rotate(-12 60 42)"
+                />
+                <circle
+                  cx="60"
+                  cy="42"
+                  r="20"
+                  className="fill-accent-soft stroke-accent"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M51 42l6 6 12-12"
+                  className="stroke-accent"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="10" cy="50" r="4" fill="#a78bfa" />
+                <circle cx="108" cy="30" r="5" fill="#34d399" />
+                <circle cx="96" cy="60" r="3" fill="#f59e0b" />
+              </svg>
+              <h2 className="text-xl font-semibold">{w.emptyTitle}</h2>
+              <p className="max-w-xs text-sm text-muted">{w.emptyBody}</p>
+            </div>
+          )}
+
+          {nothing && t.setup && <Checklist setup={t.setup} t={w} />}
+
+          {t.followUps.length > 0 && (
+            <Section id="follow-ups" title={w.followUp}>
+              {t.followUps.map((f) => (
+                <Row
+                  key={f.id}
+                  id={f.contactId}
+                  name={f.displayName}
+                  detail={
+                    <>
+                      <span className="text-foreground">{f.note}</span>
+                      <span
+                        className={
+                          f.daysAway < 0
+                            ? ' text-red-700 dark:text-red-300'
+                            : ''
+                        }
+                      >
+                        {' · '}
+                        {f.daysAway < 0
+                          ? plural(-f.daysAway, w.late)
+                          : relativeDay(f.daysAway, m.remember)}
+                      </span>
+                    </>
+                  }
+                >
+                  <Reach name={f.displayName} phone={f.phone} c={m.common} />
+                  <form action={followUpDone}>
+                    <input type="hidden" name="id" value={f.id} />
+                    <input type="hidden" name="back" value="/today" />
+                    <button
+                      type="submit"
+                      aria-label={fmt(w.doneLabel, { note: f.note })}
+                      className={done}
+                    >
+                      <CheckIcon className="size-[18px]" />
+                    </button>
+                  </form>
+                </Row>
+              ))}
+            </Section>
+          )}
+
+          {t.keepInTouch.length > 0 && (
+            <Section id="keep-in-touch" title={w.keepInTouch} hint={w.keepHint}>
+              {t.keepInTouch.map((k) => (
+                <Row
+                  key={k.contactId}
+                  id={k.contactId}
+                  name={k.displayName}
+                  detail={`${cadenceLabel(k.everyDays, m.remember)} · ${
+                    k.overdueDays === 0
+                      ? w.dueToday
+                      : plural(k.overdueDays, w.overdue)
+                  }`}
+                >
+                  <Reach name={k.displayName} phone={k.phone} c={m.common} />
+                  <form action={markContacted}>
+                    <input type="hidden" name="contactId" value={k.contactId} />
+                    <input type="hidden" name="back" value="/today" />
+                    <button
+                      type="submit"
+                      aria-label={fmt(w.inTouchWith, { name: k.displayName })}
+                      className={done}
+                    >
+                      <CheckIcon className="size-[18px]" />
+                    </button>
+                  </form>
+                </Row>
+              ))}
+            </Section>
+          )}
+
+          {t.birthdays.length > 0 && (
+            <Section id="birthdays" title={w.birthdays}>
+              {t.birthdays.map((b) => (
+                <Row
+                  key={b.contactId}
+                  id={b.contactId}
+                  name={b.displayName}
+                  detail={
+                    <>
+                      {b.daysAway === 0 ? (
+                        <strong className="text-accent">{w.todayParty}</strong>
+                      ) : (
+                        `${formatDay(b.on, locale)} · ${relativeDay(b.daysAway, m.remember)}`
+                      )}
+                      {b.turning > 0 &&
+                        b.turning < 130 &&
+                        fmt(w.turns, { n: b.turning })}
+                    </>
+                  }
+                >
+                  <Reach
+                    name={b.displayName}
+                    phone={b.phone}
+                    text={fmt(w.happyBirthday, {
+                      name: firstName(b.displayName),
+                    })}
+                    c={m.common}
+                  />
+                </Row>
+              ))}
+            </Section>
+          )}
+        </div>
+        <aside className="space-y-6">
+          <QuickActions t={w} />
+
+          <Link
+            href="/account#reminders-heading"
+            className="card flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           >
-            <ellipse
-              cx="60"
-              cy="42"
-              rx="54"
-              ry="16"
-              stroke="#a78bfa"
-              strokeWidth="1.5"
-              strokeDasharray="3 5"
-              transform="rotate(-12 60 42)"
-            />
-            <circle
-              cx="60"
-              cy="42"
-              r="20"
-              className="fill-accent-soft stroke-accent"
-              strokeWidth="2"
-            />
-            <path
-              d="M51 42l6 6 12-12"
-              className="stroke-accent"
-              strokeWidth="2.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="10" cy="50" r="4" fill="#a78bfa" />
-            <circle cx="108" cy="30" r="5" fill="#34d399" />
-            <circle cx="96" cy="60" r="3" fill="#f59e0b" />
-          </svg>
-          <h2 className="text-xl font-semibold">{w.emptyTitle}</h2>
-          <p className="max-w-xs text-sm text-muted">{w.emptyBody}</p>
-        </div>
-      )}
-
-      {nothing && t.setup && <Checklist setup={t.setup} t={w} />}
-
-      {t.followUps.length > 0 && (
-        <Section id="follow-ups" title={w.followUp}>
-          {t.followUps.map((f) => (
-            <Row
-              key={f.id}
-              id={f.contactId}
-              name={f.displayName}
-              detail={
-                <>
-                  <span className="text-foreground">{f.note}</span>
-                  <span
-                    className={
-                      f.daysAway < 0 ? ' text-red-700 dark:text-red-300' : ''
-                    }
-                  >
-                    {' · '}
-                    {f.daysAway < 0
-                      ? plural(-f.daysAway, w.late)
-                      : relativeDay(f.daysAway, m.remember)}
-                  </span>
-                </>
-              }
-            >
-              <Reach name={f.displayName} phone={f.phone} c={m.common} />
-              <form action={followUpDone}>
-                <input type="hidden" name="id" value={f.id} />
-                <input type="hidden" name="back" value="/today" />
-                <button
-                  type="submit"
-                  aria-label={fmt(w.doneLabel, { note: f.note })}
-                  className={done}
-                >
-                  <CheckIcon className="size-[18px]" />
-                </button>
-              </form>
-            </Row>
-          ))}
-        </Section>
-      )}
-
-      {t.keepInTouch.length > 0 && (
-        <Section id="keep-in-touch" title={w.keepInTouch} hint={w.keepHint}>
-          {t.keepInTouch.map((k) => (
-            <Row
-              key={k.contactId}
-              id={k.contactId}
-              name={k.displayName}
-              detail={`${cadenceLabel(k.everyDays, m.remember)} · ${
-                k.overdueDays === 0
-                  ? w.dueToday
-                  : plural(k.overdueDays, w.overdue)
-              }`}
-            >
-              <Reach name={k.displayName} phone={k.phone} c={m.common} />
-              <form action={markContacted}>
-                <input type="hidden" name="contactId" value={k.contactId} />
-                <input type="hidden" name="back" value="/today" />
-                <button
-                  type="submit"
-                  aria-label={fmt(w.inTouchWith, { name: k.displayName })}
-                  className={done}
-                >
-                  <CheckIcon className="size-[18px]" />
-                </button>
-              </form>
-            </Row>
-          ))}
-        </Section>
-      )}
-
-      {t.birthdays.length > 0 && (
-        <Section id="birthdays" title={w.birthdays}>
-          {t.birthdays.map((b) => (
-            <Row
-              key={b.contactId}
-              id={b.contactId}
-              name={b.displayName}
-              detail={
-                <>
-                  {b.daysAway === 0 ? (
-                    <strong className="text-accent">{w.todayParty}</strong>
-                  ) : (
-                    `${formatDay(b.on, locale)} · ${relativeDay(b.daysAway, m.remember)}`
-                  )}
-                  {b.turning > 0 &&
-                    b.turning < 130 &&
-                    fmt(w.turns, { n: b.turning })}
-                </>
-              }
-            >
-              <Reach
-                name={b.displayName}
-                phone={b.phone}
-                text={fmt(w.happyBirthday, { name: firstName(b.displayName) })}
-                c={m.common}
-              />
-            </Row>
-          ))}
-        </Section>
-      )}
-
-      <QuickActions t={w} />
-
-      <Link
-        href="/account#reminders-heading"
-        className="card flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
-      >
-        <span className="flex-1 text-muted">{w.reminderPromo}</span>
-        <span className="font-semibold text-accent">{w.turnOn}</span>
-        <ChevronRightIcon className="size-4 text-accent" />
-      </Link>
+            <span className="flex-1 text-muted">{w.reminderPromo}</span>
+            <span className="font-semibold text-accent">{w.turnOn}</span>
+            <ChevronRightIcon className="size-4 text-accent" />
+          </Link>
+        </aside>
+      </div>
     </div>
   );
 }

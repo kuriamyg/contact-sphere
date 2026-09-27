@@ -38,6 +38,7 @@ import type { Messages } from '@/i18n/en';
 import { groupsForContact, listGroupsQuietly } from '@/lib/groups';
 import { fmt, plural } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
+import { listHref, parseListParams } from '@/lib/contact-params';
 import { CADENCE_DAYS, relativeDay, remindersFor } from '@/lib/remember';
 import {
   formatBirthday,
@@ -57,7 +58,9 @@ export default async function ContactPage({
   searchParams,
 }: PageProps<'/contacts/[id]'>) {
   const { id } = await params;
-  const { done } = await searchParams;
+  const sp = await searchParams;
+  const { done } = sp;
+  const list = parseListParams(sp);
   const c = await getContact(id);
   if (!c) notFound();
   // Opening a contact is what "last used" means (ADR 0007).
@@ -80,9 +83,12 @@ export default async function ContactPage({
   const subtitle = [c.jobTitle, c.organization].filter(Boolean).join(' · ');
   const primary = c.phones[0];
 
-  return (
-    <article className="max-w-xl space-y-8">
-      <Link href="/contacts" className="text-sm text-muted hover:underline">
+  const article = (
+    <article className="max-w-2xl space-y-8">
+      <Link
+        href={listHref(list)}
+        className="text-sm text-muted hover:underline lg:hidden"
+      >
         {t.back}
       </Link>
 
@@ -573,6 +579,7 @@ export default async function ContactPage({
       )}
     </article>
   );
+  return article;
 }
 
 /** A number with compact one-tap actions, each labelled with the number. */

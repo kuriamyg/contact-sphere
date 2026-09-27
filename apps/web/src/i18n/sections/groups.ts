@@ -34,6 +34,9 @@ export const groups = section(
       notes: 'Notes (optional)',
       notesPlaceholder: 'e.g. Meets first Sunday, KES 1,000 a month',
       create: 'Create group',
+      pickTitle: 'Choose a group',
+      pickBody: 'Pick a group on the left to see its members and message them.',
+      listPane: 'Your groups',
     },
     detail: {
       back: '← Groups',
@@ -118,6 +121,10 @@ export const groups = section(
       notes: 'Maelezo (si lazima)',
       notesPlaceholder: 'k.m. Hukutana Jumapili ya kwanza, KES 1,000 kwa mwezi',
       create: 'Unda kikundi',
+      pickTitle: 'Chagua kikundi',
+      pickBody:
+        'Chagua kikundi upande wa kushoto kuona wanachama wake na kuwatumia ujumbe.',
+      listPane: 'Vikundi vyako',
     },
     detail: {
       back: '← Vikundi',

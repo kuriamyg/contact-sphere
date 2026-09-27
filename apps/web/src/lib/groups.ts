@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import type { Messages } from '@/i18n/en';
 
 import { api } from './api';
@@ -52,8 +54,11 @@ export interface ContactGroup {
   role: string | null;
 }
 
+/** One /groups call per request: the page and the laptop's pane share it. */
+const fetchGroups = cache(() => api<GroupSummary[]>('/groups'));
+
 export async function listGroups(): Promise<GroupSummary[]> {
-  const res = await api<GroupSummary[]>('/groups');
+  const res = await fetchGroups();
   if (res.status !== 200 || !res.data) {
     failedLoad(res.status);
   }
@@ -79,6 +84,6 @@ export async function groupsForContact(id: string): Promise<ContactGroup[]> {
 
 /** Best effort list for pickers. */
 export async function listGroupsQuietly(): Promise<GroupSummary[]> {
-  const res = await api<GroupSummary[]>('/groups');
+  const res = await fetchGroups();
   return res.status === 200 && Array.isArray(res.data) ? res.data : [];
 }

@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { api } from './api';
 import { failedLoad } from './auth';
 import { type ListParams, toApiQuery } from './contact-params';
@@ -54,12 +56,17 @@ export interface ContactPage {
   pageSize: number;
 }
 
-export async function listContacts(p: ListParams): Promise<ContactPage> {
-  const res = await api<ContactPage>(`/contacts?${toApiQuery(p)}`);
+/** One API call per list per request: the page and the laptop's list pane share it. */
+const listByQuery = cache(async (query: string): Promise<ContactPage> => {
+  const res = await api<ContactPage>(`/contacts?${query}`);
   if (res.status !== 200 || !res.data) {
     failedLoad(res.status);
   }
   return res.data;
+});
+
+export function listContacts(p: ListParams): Promise<ContactPage> {
+  return listByQuery(toApiQuery(p));
 }
 
 /** The contact, or null if it does not exist (or is not the owner's). */

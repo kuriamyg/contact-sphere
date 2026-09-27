@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — A proper laptop layout
+
+- **Sidebar** on laptops: search, Today, Contacts, Groups, tools, and your
+  own card for Profile & settings. The whole screen is used.
+- **Contacts and Groups side by side**: the list stays on the left while
+  the contact or group opens on the right, with your search kept.
+- **Today** in two columns, with New contact and Text a group at the top.
+- **Profile is a real page**: a header band, a section menu on laptops,
+  and flat sections instead of cards (on phones too). Appearance (Auto /
+  Light / Dark) is now in Profile as well.
+- Phones keep the bottom bar and never download the laptop's list pane.
+
 ### Changed — Sign-in in black and chrome
 
 - Sign-in, first-account setup and the two-factor step now have their own

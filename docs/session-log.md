@@ -500,3 +500,18 @@ asked for a black-and-chrome sign-in in the spirit of Resend's UI: built
 chrome-ring SVG, used as the emblem and as the spinner in the submit
 button. Browser flow 12/12 (black in light theme, white pill, spinner
 spins while signing in, rest of app keeps theme, 360 px, Kiswahili, CSP).
+
+## 2026-09-27 — Laptop layout (A + C)
+
+Owner found the laptop view ordinary: a 768 px column, the avatar squeezed
+against the links, Profile a phone-sized stack of cards. Three layouts were
+drawn on a design canvas; owner chose A (sidebar) with C's list/detail in
+Contacts and Groups. Built: sidebar from 1024 px; contacts pane as a
+parallel route slot (stays while a contact loads, keeps the search);
+groups pane in the groups layout (actions revalidate it); `cs-wide` cookie
+so phones never download the pane; list and groups calls cached per
+request; Today in two columns; Profile as a settings page (band, section
+menu, flat sections, Appearance) and full-page on phones. Browser: new
+layout flow 22/22 (laptop dark/light, phone, search kept in the pane, pane
+stays on group edit, section menu jumps, no sideways scroll); earlier flows
+re-run (Aurora updated for the sidebar and a tablet check).

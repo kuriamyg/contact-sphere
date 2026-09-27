@@ -27,6 +27,35 @@ preference, not a secret) and read on the server, so pages render in the
 chosen theme with no flash. `<html data-theme>` drives both the tokens and
 Tailwind's `dark:` variant (`@custom-variant dark`).
 
+## Laptop layout (chosen 2026-09-27: "A + C")
+
+From 1024 px (Tailwind `lg`):
+
+- **Sidebar** instead of the header and bottom bar: logo, a search box,
+  Today / Contacts / Groups, Tools (Import, Duplicates, Skills & tags, QR
+  card), and the owner's card at the bottom, which opens Profile &
+  settings. Content uses the width (up to 1280 px).
+- **List beside detail** for Contacts and Groups. Contacts: a parallel
+  route slot (`contacts/@pane`) renders the list pane, with the same search,
+  skill, sort, view and page as the list, so it stays put while a contact
+  loads; links carry the list's query. Groups: the pane lives in
+  `groups/layout.tsx`; group actions revalidate that layout.
+- **Phones never download the pane**: a cookie `cs-wide` (set by the
+  browser from `matchMedia`, like the theme cookie a display preference)
+  tells the server the window is laptop-wide; the first laptop visit
+  refreshes once to add it. The list call is cached per request, so the
+  page and the pane share one API call.
+- **Today** in two columns: the day's people (two thirds), quick actions
+  and reminders beside them; New contact / Text a group in the header.
+- **Profile** as a settings page: a header band (avatar, name, email,
+  two-factor state, counts), a section menu on the left, flat sections
+  divided by hairlines (not cards), Appearance added (the avatar menu is a
+  phone thing). On phones the band runs edge to edge and the sections are
+  the page itself.
+
+Between 640 and 1023 px (tablets) the header with section links stays; the
+bottom bar is for phones below 640 px.
+
 ## Navigation
 
 - Phones: a floating bottom bar — Today, Contacts, Groups, Search (Search
