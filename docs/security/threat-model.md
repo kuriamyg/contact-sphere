@@ -78,11 +78,26 @@ notification within 72 hours, and cross-border transfer rules (data is
 hosted in Frankfurt, EU). Contacts stored are also data _about third
 parties_ who never signed up; this belongs in the privacy policy.
 
+## Hardening (A5, ADR 0016)
+
+- **Guessing passwords:** per-IP limit (5/min) plus a per-account lock-out
+  (10 per 15 min) now kept in Postgres, so deploys and restarts do not
+  reset it. The table holds hashes of emails typed, never the emails.
+- **Weak or reused passwords:** new passwords are checked against Have I
+  Been Pwned with k-anonymity (5 hex characters of SHA-1 leave the server).
+  Fails open by design; the outage is logged.
+- **A lost or unknown device:** Profile lists signed-in devices by a coarse
+  label and ends any one of them. Labels come from the User-Agent (which a
+  client can fake) — they help recognise, they are not proof.
+- **Logs:** structured, no bodies, headers or query strings; routes have
+  ids masked; errors reduced to type, first line and frames with emails
+  and numbers masked; secret/personal field names redacted. Render keeps
+  logs for a limited time; nothing in them identifies a contact.
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before
   storing real contacts.
-- Per-account login-failure counter is in memory (single instance only).
 - Neon `production` branch cannot be protected on the current plan.
 - 2FA on provider accounts is an owner action and cannot be verified from
   code.

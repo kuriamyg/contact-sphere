@@ -64,7 +64,28 @@ export interface Env {
    * exists. `log` only records (tests, local).
    */
   email?: EmailConfig;
+  /**
+   * Refuse new passwords found in known data breaches (A5), via the Have I
+   * Been Pwned range API (k-anonymity: only 5 hex characters of the SHA-1
+   * leave the server). BREACHED_PASSWORD_CHECK=on|off; on by default in
+   * production, off elsewhere so tests never call out.
+   */
+  breachedPasswordCheck: boolean;
+  /** pino level: info by default, silent in tests. LOG_LEVEL overrides. */
+  logLevel: LogLevel;
 }
+
+export type LogLevel =
+  'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
+const LOG_LEVELS: readonly LogLevel[] = [
+  'fatal',
+  'error',
+  'warn',
+  'info',
+  'debug',
+  'trace',
+  'silent',
+];
 
 export interface EmailConfig {
   provider: 'log' | 'resend' | 'brevo';
@@ -374,5 +395,32 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     push: parsePush(source),
     sms: parseSms(source, nodeEnv),
     email: parseEmail(source, nodeEnv),
+    breachedPasswordCheck: parseOnOff(
+      'BREACHED_PASSWORD_CHECK',
+      source.BREACHED_PASSWORD_CHECK,
+      nodeEnv === 'production',
+    ),
+    logLevel: parseLogLevel(source.LOG_LEVEL, nodeEnv),
   };
+}
+
+function parseLogLevel(raw: string | undefined, nodeEnv: NodeEnv): LogLevel {
+  const v = raw?.trim().toLowerCase();
+  if (!v) return nodeEnv === 'test' ? 'silent' : 'info';
+  if (!(LOG_LEVELS as readonly string[]).includes(v)) {
+    throw new EnvError(`LOG_LEVEL must be one of ${LOG_LEVELS.join(', ')}.`);
+  }
+  return v as LogLevel;
+}
+
+function parseOnOff(
+  name: string,
+  raw: string | undefined,
+  fallback: boolean,
+): boolean {
+  const v = raw?.trim().toLowerCase();
+  if (!v) return fallback;
+  if (v === 'on') return true;
+  if (v === 'off') return false;
+  throw new EnvError(`${name} must be on or off.`);
 }

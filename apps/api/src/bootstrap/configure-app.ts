@@ -3,6 +3,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 
 import type { Env } from '../config/env';
+import { createLogger, PinoNestLogger, requestLogger } from '../logging/logger';
 
 /**
  * Everything that must be true of the application however it was created.
@@ -12,6 +13,12 @@ import type { Env } from '../config/env';
  * and not the other is one the tests either cannot see or wrongly believe in.
  */
 export function configureApp(app: NestExpressApplication, env: Env): void {
+  // Structured, redacted logs (A5) — Nest's own messages and one line per
+  // request. First, so every request below is logged.
+  const log = createLogger(env.logLevel);
+  app.useLogger(new PinoNestLogger(log));
+  app.use(requestLogger(log));
+
   // Behind Render's proxy every request appears to come from the proxy.
   // Trusting exactly N hops lets req.ip be the real caller (needed for rate
   // limiting in Phase 3) without trusting addresses a client made up.

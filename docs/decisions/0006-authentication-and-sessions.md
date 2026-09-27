@@ -62,13 +62,11 @@ XSS bug.
 ## Cost
 
 - Every API call makes one extra hop (browser → Vercel → Render).
-- The per-account failure counter is in memory: it resets on restart and is
-  per instance. Move it to Postgres/Redis before running more than one
-  instance.
+- ~~The per-account failure counter is in memory~~ — moved to Postgres
+  (ADR 0016).
 - Pages cannot be statically cached (per-request nonce).
 
 ## Next (tracked in the backlog)
 
 - **TOTP two-factor** — before real contact data goes in.
-- Breached-password check (k-anonymity range API).
-- Session list (see and end individual devices).
+- ~~Breached-password check~~ and ~~session list~~ — done (ADR 0016).

@@ -24,4 +24,17 @@ describe('buildApiHeaders', () => {
       'content-type': 'application/json',
     });
   });
+
+  it('passes the browser User-Agent on, capped', () => {
+    const h = buildApiHeaders({
+      secret: 's',
+      ip: '1.1.1.1',
+      json: false,
+      ua: 'x'.repeat(2000),
+    });
+    expect(h['x-client-ua']).toHaveLength(512);
+    expect(
+      buildApiHeaders({ secret: 's', ip: '1.1.1.1', json: false, ua: null }),
+    ).not.toHaveProperty('x-client-ua');
+  });
 });

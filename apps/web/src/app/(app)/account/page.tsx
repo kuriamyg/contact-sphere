@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
-import { logout, logoutEverywhere } from '@/app/actions/auth';
+import { logout, logoutEverywhere, signOutDevice } from '@/app/actions/auth';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { TwoFactorSection } from '@/components/auth/two-factor-section';
 import { Avatar } from '@/components/avatar';
@@ -28,9 +28,9 @@ import {
   OfflineToggle,
   WipeOnSubmit,
 } from '@/components/offline/offline-toggle';
-import { requireUser } from '@/lib/auth';
+import { getDevices, requireUser } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
 import { fmt } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
@@ -62,17 +62,24 @@ function CardTitle({
   );
 }
 
+/** "Chrome on Android" → "Chrome kwenye Android" in Kiswahili. */
+function deviceName(device: string | null, locale: string): string | null {
+  if (!device) return null;
+  return locale === 'sw' ? device.replace(' on ', ' kwenye ') : device;
+}
+
 /**
  * Everything about the account in one ordered place: who you are, your
  * name, security, your data, and signing out.
  */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [stats, reach, m, locale] = await Promise.all([
+  const [stats, reach, m, locale, devices] = await Promise.all([
     getContactStats(),
     getReachStatus(),
     getMessages(),
     getLocale(),
+    getDevices(),
   ]);
   const t = m.account;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
@@ -318,6 +325,61 @@ export default async function ProfilePage() {
             <CardTitle id="sessions-heading" icon={<LogOutIcon />}>
               {t.signOutTitle}
             </CardTitle>
+            <p className="text-sm text-muted">{t.devicesBody}</p>
+            {devices ? (
+              <ul
+                aria-label={t.signOutTitle}
+                className="divide-y divide-border rounded-2xl border border-border bg-surface"
+              >
+                {devices.map((d) => {
+                  const label = deviceName(d.device, locale) ?? t.someBrowser;
+                  return (
+                    <li
+                      key={d.id}
+                      className="flex flex-wrap items-center gap-3 px-4 py-3"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                          {label}
+                          {d.current && (
+                            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent">
+                              {t.thisDevice}
+                            </span>
+                          )}
+                        </span>
+                        <span className="block text-xs text-muted">
+                          {fmt(t.deviceActive, {
+                            date: formatDateTime(d.lastSeenAt, locale),
+                          })}
+                          {' · '}
+                          {fmt(t.deviceSince, {
+                            date: formatDate(d.createdAt, locale),
+                          })}
+                        </span>
+                      </span>
+                      {!d.current && (
+                        <form action={signOutDevice}>
+                          <input type="hidden" name="sessionId" value={d.id} />
+                          <button
+                            type="submit"
+                            aria-label={fmt(t.signOutDeviceLabel, {
+                              device: label,
+                            })}
+                            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+                          >
+                            {t.signOutDevice}
+                          </button>
+                        </form>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted" role="status">
+                {t.devicesFailed}
+              </p>
+            )}
             <WipeOnSubmit>
               <form action={logout}>
                 <button

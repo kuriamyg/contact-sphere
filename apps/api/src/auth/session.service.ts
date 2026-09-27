@@ -18,6 +18,14 @@ export interface IssuedSession {
 
 type Db = PrismaService | Prisma.TransactionClient;
 
+export interface SessionView {
+  id: string;
+  /** "Chrome on Android", or null when the browser did not say. */
+  device: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+}
+
 @Injectable()
 export class SessionService {
   constructor(private readonly prisma: PrismaService) {}
@@ -26,6 +34,7 @@ export class SessionService {
     userId: string,
     now = new Date(),
     db: Db = this.prisma,
+    device: string | null = null,
   ): Promise<IssuedSession> {
     const token = newSessionToken();
     const expiresAt = new Date(now.getTime() + SESSION_ABSOLUTE_MS);
@@ -36,6 +45,7 @@ export class SessionService {
         createdAt: now,
         lastSeenAt: now,
         expiresAt,
+        device,
       },
     });
     return { token, expiresAt };
@@ -66,6 +76,33 @@ export class SessionService {
       });
     }
     return { userId: session.userId, sessionId: session.id };
+  }
+
+  /** The owner's signed-in devices, most recently used first. */
+  async list(userId: string, now = new Date()): Promise<SessionView[]> {
+    const rows = await this.prisma.session.findMany({
+      where: {
+        userId,
+        expiresAt: { gt: now },
+        lastSeenAt: { gt: new Date(now.getTime() - SESSION_IDLE_MS) },
+      },
+      orderBy: { lastSeenAt: 'desc' },
+      select: { id: true, device: true, createdAt: true, lastSeenAt: true },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      device: r.device,
+      createdAt: r.createdAt.toISOString(),
+      lastSeenAt: r.lastSeenAt.toISOString(),
+    }));
+  }
+
+  /** Ends one of the owner's sessions; false if it is not theirs. */
+  async revokeOwn(userId: string, sessionId: string): Promise<boolean> {
+    const { count } = await this.prisma.session.deleteMany({
+      where: { id: sessionId, userId },
+    });
+    return count > 0;
   }
 
   async revoke(sessionId: string): Promise<void> {

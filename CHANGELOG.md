@@ -5,6 +5,20 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Security — Hardening (A5)
+
+- **See your devices**: Profile → Devices and sign-out lists where you are
+  signed in ("Chrome on Android", when last active) and signs any other
+  device out on its own.
+- **Breached passwords refused**: a new password that appears in known
+  data breaches is refused, checked without sending the password anywhere
+  (only 5 characters of its hash). If the checking service is down, the
+  password is allowed.
+- **Lock-out survives restarts**: 10 wrong passwords lock the account for
+  15 minutes even across deploys.
+- **Safer logs**: structured JSON logs with no contact details, search
+  words, emails, tokens or request bodies; each request has an id.
+
 ### Added — Edit contacts with no data
 
 - **Edit details offline**: name, numbers, emails, job, organisation,

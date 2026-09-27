@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -16,6 +20,7 @@ import {
   type SessionResult,
 } from './auth.service';
 import { type AuthContext, CurrentAuth, Public } from './decorators';
+import { deviceLabel } from './device';
 import {
   ChangePasswordDto,
   LoginDto,
@@ -24,6 +29,7 @@ import {
   SetupDto,
 } from './dto/credentials.dto';
 import { MfaLoginDto, TotpCodeDto, TotpDisableDto } from './dto/totp.dto';
+import type { SessionView } from './session.service';
 import { TotpService } from './totp.service';
 
 /** Brute-force-sensitive endpoints: 5 attempts per minute per client IP. */
@@ -50,24 +56,33 @@ export class AuthController {
   @Public()
   @Throttle(STRICT)
   @Post('setup')
-  setup(@Body() dto: SetupDto): Promise<SessionResult> {
-    return this.auth.setup(dto);
+  setup(
+    @Body() dto: SetupDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult> {
+    return this.auth.setup(dto, deviceLabel(ua));
   }
 
   @Public()
   @Throttle(STRICT)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto): Promise<SessionResult | MfaRequired> {
-    return this.auth.login(dto);
+  login(
+    @Body() dto: LoginDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult | MfaRequired> {
+    return this.auth.login(dto, deviceLabel(ua));
   }
 
   @Public()
   @Throttle(STRICT)
   @Post('login/mfa')
   @HttpCode(HttpStatus.OK)
-  loginMfa(@Body() dto: MfaLoginDto): Promise<SessionResult> {
-    return this.auth.completeMfa(dto.challenge, dto.code);
+  loginMfa(
+    @Body() dto: MfaLoginDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult> {
+    return this.auth.completeMfa(dto.challenge, dto.code, deviceLabel(ua));
   }
 
   @Throttle(STRICT)
@@ -103,6 +118,24 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(@CurrentAuth() a: AuthContext): Promise<void> {
     return this.auth.logout(a.userId, a.sessionId);
+  }
+
+  /** Devices signed in to this account. */
+  @Get('sessions')
+  sessions(
+    @CurrentAuth() a: AuthContext,
+  ): Promise<(SessionView & { current: boolean })[]> {
+    return this.auth.sessionList(a.userId, a.sessionId);
+  }
+
+  /** Signs one other device out. */
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  endSession(
+    @CurrentAuth() a: AuthContext,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<void> {
+    return this.auth.endSession(a.userId, a.sessionId, id);
   }
 
   @Post('logout-all')
