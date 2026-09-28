@@ -305,3 +305,53 @@ h3 {
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 20px 50px rgba(0, 0, 0, 0.6);
 }
+
+/* Privacy policy and terms (B7): long-form, readable text. */
+.legal h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.legal h2 {
+  margin-top: 2.25rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.legal h3 {
+  margin-top: 1.25rem;
+  font-weight: 600;
+}
+.legal p,
+.legal li {
+  margin-top: 0.75rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.legal strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.legal ul {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.legal li {
+  margin-top: 0.35rem;
+}
+.legal a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.legal .summary {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 1rem 1.25rem 1.25rem;
+}
+.legal .summary h2 {
+  margin-top: 0;
+}

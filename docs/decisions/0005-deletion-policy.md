@@ -30,7 +30,7 @@ Contacts).
   ordinary traffic (the contact list), at most once an hour per process,
   and records `contact.trash_purged` with a count only.
 - Permanent delete of one contact is only possible from the trash.
-- Account deletion is not built yet (a later phase); its rule above stands.
+- Account deletion is built (ADR 0017).
 
 ## Merges (Phase 5)
 

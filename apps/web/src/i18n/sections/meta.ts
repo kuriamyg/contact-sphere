@@ -5,6 +5,8 @@ export const meta = section(
   {
     suffix: '{page} · Contact Sphere',
     signIn: 'Sign in',
+    privacy: 'Privacy policy',
+    terms: 'Terms of use',
     setUp: 'Set up',
     verify: 'Verify',
     today: 'Today',
@@ -29,6 +31,8 @@ export const meta = section(
   {
     suffix: '{page} · Contact Sphere',
     signIn: 'Ingia',
+    privacy: 'Sera ya faragha',
+    terms: 'Masharti ya matumizi',
     setUp: 'Anzisha',
     verify: 'Thibitisha',
     today: 'Leo',

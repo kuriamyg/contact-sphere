@@ -11,6 +11,7 @@ export const errors = section(
     sessionEnded: 'Your session has ended. Sign in again.',
     contactGone: 'That contact no longer exists.',
     passwordsDiffer: 'The two new passwords do not match.',
+    typeDelete: 'Type DELETE in capitals to confirm.',
     passwordChanged:
       'Password changed. Every other device has been signed out.',
     twoFactorOff: 'Two-factor is off.',
@@ -33,6 +34,7 @@ export const errors = section(
     sessionEnded: 'Muda wako wa kuingia umeisha. Ingia tena.',
     contactGone: 'Anwani hiyo haipo tena.',
     passwordsDiffer: 'Manenosiri mawili mapya hayalingani.',
+    typeDelete: 'Andika DELETE kwa herufi kubwa ili kuthibitisha.',
     passwordChanged:
       'Nenosiri limebadilishwa. Vifaa vingine vyote vimetolewa kwenye akaunti.',
     twoFactorOff: 'Uthibitisho wa hatua mbili umezimwa.',

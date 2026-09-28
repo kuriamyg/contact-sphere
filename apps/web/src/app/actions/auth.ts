@@ -156,6 +156,32 @@ export async function signOutDevice(form: FormData): Promise<void> {
   revalidatePath('/account');
 }
 
+/**
+ * Deletes the account and all its data (B7). On success the session cookie
+ * goes and the sign-in page wipes this phone's offline copy (?deleted=1).
+ */
+export async function deleteAccount(
+  _: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const t = (await getMessages()).errors;
+  if (field(form, 'confirm').trim() !== 'DELETE') {
+    return { error: t.typeDelete };
+  }
+  const code = field(form, 'code').trim();
+  const res = await api('/auth/account/delete', {
+    method: 'POST',
+    body: {
+      password: field(form, 'password'),
+      confirm: 'DELETE',
+      ...(code ? { code } : {}),
+    },
+  });
+  if (res.status !== 204) return failure(res.status, res.message);
+  await endSession();
+  redirect('/login?deleted=1');
+}
+
 export async function logoutEverywhere(): Promise<void> {
   await api('/auth/logout-all', { method: 'POST' });
   await endSession();

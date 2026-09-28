@@ -2,6 +2,7 @@ import type { Viewport } from 'next';
 import Link from 'next/link';
 
 import { ChromeRing } from '@/components/brand/chrome-ring';
+import { LegalLinks } from '@/components/legal/legal-links';
 import { OfflineGuard } from '@/components/offline/offline-sync';
 
 /** The phone's status bar matches the black page. */
@@ -32,6 +33,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
         </div>
         {children}
         <OfflineGuard />
+        <LegalLinks />
       </main>
     </div>
   );

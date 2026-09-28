@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 
 import { ApiStatusBadge } from '@/components/api-status-badge';
 import { OrbitMark } from '@/components/brand/orbit-mark';
+import { LegalLinks } from '@/components/legal/legal-links';
 import { checkApiHealth } from '@/lib/api-health';
 import { getMessages } from '@/i18n/server';
 
@@ -64,6 +65,7 @@ export default async function Home() {
           </dd>
         </dl>
       </section>
+      <LegalLinks />
     </main>
   );
 }

@@ -94,6 +94,16 @@ parties_ who never signed up; this belongs in the privacy policy.
   and numbers masked; secret/personal field names redacted. Render keeps
   logs for a limited time; nothing in them identifies a contact.
 
+## Account deletion and legal notice (B7, ADR 0017)
+
+- **Deleting an account** needs the password, a second-factor code when
+  two-factor is on, and `DELETE` typed; rate-limited like sign-in. One
+  transaction removes every owned row (cascade). The audit entry keeps ids and
+  counts only. The sign-in page then wipes the device's offline copy and queue.
+- **Privacy policy and terms** are public at `/privacy` and `/terms`. They
+  describe exactly what this model describes — when one changes, change both.
+- **Residency:** web server, API and database all run in Frankfurt (EU).
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before

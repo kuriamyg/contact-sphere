@@ -92,7 +92,7 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       create and edit (refused forms keep what was typed); archive, trash,
       restore, delete for good, empty trash (Phase 4b)
 - [x] Browser flow (41 checks, phone size) and 360 px layout checks
-- [ ] Account deletion (ADR 0005 §4) — with Settings, later
+- [x] Account deletion (ADR 0005 §4, ADR 0017) — B7
 
 ## Phase 5 — VCF and duplicates
 

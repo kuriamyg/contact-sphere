@@ -1,4 +1,4 @@
-import { IsString, Length, Matches } from 'class-validator';
+import { IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
 
 import { PASSWORD_MAX } from '../auth.constants';
 
@@ -29,4 +29,20 @@ export class TotpDisableDto {
   @IsString()
   @Matches(CODE)
   code!: string;
+}
+
+/** Deleting the account: the password, a code if two-factor is on, and the word. */
+export class DeleteAccountDto {
+  @IsString()
+  @Length(1, PASSWORD_MAX)
+  password!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CODE)
+  code?: string;
+
+  /** Typed by the owner, so a slip of the finger cannot delete everything. */
+  @IsIn(['DELETE'])
+  confirm!: 'DELETE';
 }

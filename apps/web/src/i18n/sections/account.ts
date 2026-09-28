@@ -38,6 +38,15 @@ export const account = section(
       'Your contacts are yours: never sold, shared or used for advertising. Take a copy any time.',
     exportVcf: 'Export contacts (.vcf)',
     importContacts: 'Import contacts',
+    deleteTitle: 'Delete your account',
+    deleteBody:
+      'This deletes your account and everything in it, for good: every contact, number, note, group, follow-up and setting, and signs out every device. It cannot be undone.',
+    deleteExport: 'Take a copy first: download your contacts (.vcf).',
+    legalTitle: 'Privacy and terms',
+    legalBody:
+      'How your data and your contacts’ data are handled, and the rules for using Contact Sphere.',
+    privacy: 'Privacy policy',
+    terms: 'Terms of use',
     signOutTitle: 'Devices and sign-out',
     devicesBody:
       'Where you are signed in now. Don’t recognise one? Sign it out, then change your password.',
@@ -94,6 +103,15 @@ export const account = section(
       'Anwani zako ni zako: haziuzwi, hazishirikiwi wala kutumika kwa matangazo. Chukua nakala wakati wowote.',
     exportVcf: 'Pakua anwani (.vcf)',
     importContacts: 'Leta anwani',
+    deleteTitle: 'Futa akaunti yako',
+    deleteBody:
+      'Hii inafuta akaunti yako na kila kitu ndani yake, milele: kila anwani, nambari, maelezo, kikundi, ufuatiliaji na mipangilio, na inakutoa kwenye kila kifaa. Haiwezi kutenduliwa.',
+    deleteExport: 'Chukua nakala kwanza: pakua anwani zako (.vcf).',
+    legalTitle: 'Faragha na masharti',
+    legalBody:
+      'Jinsi data yako na ya anwani zako inavyoshughulikiwa, na kanuni za kutumia Contact Sphere.',
+    privacy: 'Sera ya faragha',
+    terms: 'Masharti ya matumizi',
     signOutTitle: 'Vifaa na kutoka',
     devicesBody:
       'Mahali ulipoingia sasa. Hukitambui kimoja? Kitoe, kisha ubadilishe nenosiri lako.',

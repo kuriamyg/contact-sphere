@@ -355,6 +355,55 @@ export class AuthService {
     }
   }
 
+  /**
+   * Deletes the account and everything in it, for good (B7; Kenya DPA s.40,
+   * the right to erasure). Needs the password and, when two-factor is on, a
+   * code — a stolen session alone cannot do it. One transaction: contacts,
+   * numbers, groups, follow-ups, sessions, devices and settings all go via
+   * ON DELETE CASCADE. The audit log keeps an entry with ids and counts only;
+   * its actor becomes null with the user (FK SET NULL).
+   */
+  async deleteAccount(
+    userId: string,
+    password: string,
+    code: string | undefined,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { passwordHash: true, totpEnabledAt: true },
+    });
+    if (!(await verifyPassword(user.passwordHash, password))) {
+      throw new UnauthorizedException('Your password is not correct.');
+    }
+    if (user.totpEnabledAt) {
+      if (!code) {
+        throw new BadRequestException(
+          'Enter a code from your authenticator app.',
+        );
+      }
+      if (!(await this.totp.verifySecondFactor(userId, code))) {
+        throw new UnauthorizedException('That code is not right.');
+      }
+    }
+    await this.prisma.$transaction(async (tx) => {
+      const [contacts, groups] = await Promise.all([
+        tx.contact.count({ where: { ownerId: userId } }),
+        tx.group.count({ where: { ownerId: userId } }),
+      ]);
+      await this.audit.record(
+        'auth.account_deleted',
+        {
+          actorUserId: userId,
+          entityType: 'user',
+          entityId: userId,
+          metadata: { contacts, groups },
+        },
+        tx,
+      );
+      await tx.user.delete({ where: { id: userId } });
+    });
+  }
+
   /** Changes the password and signs out every OTHER session. */
   async changePassword(
     userId: string,

@@ -42,6 +42,22 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
+/**
+ * Opens the store only if it already exists — never creates it. Clearing a
+ * copy must not bring back a database that a full wipe just deleted.
+ */
+function openExisting(): Promise<IDBDatabase | null> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.transaction?.abort();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () =>
+      req.error?.name === 'AbortError'
+        ? resolve(null)
+        : reject(req.error ?? new Error('indexedDB'));
+  });
+}
+
 async function put(key: string, value: unknown): Promise<void> {
   const db = await open();
   await new Promise<void>((resolve, reject) => {
@@ -92,7 +108,8 @@ export function wipe(): void {
  */
 export async function wipeCopyOnly(): Promise<void> {
   try {
-    const db = await open();
+    const db = await openExisting();
+    if (!db) return;
     await new Promise<void>((resolve) => {
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).delete('snapshot');

@@ -58,6 +58,8 @@ API as unavailable — change both, then redeploy both.
 ## Web on Vercel
 
 - Project root directory: `apps/web`. Framework: Next.js.
+- Functions run in **Frankfurt** (`regions: ["fra1"]` in `apps/web/vercel.json`), next to
+  the API and database — the privacy policy relies on it (ADR 0017).
 - Environment variable `API_URL` (server-side only, not `NEXT_PUBLIC_`):
   - Production → `https://contact-sphere-api-js7c.onrender.com`
   - Preview → `https://contact-sphere-api-staging.onrender.com`
