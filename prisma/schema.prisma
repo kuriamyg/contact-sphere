@@ -60,6 +60,12 @@ model User {
   /// text such as the morning reminder. The web app keeps its own cookie
   /// for rendering pages.
   locale        String    @default("en") @db.VarChar(5)
+  /// "operator" runs the service (the first account; sees /operator) or
+  /// "member" (everyone who signs up). CHECK. B9, ADR 0019.
+  role          String    @default("member") @db.VarChar(10)
+  /// Plus is active until this moment; null or past = the free plan.
+  /// Sign-up starts a 30-day trial; payments and grants extend it.
+  plusUntil     DateTime? @map("plus_until") @db.Timestamptz(3)
 
   auditLogs     AuditLog[]
   sessions      Session[]
@@ -70,6 +76,8 @@ model User {
   groups        Group[]
   pushDevices   PushSubscription[]
   smsSends      SmsSend[]
+  payments      Payment[]          @relation("PaymentOwner")
+  recorded      Payment[]          @relation("PaymentRecorder")
 
   @@map("users")
 }
@@ -193,37 +201,37 @@ model MfaChallenge {
 /// (`deleted_at` set; restorable for 30 days) → hard-deleted with its phone
 /// numbers and emails. Every query is scoped by `owner_id` (ADR 0004).
 model Contact {
-  id           String    @id @default(uuid(7)) @db.Uuid
-  ownerId      String    @map("owner_id") @db.Uuid
-  givenName    String?   @map("given_name") @db.VarChar(100)
-  familyName   String?   @map("family_name") @db.VarChar(100)
+  id              String    @id @default(uuid(7)) @db.Uuid
+  ownerId         String    @map("owner_id") @db.Uuid
+  givenName       String?   @map("given_name") @db.VarChar(100)
+  familyName      String?   @map("family_name") @db.VarChar(100)
   /// What lists show. Derived from the other fields when left blank, so it
   /// is never empty (CHECK constraint).
-  displayName  String    @map("display_name") @db.VarChar(200)
+  displayName     String    @map("display_name") @db.VarChar(200)
   /// Lower-case, accent-folded display name: case-insensitive A–Z sorting
   /// with a plain index. Maintained by the API (contact-names.ts).
-  sortName     String    @map("sort_name") @db.VarChar(200)
-  nickname     String?   @db.VarChar(100)
-  organization String?   @db.VarChar(200)
-  jobTitle     String?   @map("job_title") @db.VarChar(200)
-  notes        String?   @db.VarChar(10000)
-  birthday     DateTime? @db.Date
+  sortName        String    @map("sort_name") @db.VarChar(200)
+  nickname        String?   @db.VarChar(100)
+  organization    String?   @db.VarChar(200)
+  jobTitle        String?   @map("job_title") @db.VarChar(200)
+  notes           String?   @db.VarChar(10000)
+  birthday        DateTime? @db.Date
   /// Where they are: estate, town, stage ("Kasarani", "Thika Road").
-  area         String?   @db.VarChar(100)
+  area            String?   @db.VarChar(100)
   /// How the owner knows them ("church", "Wanjiru's wedding").
-  metThrough   String?   @map("met_through") @db.VarChar(200)
+  metThrough      String?   @map("met_through") @db.VarChar(200)
   /// What they do or offer ("plumber", "boda boda"). Lower-case, no
   /// repeats, at most 20 (CHECK); normalised by the API.
-  tags         String[]  @default([]) @db.VarChar(40)
+  tags            String[]  @default([]) @db.VarChar(40)
   /// Folded names, organisation, job, area, met-through, tags and notes, for
   /// word search. Maintained by the API (contact-names.ts); never shown.
-  searchText   String    @default("") @map("search_text")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  searchText      String    @default("") @map("search_text")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   /// Last time the owner opened this contact in the app (ADR 0007). Never
   /// inferred from call logs.
-  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(3)
-  archivedAt   DateTime? @map("archived_at") @db.Timestamptz(3)
+  lastUsedAt      DateTime? @map("last_used_at") @db.Timestamptz(3)
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
   /// "Keep in touch every N days" (7, 14, 30, 60, 90, 180 or 365; CHECK).
   /// Null = no reminder. Phase 9.
   keepInTouchDays Int?      @map("keep_in_touch_days") @db.SmallInt
@@ -231,9 +239,9 @@ model Contact {
   /// Never inferred from call logs (ADR 0007). Not an edit.
   lastContactedAt DateTime? @map("last_contacted_at") @db.Timestamptz(3)
   /// Set = in the trash. Hard-deleted 30 days later (ADR 0005).
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner          User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   phoneNumbers   PhoneNumber[]
   emailAddresses EmailAddress[]
   dismissedAsA   DuplicateDismissal[] @relation("DismissalA")
@@ -452,4 +460,33 @@ model SmsSend {
 
   @@index([ownerId, createdAt])
   @@map("sms_sends")
+}
+
+/// A Plus payment or grant (B9, ADR 0019). Kept after the account is
+/// deleted (owner set to null) because payment records are tax records;
+/// it never holds the payer's phone number.
+model Payment {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  ownerId      String?   @map("owner_id") @db.Uuid
+  owner        User?     @relation("PaymentOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  /// "mpesa_stk" (prompt on the phone), "manual" (M-Pesa sent by hand and
+  /// recorded by the operator) or "grant" (free months, amount 0). CHECK.
+  method       String    @db.VarChar(10)
+  months       Int       @db.SmallInt
+  amountKes    Int       @map("amount_kes")
+  /// "pending" → "paid" | "failed". CHECK.
+  status       String    @db.VarChar(10)
+  /// Daraja CheckoutRequestID of an STK push.
+  checkoutId   String?   @unique @map("checkout_id") @db.VarChar(64)
+  /// The M-Pesa confirmation code, e.g. "SJK3ABCD12".
+  receipt      String?   @unique @db.VarChar(12)
+  /// Why a prompt failed ("Request cancelled by user"), as Safaricom says.
+  resultDesc   String?   @map("result_desc") @db.VarChar(200)
+  recordedById String?   @map("recorded_by") @db.Uuid
+  recordedBy   User?     @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  paidAt       DateTime? @map("paid_at") @db.Timestamptz(3)
+
+  @@index([ownerId, createdAt])
+  @@map("payments")
 }

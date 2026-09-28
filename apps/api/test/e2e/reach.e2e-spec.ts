@@ -57,8 +57,9 @@ const create = (body: object, as = token) =>
 
 async function secondUser(): Promise<string> {
   const { rows } = await owner.query<{ id: string }>(
-    `INSERT INTO users (id, email, password_hash, updated_at)
-     VALUES (gen_random_uuid(), 'other@example.com', '$argon2id$v=19$x', now())
+    // A member on the Plus trial every sign-up gets (ADR 0019).
+    `INSERT INTO users (id, email, password_hash, updated_at, plus_until)
+     VALUES (gen_random_uuid(), 'other@example.com', '$argon2id$v=19$x', now(), now() + interval '30 days')
      RETURNING id`,
   );
   const t = newSessionToken();

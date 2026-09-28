@@ -49,7 +49,12 @@ export type AuditAction =
   | 'contact.keep_in_touch_set'
   | 'follow_up.created'
   | 'follow_up.deleted'
-  | 'group.texted';
+  | 'group.texted'
+  | 'billing.mpesa_started'
+  | 'billing.paid'
+  | 'billing.failed'
+  | 'billing.granted'
+  | 'billing.recorded';
 
 export interface AuditEntry {
   actorUserId?: string | null;

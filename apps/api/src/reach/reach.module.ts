@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import type { Env } from '../config/env';
 import { ENV } from '../config/env.provider';
+import { BillingModule } from '../billing/billing.module';
 import { RememberModule } from '../remember/remember.module';
 import { PushService } from './push.service';
 import { ReachController } from './reach.controller';
@@ -10,7 +11,7 @@ import { EMAIL_PROVIDER, emailProviderFor } from './email-provider';
 import { SMS_PROVIDER, smsProviderFor } from './sms-provider';
 
 @Module({
-  imports: [RememberModule],
+  imports: [RememberModule, BillingModule],
   controllers: [ReachController],
   providers: [
     ReachService,

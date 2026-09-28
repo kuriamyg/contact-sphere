@@ -101,6 +101,11 @@ export default async function PrivacyPage() {
           (at Google, Apple or Mozilla).
         </li>
         <li>
+          Your plan and payments: how many months, the amount, the date and the
+          M-Pesa confirmation code. Never your M-Pesa PIN. The number you pay
+          from is passed to Safaricom for the payment prompt and not stored.
+        </li>
+        <li>
           A security log of actions (for example &ldquo;contact updated&rdquo;),
           holding only ids, times and counts — never names, numbers or notes.
         </li>
@@ -125,6 +130,10 @@ export default async function PrivacyPage() {
         <li>
           <strong>To keep it secure</strong> (legitimate interest and legal
           obligation): sign-in protection, rate limits, the security log.
+        </li>
+        <li>
+          <strong>To take payment and keep the books</strong> (performance of
+          our agreement and legal obligation): your plan and payment records.
         </li>
         <li>
           <strong>Only when you switch them on</strong> (consent): phone and
@@ -156,6 +165,10 @@ export default async function PrivacyPage() {
           names.
         </li>
         <li>
+          <strong>Safaricom (M-Pesa)</strong> — only when you pay in the app:
+          your M-Pesa number and the amount, for the payment prompt.
+        </li>
+        <li>
           <strong>Africa&rsquo;s Talking</strong> (Nairobi, Kenya) — only when
           you sign up or reset your password with a mobile number: your number
           and the text carrying the one-time code.
@@ -175,6 +188,13 @@ export default async function PrivacyPage() {
         does not send those messages or see their content.
       </p>
 
+      <p>
+        As the person running the service, I can see each account&rsquo;s name,
+        email or mobile number, plan, payments, when it was last used and how
+        many contacts and groups it has — to support you and to keep the books.
+        Never the contacts themselves.
+      </p>
+
       <h2>How long it is kept</h2>
       <ul>
         <li>Your data: for as long as you have an account.</li>
@@ -183,6 +203,10 @@ export default async function PrivacyPage() {
           Sign-in sessions: end after 7 days unused, and at most after 30 days.
         </li>
         <li>Failed sign-in counters: deleted after one day.</li>
+        <li>
+          Payment records: 5 years, as Kenyan tax law requires — also after you
+          delete your account, but no longer linked to it.
+        </li>
         <li>
           One-time SMS codes: kept only as one-way hashes, work for 10 minutes,
           and deleted within a day.

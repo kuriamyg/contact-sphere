@@ -123,6 +123,9 @@ describe('first-account setup', () => {
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       totpEnabled: false,
       recoveryCodesLeft: 0,
+      operator: true,
+      plan: 'plus',
+      plusUntil: null,
     });
     expect(await auditActions()).toEqual(['auth.setup_completed']);
     const { rows } = await owner.query('SELECT metadata::text FROM audit_logs');

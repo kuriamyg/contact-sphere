@@ -61,6 +61,20 @@ Open sign-up (ADR 0018), off unless set:
 | `AT_API_KEY`       | That app's API key — secret, Render only                         |
 | `AT_SENDER_ID`     | Optional approved sender ID (≤ 11 letters/digits)                |
 
+Plans and payments (ADR 0019), off unless set:
+
+| Variable                                       | Value                                                      |
+| ---------------------------------------------- | ---------------------------------------------------------- |
+| `BILLING_PAY_TO`                               | Pay-by-hand line, e.g. `Send Money to 07xx xxx xxx (Name)` |
+| `MPESA_PROVIDER`                               | `daraja` (`log` in tests only)                             |
+| `MPESA_ENV`                                    | `sandbox` or `production`                                  |
+| `MPESA_CONSUMER_KEY` / `MPESA_CONSUMER_SECRET` | The Daraja app's keys — secret                             |
+| `MPESA_SHORTCODE` / `MPESA_PASSKEY`            | Lipa na M-Pesa shortcode and passkey — passkey secret      |
+| `MPESA_TYPE` / `MPESA_TILL`                    | `paybill`, or `till` with the till number                  |
+| `MPESA_CALLBACK_TOKEN`                         | `openssl rand -hex 32`; part of the callback URL — secret  |
+
+The callback URL is `<first WEB_ORIGIN>/api/mpesa/callback/<token>`.
+
 Staging runs the sandbox (texts appear in the Africa's Talking simulator);
 production stays closed until a live key exists.
 

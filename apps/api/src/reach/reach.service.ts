@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { Plans, PLUS_REMINDERS } from '../billing/plans.service';
 import type { Env } from '../config/env';
 import { ENV } from '../config/env.provider';
 import { PrismaService } from '../prisma/prisma.service';
@@ -135,6 +136,7 @@ export class ReachService {
     private readonly audit: AuditService,
     private readonly remember: RememberService,
     private readonly push: PushService,
+    private readonly plans: Plans,
     @Inject(ENV) private readonly env: Env,
     @Inject(SMS_PROVIDER) private readonly sms: SmsProvider | null,
     @Inject(EMAIL_PROVIDER) private readonly mail: EmailProvider | null,
@@ -177,6 +179,7 @@ export class ReachService {
     if (on && !this.mail) {
       throw new ForbiddenException('Email reminders are not set up.');
     }
+    if (on) await this.plans.requirePlus(ownerId, PLUS_REMINDERS);
     if (on) await this.requireEmail(ownerId);
     await this.prisma.user.update({
       where: { id: ownerId },
@@ -218,6 +221,7 @@ export class ReachService {
     if (!this.push.enabled) {
       throw new ForbiddenException('Reminders on the phone are not set up.');
     }
+    await this.plans.requirePlus(ownerId, PLUS_REMINDERS);
     const count = await this.prisma.pushSubscription.count({
       where: { ownerId, NOT: { endpoint: d.endpoint } },
     });
@@ -276,6 +280,8 @@ export class ReachService {
     const owners = await this.prisma.user.findMany({
       where: {
         AND: [
+          // Morning reminders are part of Plus (B9, ADR 0019).
+          Plans.plusWhere(now),
           { OR: channels },
           { OR: [{ digestSentOn: null }, { digestSentOn: { lt: todayDate } }] },
         ],

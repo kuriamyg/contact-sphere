@@ -1,5 +1,6 @@
 import { account } from './sections/account';
 import { auth } from './sections/auth';
+import { billing } from './sections/billing';
 import { card } from './sections/card';
 import { client } from './sections/client';
 import { common } from './sections/common';
@@ -18,6 +19,7 @@ import { today } from './sections/today';
 const ALL = {
   account,
   auth,
+  billing,
   card,
   client,
   common,

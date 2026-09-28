@@ -9,6 +9,7 @@ import { TwoFactorSection } from '@/components/auth/two-factor-section';
 import { Avatar } from '@/components/avatar';
 import {
   BellIcon,
+  CheckIcon,
   DownloadIcon,
   GlobeIcon,
   LogOutIcon,
@@ -34,6 +35,8 @@ import { getDevices, requireUser, whoIs } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
+import { getBilling } from '@/lib/billing';
+import { PlanSection } from '@/components/billing/plan-section';
 import { fmt } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 
@@ -76,12 +79,13 @@ function deviceName(device: string | null, locale: string): string | null {
  */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [stats, reach, m, locale, devices] = await Promise.all([
+  const [stats, reach, m, locale, devices, billing] = await Promise.all([
     getContactStats(),
     getReachStatus(),
     getMessages(),
     getLocale(),
     getDevices(),
+    getBilling(),
   ]);
   const t = m.account;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
@@ -160,6 +164,7 @@ export default async function ProfilePage() {
             {(
               [
                 ['details-heading', t.personal],
+                ['plan-heading', m.billing.planTitle],
                 ['security-heading', t.security],
                 ['install-heading', t.installTitle],
                 ['reminders-heading', t.remindersTitle],
@@ -206,6 +211,22 @@ export default async function ProfilePage() {
               </div>
             )}
           </section>
+
+          {billing && (
+            <section
+              aria-labelledby="plan-heading"
+              className={`${card} space-y-4`}
+            >
+              <CardTitle id="plan-heading" icon={<CheckIcon />}>
+                {m.billing.planTitle}
+              </CardTitle>
+              <PlanSection
+                billing={billing}
+                phone={user.phone ?? null}
+                locale={locale}
+              />
+            </section>
+          )}
 
           <section
             aria-labelledby="security-heading"

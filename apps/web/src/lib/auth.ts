@@ -15,6 +15,10 @@ export interface CurrentUser {
   createdAt?: string;
   totpEnabled: boolean;
   recoveryCodesLeft: number;
+  /** Runs the service (B9). Absent while an older API deploys. */
+  operator?: boolean;
+  plan?: 'plus' | 'free';
+  plusUntil?: string | null;
 }
 
 /** Thrown when the API cannot say who is signed in (down, slow, 5xx). */

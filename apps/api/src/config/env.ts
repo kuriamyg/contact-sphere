@@ -83,6 +83,40 @@ export interface Env {
    * `log` only records them (tests, local), never in production.
    */
   otpSms?: OtpSmsConfig;
+  /** Plans and payments (B9, ADR 0019). */
+  billing: BillingConfig;
+}
+
+export interface BillingConfig {
+  /**
+   * How to pay by hand, shown on the Plan page, e.g. "Send Money to 0712
+   * 345 678 (Moses Kuria)". Unset = no manual payments offered. Lives in
+   * the server's environment, never in the public repository.
+   */
+  payTo?: string;
+  /** The M-Pesa prompt on the phone (STK push). Unset = off. */
+  mpesa?: MpesaConfig;
+}
+
+export interface MpesaConfig {
+  /** `log` records prompts (tests, local); `daraja` is Safaricom's API. */
+  provider: 'log' | 'daraja';
+  environment: 'sandbox' | 'production';
+  consumerKey?: string;
+  consumerSecret?: string;
+  /** The paybill, or the till's store number. */
+  shortcode: string;
+  passkey?: string;
+  /** paybill: CustomerPayBillOnline; till: CustomerBuyGoodsOnline. */
+  type: 'paybill' | 'till';
+  /** Where the money lands: the till number (till), else the shortcode. */
+  partyB: string;
+  /**
+   * The secret last part of the callback URL
+   * (<web origin>/api/mpesa/callback/<token>). Safaricom does not sign
+   * callbacks; this, the checkout id and the amount are what we check.
+   */
+  callbackToken: string;
 }
 
 export interface OtpSmsConfig {
@@ -421,6 +455,90 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     ),
     logLevel: parseLogLevel(source.LOG_LEVEL, nodeEnv),
     ...parseSignup(source, nodeEnv),
+    billing: parseBilling(source, nodeEnv),
+  };
+}
+
+function parseBilling(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): BillingConfig {
+  const payTo = source.BILLING_PAY_TO?.trim() || undefined;
+  if (payTo && payTo.length > 120) {
+    throw new EnvError('BILLING_PAY_TO must be at most 120 characters.');
+  }
+  return { payTo, mpesa: parseMpesa(source, nodeEnv) };
+}
+
+function parseMpesa(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): MpesaConfig | undefined {
+  const provider = source.MPESA_PROVIDER?.trim();
+  if (!provider) return undefined;
+  if (provider !== 'daraja' && provider !== 'log') {
+    throw new EnvError('MPESA_PROVIDER must be daraja or log.');
+  }
+  if (provider === 'log' && nodeEnv === 'production') {
+    throw new EnvError('MPESA_PROVIDER=log is for tests; not in production.');
+  }
+  const callbackToken = source.MPESA_CALLBACK_TOKEN?.trim() ?? '';
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(callbackToken)) {
+    throw new EnvError(
+      'MPESA_CALLBACK_TOKEN must be 32+ letters, digits, - or _ (openssl rand -hex 32).',
+    );
+  }
+  if (provider === 'log') {
+    return {
+      provider,
+      environment: 'sandbox',
+      shortcode: '174379',
+      type: 'paybill',
+      partyB: '174379',
+      callbackToken,
+    };
+  }
+  const environment = source.MPESA_ENV?.trim() || 'sandbox';
+  if (environment !== 'sandbox' && environment !== 'production') {
+    throw new EnvError('MPESA_ENV must be sandbox or production.');
+  }
+  const consumerKey = source.MPESA_CONSUMER_KEY?.trim();
+  const consumerSecret = source.MPESA_CONSUMER_SECRET?.trim();
+  const passkey = source.MPESA_PASSKEY?.trim();
+  const shortcode = source.MPESA_SHORTCODE?.trim() ?? '';
+  const type = source.MPESA_TYPE?.trim() || 'paybill';
+  if (
+    !consumerKey ||
+    !consumerSecret ||
+    /\s/.test(consumerKey + consumerSecret)
+  ) {
+    throw new EnvError(
+      'MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET must be your Daraja app keys.',
+    );
+  }
+  if (!passkey || passkey.length < 20) {
+    throw new EnvError('MPESA_PASSKEY must be the Lipa na M-Pesa passkey.');
+  }
+  if (!/^\d{5,7}$/.test(shortcode)) {
+    throw new EnvError('MPESA_SHORTCODE must be a 5–7 digit shortcode.');
+  }
+  if (type !== 'paybill' && type !== 'till') {
+    throw new EnvError('MPESA_TYPE must be paybill or till.');
+  }
+  const till = source.MPESA_TILL?.trim();
+  if (type === 'till' && !/^\d{5,7}$/.test(till ?? '')) {
+    throw new EnvError('MPESA_TILL must be the 5–7 digit till number.');
+  }
+  return {
+    provider,
+    environment,
+    consumerKey,
+    consumerSecret,
+    shortcode,
+    passkey,
+    type,
+    partyB: type === 'till' ? (till as string) : shortcode,
+    callbackToken,
   };
 }
 

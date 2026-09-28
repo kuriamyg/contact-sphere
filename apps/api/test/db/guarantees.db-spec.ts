@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE payments, phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -695,5 +695,73 @@ describe('reach (Phase 11)', () => {
     expect(await sqlState(app.query('DELETE FROM sms_sends'))).toBe(
       PERMISSION_DENIED,
     );
+  });
+});
+
+describe('payments (B9, ADR 0019)', () => {
+  const insert = (cols: string, vals: string) =>
+    app.query(
+      `INSERT INTO payments (id, ${cols}) VALUES (gen_random_uuid(), ${vals})`,
+    );
+
+  it('keeps payment records: the app can add but never delete', async () => {
+    await insert(
+      'method, months, amount_kes, status, receipt, paid_at',
+      "'manual', 1, 99, 'paid', 'SJK3ABCD12', now()",
+    );
+    expect(await sqlState(app.query('DELETE FROM payments'))).toBe(
+      PERMISSION_DENIED,
+    );
+  });
+
+  it('refuses payments that do not add up', async () => {
+    const bad = [
+      // A grant costs nothing; a paid-for method is never free.
+      [
+        'method, months, amount_kes, status, paid_at',
+        "'grant', 1, 99, 'paid', now()",
+      ],
+      [
+        'method, months, amount_kes, status, receipt, paid_at',
+        "'manual', 1, 0, 'paid', 'SJK3ABCD13', now()",
+      ],
+      // A prompt needs its checkout id; a hand payment its M-Pesa code.
+      ['method, months, amount_kes, status', "'mpesa_stk', 1, 99, 'pending'"],
+      [
+        'method, months, amount_kes, status, paid_at',
+        "'manual', 1, 99, 'paid', now()",
+      ],
+      // Codes look like M-Pesa's; paid means a time; months 1–24.
+      [
+        'method, months, amount_kes, status, receipt, paid_at',
+        "'manual', 1, 99, 'paid', 'bad', now()",
+      ],
+      [
+        'method, months, amount_kes, status, receipt',
+        "'manual', 1, 99, 'paid', 'SJK3ABCD14'",
+      ],
+      [
+        'method, months, amount_kes, status, paid_at',
+        "'grant', 25, 0, 'paid', now()",
+      ],
+      [
+        'method, months, amount_kes, status, paid_at',
+        "'cash', 1, 99, 'paid', now()",
+      ],
+    ];
+    for (const [cols, vals] of bad) {
+      expect(await sqlState(insert(cols, vals))).toBe(CHECK_VIOLATION);
+    }
+  });
+
+  it('knows only two roles', async () => {
+    expect(
+      await sqlState(
+        app.query(
+          `INSERT INTO users (id, email, password_hash, updated_at, role)
+           VALUES (gen_random_uuid(), 'r@example.com', 'x', now(), 'admin')`,
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
   });
 });

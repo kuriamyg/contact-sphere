@@ -21,6 +21,20 @@ const EXACT: Record<string, string> = {
     'Nambari hii tayari ina akaunti. Ingia badala yake.',
   'Could not send the code just now. Try again in a minute.':
     'Imeshindikana kutuma msimbo sasa hivi. Jaribu tena baada ya dakika moja.',
+  'Morning reminders are part of Plus.':
+    'Vikumbusho vya asubuhi ni sehemu ya Plus.',
+  'The free plan holds 3 groups. Plus has no limit.':
+    'Mpango wa bure una vikundi 3. Plus haina kikomo.',
+  'Enter the M-Pesa number, like 0712 345 678.':
+    'Weka nambari ya M-Pesa, kama 0712 345 678.',
+  'Wait a minute before asking for another M-Pesa prompt.':
+    'Subiri dakika moja kabla ya kuomba ombi jingine la M-Pesa.',
+  'M-Pesa did not accept the request just now. Try again in a minute.':
+    'M-Pesa haikukubali ombi sasa hivi. Jaribu tena baada ya dakika moja.',
+  'That M-Pesa code is already recorded.':
+    'Msimbo huo wa M-Pesa umesharekodiwa.',
+  'An M-Pesa code has 10 letters and digits, like SJK3ABCD12.':
+    'Msimbo wa M-Pesa una herufi na tarakimu 10, kama SJK3ABCD12.',
   'Add an email address to your account first.':
     'Ongeza anwani ya barua pepe kwenye akaunti yako kwanza.',
   'Too many failed attempts for this account. Try again in 15 minutes.':

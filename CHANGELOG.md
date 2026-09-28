@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Plans and paying with M-Pesa (B9a)
+
+- **Free and Plus.** Free keeps all your contacts and 3 groups; Plus
+  (KES 99 a month or KES 990 a year) adds morning reminders and unlimited
+  groups. New accounts get 30 days of Plus free.
+- **Pay with M-Pesa** from Profile → Your plan: the prompt comes to your
+  phone, you enter your PIN, and the page updates by itself.
+- **Operator page** for the person running Contact Sphere: who signed up,
+  their plan and payments, free months for pilots, and M-Pesa payments
+  recorded by their code.
+- A proper "page not found" page.
+
 ### Added — Sign up with your phone number (B6)
 
 - **Create an account with a mobile number**: we text a 6-digit code, then
