@@ -93,6 +93,9 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       restore, delete for good, empty trash (Phase 4b)
 - [x] Browser flow (41 checks, phone size) and 360 px layout checks
 - [x] Account deletion (ADR 0005 §4, ADR 0017) — B7
+- [ ] B8: ODPC registration — pack ready in `docs/odpc/` (voluntary for now,
+      KES 4,000); owner registers on the portal, then add the number to the
+      privacy policy
 
 ## Phase 5 — VCF and duplicates
 

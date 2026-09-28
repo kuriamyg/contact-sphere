@@ -561,3 +561,14 @@ account creation, links everywhere; web server pinned to Frankfurt (fra1).
 ADR 0017. Tests: e2e +4 (wrong password/confirm, every table emptied for that
 owner only, audit counts only, 2FA needs a code and a recovery code works);
 browser B7 flow 20/20; A4 and offline flows re-run.
+
+## 2026-09-28 — B8: ODPC registration pack
+
+`docs/odpc/`: applicability test (not yet mandatory: under KES 5M turnover and
+10 staff, not a Third Schedule sector — voluntary registration recommended
+before public sign-up), fees (micro/small KES 4,000, renewal KES 2,000 every
+two years), ready answers for the registration form, record of processing,
+DPIA, data protection policy, breach plan (ODPC within 72 h), data subject
+requests (access 7 days; rectification and erasure 14; portability 30),
+processors and EU transfers, retention schedule. No personal identifiers in
+the public repo — those go on the portal only.
