@@ -31,7 +31,46 @@ describe('loadEnv', () => {
       totpEncryptionKey: Buffer.from(KEY, 'hex'),
       breachedPasswordCheck: false,
       logLevel: 'info',
+      openSignup: false,
     });
+  });
+
+  it('open sign-up is off by default and needs an SMS provider for codes', () => {
+    expect(loadEnv(BASE).openSignup).toBe(false);
+    expect(() => loadEnv({ ...BASE, OPEN_SIGNUP: 'on' })).toThrow(
+      /needs OTP_SMS_PROVIDER/,
+    );
+    const on = loadEnv({ ...BASE, OPEN_SIGNUP: 'on', OTP_SMS_PROVIDER: 'log' });
+    expect(on).toMatchObject({ openSignup: true, otpSms: { provider: 'log' } });
+    expect(() => loadEnv({ ...PROD, OTP_SMS_PROVIDER: 'log' })).toThrow(
+      /not in production/,
+    );
+    const at = loadEnv({
+      ...PROD,
+      OTP_SMS_PROVIDER: 'africastalking',
+      AT_USERNAME: 'sandbox',
+      AT_API_KEY: 'atsk_' + 'a'.repeat(40),
+    });
+    expect(at.otpSms).toMatchObject({
+      provider: 'africastalking',
+      username: 'sandbox',
+    });
+    expect(() =>
+      loadEnv({
+        ...PROD,
+        OTP_SMS_PROVIDER: 'africastalking',
+        AT_USERNAME: 'x',
+      }),
+    ).toThrow(/AT_API_KEY/);
+    expect(() =>
+      loadEnv({
+        ...PROD,
+        OTP_SMS_PROVIDER: 'africastalking',
+        AT_USERNAME: 'x',
+        AT_API_KEY: 'atsk_' + 'a'.repeat(40),
+        AT_SENDER_ID: 'Far too long a name',
+      }),
+    ).toThrow(/AT_SENDER_ID/);
   });
 
   it('logs at info, silent in tests, and refuses an unknown level', () => {

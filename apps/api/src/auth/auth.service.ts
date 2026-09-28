@@ -12,14 +12,19 @@ import {
 import { AuditService } from '../audit/audit.service';
 import type { Env } from '../config/env';
 import { ENV } from '../config/env.provider';
+import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
   ChangePasswordDto,
   LoginDto,
+  ResetPasswordDto,
   SetupDto,
+  SignupDto,
 } from './dto/credentials.dto';
 import { BreachedPasswords } from './breached-passwords';
 import { LoginFailures } from './login-failures';
+import { kenyanMobile } from './mobile';
+import { PhoneCodes } from './phone-codes.service';
 import {
   hashPassword,
   passwordProblem,
@@ -36,7 +41,7 @@ import { TotpService } from './totp.service';
 import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
 
 export interface SessionResult extends IssuedSession {
-  user: { id: string; email: string };
+  user: { id: string; email: string | null; phone: string | null };
 }
 
 /** Password was right; the second factor is still needed (ADR 0013). */
@@ -48,7 +53,10 @@ export interface MfaRequired {
 
 export interface Me {
   id: string;
-  email: string;
+  /** Null for accounts made by phone (B6). */
+  email: string | null;
+  /** Verified Kenyan mobile, E.164; null for email-only accounts. */
+  phone: string | null;
   displayName: string | null;
   /** "en" or "sw". */
   locale: string;
@@ -59,7 +67,7 @@ export interface Me {
 }
 
 /** One message for every login failure, so it never reveals which part was wrong. */
-const INVALID_LOGIN = 'Invalid email or password.';
+const INVALID_LOGIN = 'Those sign-in details are not right.';
 
 const BREACHED_PASSWORD =
   'This password has appeared in known data breaches, so attackers try it first. Choose a different one.';
@@ -73,6 +81,7 @@ export class AuthService {
     private readonly totp: TotpService,
     private readonly failures: LoginFailures,
     private readonly breached: BreachedPasswords,
+    private readonly codes: PhoneCodes,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -109,7 +118,7 @@ export class AuthService {
       }
       const user = await tx.user.create({
         data: { email: dto.email, passwordHash },
-        select: { id: true, email: true },
+        select: { id: true, email: true, phone: true },
       });
       const session = await this.sessions.create(
         user.id,
@@ -130,7 +139,13 @@ export class AuthService {
     dto: LoginDto,
     device: string | null = null,
   ): Promise<SessionResult | MfaRequired> {
-    const key = hashToken(dto.email.toLowerCase());
+    const phone = dto.phone ? kenyanMobile(dto.phone) : null;
+    const email = dto.email?.toLowerCase() ?? null;
+    if (!email && !dto.phone) {
+      throw new BadRequestException('Enter your email or phone number.');
+    }
+    // One lock-out key per account identifier, however it was typed.
+    const key = hashToken(email ?? phone ?? dto.phone ?? '');
     if (await this.failures.isLocked(key)) {
       throw new HttpException(
         'Too many failed attempts for this account. Try again in 15 minutes.',
@@ -138,15 +153,19 @@ export class AuthService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      select: {
-        id: true,
-        email: true,
-        passwordHash: true,
-        totpEnabledAt: true,
-      },
-    });
+    const where = email ? { email } : phone ? { phone } : null;
+    const user = where
+      ? await this.prisma.user.findUnique({
+          where,
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            passwordHash: true,
+            totpEnabledAt: true,
+          },
+        })
+      : null;
 
     const ok = user
       ? await verifyPassword(user.passwordHash, dto.password)
@@ -191,7 +210,10 @@ export class AuthService {
       entityType: 'user',
       entityId: user.id,
     });
-    return { ...session, user: { id: user.id, email: user.email } };
+    return {
+      ...session,
+      user: { id: user.id, email: user.email, phone: user.phone },
+    };
   }
 
   /** Second step of sign-in: the challenge plus a TOTP or recovery code. */
@@ -207,7 +229,7 @@ export class AuthService {
         userId: true,
         expiresAt: true,
         attempts: true,
-        user: { select: { email: true } },
+        user: { select: { email: true, phone: true } },
       },
     });
     const expired = !found || found.expiresAt <= new Date();
@@ -248,7 +270,11 @@ export class AuthService {
     });
     return {
       ...session,
-      user: { id: found.userId, email: found.user.email },
+      user: {
+        id: found.userId,
+        email: found.user.email,
+        phone: found.user.phone,
+      },
     };
   }
 
@@ -305,6 +331,7 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        phone: true,
         displayName: true,
         locale: true,
         createdAt: true,
@@ -317,6 +344,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      phone: user.phone,
       displayName: user.displayName,
       locale: user.locale,
       createdAt: user.createdAt.toISOString(),
@@ -353,6 +381,105 @@ export class AuthService {
     if (seen && seen > 0) {
       throw new BadRequestException(BREACHED_PASSWORD);
     }
+  }
+
+  /** Is open sign-up on here? Public: the web shows or hides the link. */
+  signupOpen(): boolean {
+    return this.env.openSignup && this.codes.enabled;
+  }
+
+  /** Step 1 of sign-up: text a code to the number (B6). */
+  async sendSignupCode(phone: string, locale?: 'en' | 'sw'): Promise<void> {
+    if (!this.signupOpen()) throw new NotFoundException();
+    await this.codes.send('signup', phone, locale);
+  }
+
+  /**
+   * Step 2: the code proves the number; the account is made and signed in.
+   * The password rules and the breached-password check apply as at setup.
+   */
+  async signup(
+    dto: SignupDto,
+    device: string | null = null,
+  ): Promise<SessionResult> {
+    if (!this.signupOpen()) throw new NotFoundException();
+    const phone = this.codes.mobile(dto.phone);
+    const problem = passwordProblem(dto.password, phone);
+    if (problem) throw new BadRequestException(problem);
+    await this.refuseBreached(dto.password);
+    await this.codes.verify('signup', phone, dto.code);
+    const passwordHash = await hashPassword(dto.password);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            phone,
+            passwordHash,
+            displayName: dto.displayName ?? null,
+            locale: dto.locale ?? 'en',
+          },
+          select: { id: true, email: true, phone: true },
+        });
+        const session = await this.sessions.create(
+          user.id,
+          new Date(),
+          tx,
+          device,
+        );
+        await this.audit.record(
+          'auth.signup_completed',
+          { actorUserId: user.id, entityType: 'user', entityId: user.id },
+          tx,
+        );
+        return { ...session, user };
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'This number already has an account. Sign in instead.',
+        );
+      }
+      throw err;
+    }
+  }
+
+  /** Forgot password, step 1: a code to the account's number, if any. */
+  async sendResetCode(phone: string, locale?: 'en' | 'sw'): Promise<void> {
+    if (!this.codes.enabled) throw new NotFoundException();
+    await this.codes.send('reset', phone, locale);
+  }
+
+  /**
+   * Forgot password, step 2: the code proves the phone; the new password is
+   * set, every device is signed out and the lock-out is cleared.
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    if (!this.codes.enabled) throw new NotFoundException();
+    const phone = this.codes.mobile(dto.phone);
+    const problem = passwordProblem(dto.newPassword, phone);
+    if (problem) throw new BadRequestException(problem);
+    await this.refuseBreached(dto.newPassword);
+    await this.codes.verify('reset', phone, dto.code);
+    const user = await this.prisma.user.findUnique({
+      where: { phone },
+      select: { id: true },
+    });
+    // Unknown numbers are never texted a code, so a right code means an account.
+    if (!user) throw new BadRequestException('That code is not right.');
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { passwordHash } });
+      await this.sessions.revokeAll(user.id, undefined, tx);
+      await this.audit.record(
+        'auth.password_reset',
+        { actorUserId: user.id, entityType: 'user', entityId: user.id },
+        tx,
+      );
+    });
+    await this.failures.clear(hashToken(phone));
   }
 
   /**
@@ -412,12 +539,15 @@ export class AuthService {
   ): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { email: true, passwordHash: true },
+      select: { email: true, phone: true, passwordHash: true },
     });
     if (!(await verifyPassword(user.passwordHash, dto.currentPassword))) {
       throw new UnauthorizedException('Your current password is not correct.');
     }
-    const problem = passwordProblem(dto.newPassword, user.email);
+    const problem = passwordProblem(
+      dto.newPassword,
+      user.email ?? user.phone ?? '',
+    );
     if (problem) throw new BadRequestException(problem);
     if (dto.newPassword === dto.currentPassword) {
       throw new BadRequestException(

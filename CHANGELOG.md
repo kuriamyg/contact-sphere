@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Sign up with your phone number (B6)
+
+- **Create an account with a mobile number**: we text a 6-digit code, then
+  you choose a password. No email needed. In English or Kiswahili.
+- **Sign in with your email or your phone number.**
+- **Forgot your password?** Get a code by SMS and set a new one; every
+  device is signed out.
+- Codes work for 10 minutes and 5 tries; at most one a minute and five a day
+  per number.
+
 ### Added — Delete your account; privacy policy and terms (B7)
 
 - **Profile → Delete your account**: removes your account and everything in

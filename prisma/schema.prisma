@@ -26,7 +26,12 @@ model User {
   /// UUIDv7: time-ordered, so new rows append to the index instead of
   /// scattering across it, and ids reveal no row count.
   id            String    @id @default(uuid(7)) @db.Uuid
-  email         String    @unique @db.VarChar(254)
+  /// Optional since open sign-up (B6): an account has an email, a verified
+  /// phone, or both (CHECK).
+  email         String?   @unique @db.VarChar(254)
+  /// Kenyan mobile number in E.164 (+2547… / +2541…), proven by an SMS code
+  /// at sign-up. Signs in like an email. B6, ADR 0018.
+  phone         String?   @unique @db.VarChar(16)
   /// How the app greets the owner ("Kuria"). Optional; trimmed, never blank.
   displayName   String?   @map("display_name") @db.VarChar(100)
   /// argon2id, in PHC string format (algorithm, parameters and salt are
@@ -67,6 +72,26 @@ model User {
   smsSends      SmsSend[]
 
   @@map("users")
+}
+
+/// A one-time SMS code proving a phone number, for sign-up or a password
+/// reset (B6). Only a hash of the code is stored; it expires in minutes and
+/// allows a few attempts.
+model PhoneCode {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  /// E.164, the number the code was sent to.
+  phone     String   @db.VarChar(16)
+  /// "signup" or "reset" (CHECK).
+  purpose   String   @db.VarChar(10)
+  /// Hex SHA-256 of "<id>:<code>".
+  codeHash  String   @map("code_hash") @db.Char(64)
+  attempts  Int      @default(0) @db.SmallInt
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([phone, createdAt])
+  @@index([expiresAt])
+  @@map("phone_codes")
 }
 
 /// A signed-in browser. The cookie holds a random token; only its SHA-256

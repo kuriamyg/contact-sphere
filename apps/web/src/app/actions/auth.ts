@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 import QRCode from 'qrcode';
 
-import { apiText, getMessages } from '@/i18n/server';
+import { apiText, getLocale, getMessages } from '@/i18n/server';
 import { api, isProduction } from '@/lib/api';
 import {
   mfaCookieName,
@@ -83,11 +83,19 @@ async function failure(status: number, message?: string): Promise<FormState> {
   return { error: said ?? (status === 429 ? t.tooMany : t.generic) };
 }
 
+/** "me@example.com" signs in by email; anything else is a phone number. */
+function identifier(value: string): { email: string } | { phone: string } {
+  return value.includes('@') ? { email: value } : { phone: value };
+}
+
 export async function login(_: FormState, form: FormData): Promise<FormState> {
   const res = await api<SessionResponse | MfaResponse>('/auth/login', {
     method: 'POST',
     auth: false,
-    body: { email: field(form, 'email'), password: field(form, 'password') },
+    body: {
+      ...identifier(field(form, 'identifier')),
+      password: field(form, 'password'),
+    },
   });
   if (res.status !== 200 || !res.data) return failure(res.status, res.message);
   if ('mfaRequired' in res.data) {
@@ -137,6 +145,87 @@ export async function setup(_: FormState, form: FormData): Promise<FormState> {
   if (res.status !== 201 || !res.data) return failure(res.status, res.message);
   await startSession(res.data);
   redirect('/contacts');
+}
+
+/** Sign-up and password reset by SMS code (B6): the number carries over. */
+export interface PhoneCodeState extends FormState {
+  /** Set once a code has been sent: the number, as typed. */
+  phone?: string;
+  /** Kept after a failed try: React clears the form on every submit. */
+  displayName?: string;
+}
+
+async function sendCode(
+  path: '/auth/signup/code' | '/auth/reset/code',
+  prev: PhoneCodeState,
+  form: FormData,
+): Promise<PhoneCodeState> {
+  const phone = field(form, 'phone').trim();
+  const res = await api(path, {
+    method: 'POST',
+    auth: false,
+    body: { phone, locale: await getLocale() },
+  });
+  if (res.status !== 204) {
+    // A failed resend keeps the code step open; a failed first send does not.
+    const keep = field(form, 'resend') === '1' ? prev.phone : undefined;
+    return { ...(await failure(res.status, res.message)), phone: keep };
+  }
+  return { phone };
+}
+
+export async function sendSignupCode(
+  prev: PhoneCodeState,
+  form: FormData,
+): Promise<PhoneCodeState> {
+  return sendCode('/auth/signup/code', prev, form);
+}
+
+export async function sendResetCode(
+  prev: PhoneCodeState,
+  form: FormData,
+): Promise<PhoneCodeState> {
+  return sendCode('/auth/reset/code', prev, form);
+}
+
+export async function signup(
+  _: PhoneCodeState,
+  form: FormData,
+): Promise<PhoneCodeState> {
+  const displayName = field(form, 'displayName').trim();
+  const res = await api<SessionResponse>('/auth/signup', {
+    method: 'POST',
+    auth: false,
+    body: {
+      phone: field(form, 'phone'),
+      code: field(form, 'code').trim(),
+      password: field(form, 'password'),
+      locale: await getLocale(),
+      ...(displayName ? { displayName } : {}),
+    },
+  });
+  if (res.status !== 201 || !res.data) {
+    return { ...(await failure(res.status, res.message)), displayName };
+  }
+  await startSession(res.data);
+  redirect('/contacts');
+}
+
+export async function resetPassword(
+  _: PhoneCodeState,
+  form: FormData,
+): Promise<PhoneCodeState> {
+  const res = await api('/auth/reset', {
+    method: 'POST',
+    auth: false,
+    body: {
+      phone: field(form, 'phone'),
+      code: field(form, 'code').trim(),
+      newPassword: field(form, 'newPassword'),
+    },
+  });
+  if (res.status !== 204) return failure(res.status, res.message);
+  redirect('/login?reset=1');
 }
 
 export async function logout(): Promise<void> {

@@ -7,8 +7,10 @@ import { api, sessionToken } from './api';
 
 export interface CurrentUser {
   id: string;
-  email: string;
+  /** Null for accounts made with a mobile number (B6). */
+  email: string | null;
   /** Optional: older API versions do not send these. */
+  phone?: string | null;
   displayName?: string | null;
   createdAt?: string;
   totpEnabled: boolean;
@@ -60,6 +62,17 @@ export async function setupAvailable(): Promise<boolean> {
     auth: false,
   });
   return res.data?.setupAvailable ?? false;
+}
+
+/** Whether anyone can create an account with a mobile number (B6). */
+export async function signupOpen(): Promise<boolean> {
+  const res = await api<{ open: boolean }>('/auth/signup', { auth: false });
+  return res.data?.open ?? false;
+}
+
+/** How to show who is signed in: their name, email or number. */
+export function whoIs(user: CurrentUser): string {
+  return user.displayName ?? user.email ?? user.phone ?? '';
 }
 
 export interface DeviceSession {

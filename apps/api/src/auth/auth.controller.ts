@@ -25,8 +25,11 @@ import {
   ChangePasswordDto,
   LoginDto,
   LocaleDto,
+  PhoneCodeDto,
   ProfileDto,
+  ResetPasswordDto,
   SetupDto,
+  SignupDto,
 } from './dto/credentials.dto';
 import {
   DeleteAccountDto,
@@ -66,6 +69,51 @@ export class AuthController {
     @Headers('x-client-ua') ua?: string,
   ): Promise<SessionResult> {
     return this.auth.setup(dto, deviceLabel(ua));
+  }
+
+  /** Is open sign-up on? (B6) */
+  @Public()
+  @Get('signup')
+  signupStatus(): { open: boolean } {
+    return { open: this.auth.signupOpen() };
+  }
+
+  /** Sign-up step 1: text a code to the number. Same answer either way. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('signup/code')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  signupCode(@Body() dto: PhoneCodeDto): Promise<void> {
+    return this.auth.sendSignupCode(dto.phone, dto.locale);
+  }
+
+  /** Sign-up step 2: the code, a password; returns a session. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('signup')
+  signup(
+    @Body() dto: SignupDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult> {
+    return this.auth.signup(dto, deviceLabel(ua));
+  }
+
+  /** Forgot password step 1: a code to the account's phone. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('reset/code')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetCode(@Body() dto: PhoneCodeDto): Promise<void> {
+    return this.auth.sendResetCode(dto.phone, dto.locale);
+  }
+
+  /** Forgot password step 2: the code and a new password. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  reset(@Body() dto: ResetPasswordDto): Promise<void> {
+    return this.auth.resetPassword(dto);
   }
 
   @Public()

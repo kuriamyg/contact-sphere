@@ -30,7 +30,7 @@ import {
   OfflineToggle,
   WipeOnSubmit,
 } from '@/components/offline/offline-toggle';
-import { getDevices, requireUser } from '@/lib/auth';
+import { getDevices, requireUser, whoIs } from '@/lib/auth';
 import { getContactStats } from '@/lib/contacts';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
@@ -85,7 +85,7 @@ export default async function ProfilePage() {
   ]);
   const t = m.account;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const name = user.displayName ?? user.email;
+  const name = whoIs(user);
 
   return (
     <div className="-mx-4 -mt-6 sm:mx-0 sm:mt-0 lg:max-w-6xl">
@@ -101,7 +101,7 @@ export default async function ProfilePage() {
             {user.displayName ?? t.welcome}
           </p>
           <p className="break-all text-muted">
-            {user.email}
+            {user.email ?? user.phone}
             {/* Absent only while an older API is still deploying. */}
             {user.createdAt && (
               <span className="block text-sm lg:inline">
@@ -193,10 +193,18 @@ export default async function ProfilePage() {
               {t.personal}
             </CardTitle>
             <NameForm current={user.displayName ?? null} />
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{t.email}</p>
-              <p className="break-all text-muted">{user.email}</p>
-            </div>
+            {user.email && (
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{t.email}</p>
+                <p className="break-all text-muted">{user.email}</p>
+              </div>
+            )}
+            {user.phone && (
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{t.phone}</p>
+                <p className="text-muted">{user.phone}</p>
+              </div>
+            )}
           </section>
 
           <section
@@ -247,8 +255,12 @@ export default async function ProfilePage() {
             ) : (
               <p className="text-sm text-muted">{t.notAvailable}</p>
             )}
-            {reach?.email?.enabled ? (
+            {reach?.email?.enabled && user.email ? (
               <EmailReminders initialOn={reach.email.on} email={user.email} />
+            ) : reach?.email?.enabled ? (
+              <p className="border-t border-border pt-3 text-sm text-muted">
+                {t.emailNeedsAddress}
+              </p>
             ) : (
               <p className="border-t border-border pt-3 text-sm text-muted">
                 {m.client.reminders.emailNotYet}

@@ -572,3 +572,20 @@ DPIA, data protection policy, breach plan (ODPC within 72 h), data subject
 requests (access 7 days; rectification and erasure 14; portability 30),
 processors and EU transfers, retention schedule. No personal identifiers in
 the public repo — those go on the portal only.
+
+## 2026-09-28 — B6: open sign-up with a mobile number
+
+Provider chosen by the owner's rule (free account → Africa's Talking, else
+the Android gateway): Africa's Talking has a free account and sandbox, about
+KES 0.80 per SMS, sender ID optional (skipped). Migration `open_signup`:
+`users.email` nullable, `users.phone` unique, `phone_codes` (hash only), with
+CHECKs (email or phone; Kenyan mobile E.164; purpose; hash hex; tries;
+expiry). API: `GET /auth/signup`, `POST /auth/signup/code`, `/auth/signup`,
+`/auth/reset/code`, `/auth/reset`; login by email or phone; neutral
+wrong-password message. Web: "Email or phone number" sign-in, `/signup` and
+`/reset` (two steps, name kept after a wrong code), phone on Profile, email
+reminders explain they need an email. ADR 0018; privacy policy, threat model
+and ODPC 02/03/07/08 updated. Tests: e2e +14 (signup), unit (config, mobile
+numbers, Africa's Talking client); browser flow 23/23 (sign-up, wrong code,
+resend limit, phone sign-in, reset in Kiswahili with a Kiswahili SMS, no CSP
+errors); with sign-up off, `/signup` and `/reset` redirect and the links hide.

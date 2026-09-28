@@ -104,6 +104,21 @@ parties_ who never signed up; this belongs in the privacy policy.
   describe exactly what this model describes — when one changes, change both.
 - **Residency:** web server, API and database all run in Frankfurt (EU).
 
+## Open sign-up and SMS codes (B6, ADR 0018)
+
+- **Codes** are 6 random digits, stored only as a hash with their row id,
+  valid 10 minutes and 5 wrong tries, one a minute and five a day per number
+  and purpose. Asking for one answers the same for every valid number, so
+  the endpoint cannot tell who has an account; the SMS says so to the
+  phone's owner only.
+- **Passwords** are checked (length, breaches) before a code is spent, so a
+  weak password does not burn a try.
+- **Reset** revokes every session and clears the lock-out.
+- **Logs** never hold the number (the scrubber replaces it) or the code,
+  except the development-only `log` provider, which production refuses.
+- **Cost abuse** is bounded: 10 texts a day per number at most, plus the
+  per-IP rate limit on every public auth route.
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before
