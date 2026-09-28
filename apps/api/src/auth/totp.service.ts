@@ -41,7 +41,7 @@ export class TotpService {
   async setup(userId: string): Promise<{ secret: string; uri: string }> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { email: true, totpEnabledAt: true },
+      select: { email: true, phone: true, totpEnabledAt: true },
     });
     if (user.totpEnabledAt) {
       throw new ConflictException('Two-factor is already on.');
@@ -54,7 +54,10 @@ export class TotpService {
         totpLastStep: null,
       },
     });
-    return { secret, uri: totpUri(secret, user.email) };
+    return {
+      secret,
+      uri: totpUri(secret, user.email ?? user.phone ?? 'account'),
+    };
   }
 
   /** Confirms enrolment with a first code; returns fresh recovery codes. */

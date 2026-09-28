@@ -117,6 +117,7 @@ describe('first-account setup', () => {
     expect(me.body).toEqual({
       id: expect.any(String),
       email: EMAIL,
+      phone: null,
       displayName: null,
       locale: 'en',
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
@@ -200,7 +201,7 @@ describe('login', () => {
     expect(res.body).toEqual({
       token: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
       expiresAt: expect.any(String),
-      user: { id: expect.any(String), email: EMAIL },
+      user: { id: expect.any(String), email: EMAIL, phone: null },
     });
   });
 

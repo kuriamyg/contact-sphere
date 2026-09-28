@@ -20,6 +20,19 @@ export const auth = section(
     verifyTitle: 'Two-factor verification',
     verifyLead: 'Open your authenticator app and enter the current code.',
     startAgain: 'Start again',
+    newHere: 'New here?',
+    createAccount: 'Create an account',
+    forgot: 'Forgot your password?',
+    haveAccount: 'Already have an account?',
+    signInLink: 'Sign in',
+    signUpTitle: 'Create your account',
+    signUpLead:
+      'Use your mobile number. We text you a code to check it is yours — no email needed.',
+    resetTitle: 'Reset your password',
+    resetLead:
+      'Enter the mobile number you sign in with. If it has an account, we text it a code.',
+    passwordReset:
+      'Your password has been changed and every device signed out. Sign in with the new one.',
   },
   {
     signInTitle: 'Ingia',
@@ -41,5 +54,18 @@ export const auth = section(
     verifyLead:
       'Fungua programu yako ya uthibitishaji na uweke msimbo wa sasa.',
     startAgain: 'Anza upya',
+    newHere: 'Mgeni hapa?',
+    createAccount: 'Fungua akaunti',
+    forgot: 'Umesahau nenosiri?',
+    haveAccount: 'Tayari una akaunti?',
+    signInLink: 'Ingia',
+    signUpTitle: 'Fungua akaunti yako',
+    signUpLead:
+      'Tumia nambari yako ya simu. Tutakutumia msimbo kwa SMS kuthibitisha kuwa ni yako — hakuna barua pepe inayohitajika.',
+    resetTitle: 'Weka upya nenosiri lako',
+    resetLead:
+      'Weka nambari ya simu unayoingia nayo. Ikiwa ina akaunti, tutaitumia msimbo kwa SMS.',
+    passwordReset:
+      'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
   },
 );

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -125,6 +126,8 @@ const monthStart = (now: Date) => {
  * provider, and the owner's QR business card. Owner-scoped; audited by
  * counts only — never message text, names or numbers.
  */
+const NO_EMAIL = 'Add an email address to your account first.';
+
 @Injectable()
 export class ReachService {
   constructor(
@@ -174,10 +177,20 @@ export class ReachService {
     if (on && !this.mail) {
       throw new ForbiddenException('Email reminders are not set up.');
     }
+    if (on) await this.requireEmail(ownerId);
     await this.prisma.user.update({
       where: { id: ownerId },
       data: { digestEmail: on },
     });
+  }
+
+  /** Phone-only accounts (B6) have no address to send to. */
+  private async requireEmail(ownerId: string): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: ownerId },
+      select: { email: true },
+    });
+    if (!user.email) throw new BadRequestException(NO_EMAIL);
   }
 
   /** Sends a test to the account's own address. */
@@ -189,6 +202,7 @@ export class ReachService {
       where: { id: ownerId },
       select: { email: true, locale: true },
     });
+    if (!user.email) throw new BadRequestException(NO_EMAIL);
     const sent = await this.mail.send(
       testEmail(user.email, asLocale(user.locale), this.webOrigin),
     );
@@ -254,7 +268,7 @@ export class ReachService {
   ): Promise<{ owners: number; sent: number; emailed: number }> {
     const channels = [
       ...(this.push.enabled ? [{ pushDevices: { some: {} } }] : []),
-      ...(this.mail ? [{ digestEmail: true }] : []),
+      ...(this.mail ? [{ digestEmail: true, email: { not: null } }] : []),
     ];
     if (channels.length === 0) return { owners: 0, sent: 0, emailed: 0 };
     const today = nairobiToday(now);
@@ -296,7 +310,7 @@ export class ReachService {
           })
         : 0;
       const mailed =
-        wantsEmail && this.mail
+        wantsEmail && email && this.mail
           ? await this.mail.send(
               digestEmail(email, body, asLocale(locale), this.webOrigin),
             )

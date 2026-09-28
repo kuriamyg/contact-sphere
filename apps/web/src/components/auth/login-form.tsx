@@ -17,10 +17,12 @@ export function LoginForm({ action = login }: { action?: typeof login }) {
     <form action={formAction} className="space-y-5" noValidate>
       <FormMessage error={state.error} />
       <Field
-        label={t.email}
-        name="email"
-        type="email"
+        label={t.identifier}
+        name="identifier"
+        type="text"
         autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
         required
         autoFocus
       />

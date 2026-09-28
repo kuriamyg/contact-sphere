@@ -73,6 +73,25 @@ export interface Env {
   breachedPasswordCheck: boolean;
   /** pino level: info by default, silent in tests. LOG_LEVEL overrides. */
   logLevel: LogLevel;
+  /**
+   * Open sign-up with an SMS code (B6, ADR 0018). OPEN_SIGNUP=on|off, off by
+   * default; turning it on needs an SMS provider for the codes.
+   */
+  openSignup: boolean;
+  /**
+   * Sends one-time codes by SMS (sign-up, password reset). Unset = no codes;
+   * `log` only records them (tests, local), never in production.
+   */
+  otpSms?: OtpSmsConfig;
+}
+
+export interface OtpSmsConfig {
+  provider: 'log' | 'africastalking';
+  /** Africa's Talking username; "sandbox" uses their test simulator. */
+  username?: string;
+  apiKey?: string;
+  /** Registered sender ID; unset = the provider's shared sender. */
+  senderId?: string;
 }
 
 export type LogLevel =
@@ -401,7 +420,54 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       nodeEnv === 'production',
     ),
     logLevel: parseLogLevel(source.LOG_LEVEL, nodeEnv),
+    ...parseSignup(source, nodeEnv),
   };
+}
+
+function parseSignup(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): { openSignup: boolean; otpSms?: OtpSmsConfig } {
+  const otpSms = parseOtpSms(source, nodeEnv);
+  const openSignup = parseOnOff('OPEN_SIGNUP', source.OPEN_SIGNUP, false);
+  if (openSignup && !otpSms) {
+    throw new EnvError(
+      'OPEN_SIGNUP=on needs OTP_SMS_PROVIDER to send sign-up codes.',
+    );
+  }
+  return { openSignup, otpSms };
+}
+
+function parseOtpSms(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): OtpSmsConfig | undefined {
+  const provider = source.OTP_SMS_PROVIDER?.trim();
+  if (!provider) return undefined;
+  if (provider === 'log') {
+    if (nodeEnv === 'production') {
+      throw new EnvError(
+        'OTP_SMS_PROVIDER=log is for tests; not in production.',
+      );
+    }
+    return { provider };
+  }
+  if (provider !== 'africastalking') {
+    throw new EnvError('OTP_SMS_PROVIDER must be africastalking or log.');
+  }
+  const username = source.AT_USERNAME?.trim();
+  const apiKey = source.AT_API_KEY?.trim();
+  if (!username || !/^[\w.-]{1,60}$/.test(username)) {
+    throw new EnvError("AT_USERNAME must be your Africa's Talking username.");
+  }
+  if (!apiKey || apiKey.length < 20 || /\s/.test(apiKey)) {
+    throw new EnvError("AT_API_KEY must be an Africa's Talking API key.");
+  }
+  const senderId = source.AT_SENDER_ID?.trim() || undefined;
+  if (senderId && !/^[A-Za-z0-9 ]{1,11}$/.test(senderId)) {
+    throw new EnvError('AT_SENDER_ID must be up to 11 letters or digits.');
+  }
+  return { provider, username, apiKey, senderId };
 }
 
 function parseLogLevel(raw: string | undefined, nodeEnv: NodeEnv): LogLevel {

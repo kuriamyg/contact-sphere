@@ -101,7 +101,7 @@ export function ProfileMenu({
             <Avatar name={name} colourKey={colourKey} />
             <div className="min-w-0">
               <p className="truncate font-bold">{name}</p>
-              {email !== name && (
+              {email && email !== name && (
                 <p className="truncate text-sm text-muted">{email}</p>
               )}
             </div>

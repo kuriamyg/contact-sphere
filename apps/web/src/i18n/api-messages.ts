@@ -6,7 +6,23 @@ import type { Locale } from './locales';
  * is shown as it came (still useful, never empty).
  */
 const EXACT: Record<string, string> = {
-  'Invalid email or password.': 'Barua pepe au nenosiri si sahihi.',
+  'Those sign-in details are not right.': 'Maelezo hayo ya kuingia si sahihi.',
+  'Enter your email or phone number.':
+    'Weka barua pepe au nambari yako ya simu.',
+  'Enter a Kenyan mobile number, like 0712 345 678.':
+    'Weka nambari ya simu ya Kenya, kama 0712 345 678.',
+  'Too many codes for this number today. Try again tomorrow.':
+    'Misimbo mingi mno kwa nambari hii leo. Jaribu tena kesho.',
+  'Wait a minute before asking for another code.':
+    'Subiri dakika moja kabla ya kuomba msimbo mwingine.',
+  'That code has expired. Ask for a new one.':
+    'Msimbo huo umeisha muda. Omba mpya.',
+  'This number already has an account. Sign in instead.':
+    'Nambari hii tayari ina akaunti. Ingia badala yake.',
+  'Could not send the code just now. Try again in a minute.':
+    'Imeshindikana kutuma msimbo sasa hivi. Jaribu tena baada ya dakika moja.',
+  'Add an email address to your account first.':
+    'Ongeza anwani ya barua pepe kwenye akaunti yako kwanza.',
   'Too many failed attempts for this account. Try again in 15 minutes.':
     'Majaribio mengi yameshindwa kwa akaunti hii. Jaribu tena baada ya dakika 15.',
   'That sign-in has expired. Enter your email and password again.':

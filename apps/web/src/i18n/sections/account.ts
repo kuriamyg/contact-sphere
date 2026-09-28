@@ -13,6 +13,9 @@ export const account = section(
     stats: { contacts: 'Contacts', archived: 'Archived', trash: 'Trash' },
     personal: 'Personal details',
     email: 'Email',
+    phone: 'Mobile number',
+    emailNeedsAddress:
+      'Email reminders need an email address, and this account signs in with a mobile number. Phone reminders above work without one.',
     security: 'Security',
     twoFactor: 'Two-factor sign-in',
     changePassword: 'Change password',
@@ -78,6 +81,9 @@ export const account = section(
     },
     personal: 'Taarifa binafsi',
     email: 'Barua pepe',
+    phone: 'Nambari ya simu',
+    emailNeedsAddress:
+      'Vikumbusho vya barua pepe vinahitaji anwani ya barua pepe, na akaunti hii huingia kwa nambari ya simu. Vikumbusho vya simu hapo juu hufanya kazi bila hiyo.',
     security: 'Usalama',
     twoFactor: 'Kuingia kwa hatua mbili',
     changePassword: 'Badilisha nenosiri',

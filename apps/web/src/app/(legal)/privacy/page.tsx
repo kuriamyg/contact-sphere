@@ -24,9 +24,9 @@ export default async function PrivacyPage() {
           <h2>Muhtasari kwa Kiswahili</h2>
           <ul>
             <li>
-              <strong>Tunahifadhi nini:</strong> barua pepe yako, nenosiri
-              lililofichwa (hash), mipangilio yako, na anwani unazoweka (majina,
-              nambari, maelezo, vikundi, ufuatiliaji).
+              <strong>Tunahifadhi nini:</strong> barua pepe au nambari yako ya
+              simu, nenosiri lililofichwa (hash), mipangilio yako, na anwani
+              unazoweka (majina, nambari, maelezo, vikundi, ufuatiliaji).
             </li>
             <li>
               <strong>Hatuuzi wala kushiriki</strong> data yako, hakuna
@@ -75,7 +75,10 @@ export default async function PrivacyPage() {
       <h2>What is stored</h2>
       <h3>About you</h3>
       <ul>
-        <li>Your email address and, if you add one, your display name.</li>
+        <li>
+          Your email address or mobile number (whichever you signed up with)
+          and, if you add one, your display name.
+        </li>
         <li>
           Your password — only as a one-way argon2 hash; nobody, including me,
           can read it.
@@ -153,6 +156,11 @@ export default async function PrivacyPage() {
           names.
         </li>
         <li>
+          <strong>Africa&rsquo;s Talking</strong> (Nairobi, Kenya) — only when
+          you sign up or reset your password with a mobile number: your number
+          and the text carrying the one-time code.
+        </li>
+        <li>
           <strong>Google, Apple or Mozilla</strong> push services — only if you
           turn on phone reminders; the message is encrypted to your device.
         </li>
@@ -175,6 +183,10 @@ export default async function PrivacyPage() {
           Sign-in sessions: end after 7 days unused, and at most after 30 days.
         </li>
         <li>Failed sign-in counters: deleted after one day.</li>
+        <li>
+          One-time SMS codes: kept only as one-way hashes, work for 10 minutes,
+          and deleted within a day.
+        </li>
         <li>
           When you delete your account, everything above is deleted at once. The
           hosting provider&rsquo;s point-in-time backups may hold it for up to 7

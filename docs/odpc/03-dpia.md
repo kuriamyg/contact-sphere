@@ -42,11 +42,21 @@ sharing. Data inventory: [02-record-of-processing.md](02-record-of-processing.md
 | Provider breach (Neon, Render, Vercel)               | Low        | High   | Reputable processors with security certifications; encryption in transit and at rest by the providers; breach plan (05)          | Low–medium                             |
 | Data kept longer than needed                         | Low        | Low    | Trash purge at 30 days; immediate deletion; retention schedule (08)                                                              | Low                                    |
 
-## 5. Before public sign-up (B6)
+## 5. Public sign-up (B6, ADR 0018)
 
-- Phone verification by SMS adds a processor (Africa's Talking or a phone gateway):
-  update 02, 07 and this DPIA, and the privacy policy, before it goes live.
-- Consider limits per account to reduce the blast radius of abuse.
+- Sign-up and password reset by SMS code through **Africa's Talking** (Kenya):
+  it receives the mobile number and the text with the code. Listed in 02, 07,
+  08 and the privacy policy.
+- Added risks and controls:
+  - _Code guessed or intercepted_ — 6 random digits, 10 minutes, 5 tries,
+    stored only as a hash; a reset signs out every device. Residual: low
+    (SIM-swap remains; TOTP is the answer for high-value accounts).
+  - _Finding out who uses the app from a number_ — the API answers the same
+    for every number; only the SMS to the owner says an account exists.
+    Residual: low.
+  - _Texts used to annoy someone or run up cost_ — one a minute, five a day
+    per number and purpose, plus per-IP limits. Residual: low.
+- Production sign-up stays closed until a live key and plans (B9) exist.
 
 ## 6. Conclusion
 

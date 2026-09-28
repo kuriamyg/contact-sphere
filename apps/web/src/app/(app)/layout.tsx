@@ -11,7 +11,7 @@ import { Sidebar } from '@/components/shell/sidebar';
 import { WideSync } from '@/components/shell/wide-sync';
 import { isWide } from '@/lib/wide';
 import { getMessages } from '@/i18n/server';
-import { requireUser } from '@/lib/auth';
+import { requireUser, whoIs } from '@/lib/auth';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
 /** Everything under (app) requires a signed-in user, checked with the API on each request. */
@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
   const [user, m] = await Promise.all([requireUser(), getMessages()]);
   const t = m.client.shell;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const name = user.displayName ?? user.email;
+  const name = whoIs(user);
   return (
     <div className="flex min-h-full flex-1">
       <Sidebar name={name} colourKey={user.id} />
@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
               </nav>
               <ProfileMenu
                 name={name}
-                email={user.email}
+                email={user.email ?? user.phone ?? ''}
                 colourKey={user.id}
                 theme={theme}
               />

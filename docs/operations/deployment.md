@@ -51,6 +51,19 @@ Optional on the API (both services): `LOG_LEVEL` (`info` by default) and
 `BREACHED_PASSWORD_CHECK` (`on` by default in production; set `off` only to
 diagnose — ADR 0016).
 
+Open sign-up (ADR 0018), off unless set:
+
+| Variable           | Value                                                            |
+| ------------------ | ---------------------------------------------------------------- |
+| `OPEN_SIGNUP`      | `on` to allow sign-up and reset by SMS; unset or `off` otherwise |
+| `OTP_SMS_PROVIDER` | `africastalking` (required with `OPEN_SIGNUP=on`); `log` in dev  |
+| `AT_USERNAME`      | Africa's Talking app username (`sandbox` for the sandbox)        |
+| `AT_API_KEY`       | That app's API key — secret, Render only                         |
+| `AT_SENDER_ID`     | Optional approved sender ID (≤ 11 letters/digits)                |
+
+Staging runs the sandbox (texts appear in the Africa's Talking simulator);
+production stays closed until a live key exists.
+
 Generate each with `openssl rand -hex 32`. Staging and production secrets
 must differ. Changing one side without the other makes every page show the
 API as unavailable — change both, then redeploy both.
