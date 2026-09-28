@@ -12,6 +12,7 @@ import {
   LogOutIcon,
   MergeIcon,
   QrIcon,
+  ShieldIcon,
   TagIcon,
   UploadIcon,
   UserIcon,
@@ -37,9 +38,11 @@ export function ProfileMenu({
   email,
   colourKey,
   theme,
+  operator = false,
 }: {
   name: string;
   email: string;
+  operator?: boolean;
   colourKey: string;
   theme: Theme;
 }) {
@@ -136,6 +139,12 @@ export function ProfileMenu({
               <DownloadIcon className="size-[18px] text-muted" />
               {t.export}
             </a>
+            {operator && (
+              <Link href="/operator" className={item}>
+                <ShieldIcon className="size-[18px] text-emerald-500" />
+                {t.operator}
+              </Link>
+            )}
           </nav>
           <div className="mx-2 my-1 h-px bg-border" />
           <div className="space-y-2 px-3 pt-2 pb-2">

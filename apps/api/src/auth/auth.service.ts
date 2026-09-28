@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { TRIAL_DAYS } from '../billing/plans.service';
 import type { Env } from '../config/env';
 import { ENV } from '../config/env.provider';
 import { Prisma } from '../generated/prisma/client';
@@ -64,6 +65,11 @@ export interface Me {
   createdAt: string;
   totpEnabled: boolean;
   recoveryCodesLeft: number;
+  /** Runs the service: sees /operator (B9). */
+  operator: boolean;
+  plan: 'plus' | 'free';
+  /** When Plus (or the trial) ends; null if never had it. */
+  plusUntil: string | null;
 }
 
 /** One message for every login failure, so it never reveals which part was wrong. */
@@ -117,7 +123,8 @@ export class AuthService {
         throw new ConflictException('Setup has already been completed.');
       }
       const user = await tx.user.create({
-        data: { email: dto.email, passwordHash },
+        // The first account runs the service (B9, ADR 0019).
+        data: { email: dto.email, passwordHash, role: 'operator' },
         select: { id: true, email: true, phone: true },
       });
       const session = await this.sessions.create(
@@ -336,6 +343,8 @@ export class AuthService {
         locale: true,
         createdAt: true,
         totpEnabledAt: true,
+        role: true,
+        plusUntil: true,
       },
     });
     // A session whose user vanished cannot happen (cascade), but never
@@ -352,6 +361,13 @@ export class AuthService {
       recoveryCodesLeft: user.totpEnabledAt
         ? await this.totp.remainingRecoveryCodes(userId)
         : 0,
+      operator: user.role === 'operator',
+      plan:
+        user.role === 'operator' ||
+        (!!user.plusUntil && user.plusUntil > new Date())
+          ? 'plus'
+          : 'free',
+      plusUntil: user.plusUntil?.toISOString() ?? null,
     };
   }
 
@@ -417,6 +433,8 @@ export class AuthService {
             passwordHash,
             displayName: dto.displayName ?? null,
             locale: dto.locale ?? 'en',
+            // Everyone starts with a Plus trial (B9, ADR 0019).
+            plusUntil: new Date(Date.now() + TRIAL_DAYS * 86_400_000),
           },
           select: { id: true, email: true, phone: true },
         });

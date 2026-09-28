@@ -119,6 +119,19 @@ parties_ who never signed up; this belongs in the privacy policy.
 - **Cost abuse** is bounded: 10 texts a day per number at most, plus the
   per-IP rate limit on every public auth route.
 
+## Plans and payments (B9, ADR 0019)
+
+- **Forged payment callbacks:** Safaricom does not sign them. The callback
+  URL carries a secret token; it reaches the API only through the web
+  server (web-server secret); the checkout id must be ours and pending, and
+  the amount exact. Crediting is a conditional update — replaying a
+  callback credits nothing. Lost callbacks are recovered by Daraja's query.
+- **Operator page:** only `role = operator` (checked in the API on every
+  call; the web page is a 404 otherwise). It shows counts, never contacts.
+- **Hand-recorded payments** are unique by M-Pesa code, audited with the
+  operator's id, and cannot be deleted by the app role.
+- **Prompt spam:** one a minute and five a day per account.
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before

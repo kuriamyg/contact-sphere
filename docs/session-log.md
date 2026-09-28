@@ -589,3 +589,25 @@ and ODPC 02/03/07/08 updated. Tests: e2e +14 (signup), unit (config, mobile
 numbers, Africa's Talking client); browser flow 23/23 (sign-up, wrong code,
 resend limit, phone sign-in, reset in Kiswahili with a Kiswahili SMS, no CSP
 errors); with sign-up off, `/signup` and `/reset` redirect and the links hide.
+
+## 2026-09-28 — B9a: plans, payments and the operator page
+
+Plans Free and Plus (KES 99/month, 990/year); every sign-up gets a 30-day
+Plus trial; Free keeps 3 groups and no morning reminders (nothing is ever
+locked or deleted). Migration `plans_billing`: `users.role` (existing
+setup-made accounts become operator), `users.plus_until`, `payments`
+(CHECKs: method, status, months, amount, grants free, STK has checkout id,
+manual has receipt, receipt format, paid ⇔ paid_at; app role cannot
+delete). API: `/billing` status, M-Pesa STK via Daraja (token cached,
+password, query fallback, 3-minute expiry), callback checked by secret
+token + our pending checkout id + exact amount, credited once;
+`/operator/accounts` (counts only), free months, hand-recorded payments
+unique by M-Pesa code. Web: Profile → Your plan with the prompt and a
+self-updating status, pay-by-hand line, payment history; `/operator`
+(404 for others); the M-Pesa callback route forwards to the API; an app
+not-found page (the framework's inline-styled one broke the CSP). ADR 0019,
+privacy policy, threat model, ODPC 02/07/08, pilot playbook. Tests: unit
+(Daraja client, callback parsing, config), e2e +12, browser flow 22/22 —
+sign-up → trial → lapse → prompt → callback through the web server → paid
+without a reload; operator sees the client, records a hand payment,
+refuses the same code twice, gives a free month; Kiswahili; no CSP errors.

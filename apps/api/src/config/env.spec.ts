@@ -32,7 +32,49 @@ describe('loadEnv', () => {
       breachedPasswordCheck: false,
       logLevel: 'info',
       openSignup: false,
+      billing: { payTo: undefined, mpesa: undefined },
     });
+  });
+
+  it('M-Pesa prompts are off unless fully configured', () => {
+    const TOKEN = 'c'.repeat(64);
+    expect(() => loadEnv({ ...BASE, MPESA_PROVIDER: 'log' })).toThrow(
+      /MPESA_CALLBACK_TOKEN/,
+    );
+    expect(
+      loadEnv({ ...BASE, MPESA_PROVIDER: 'log', MPESA_CALLBACK_TOKEN: TOKEN })
+        .billing.mpesa,
+    ).toMatchObject({ provider: 'log', callbackToken: TOKEN });
+    expect(() =>
+      loadEnv({ ...PROD, MPESA_PROVIDER: 'log', MPESA_CALLBACK_TOKEN: TOKEN }),
+    ).toThrow(/not in production/);
+    const daraja = {
+      ...PROD,
+      MPESA_PROVIDER: 'daraja',
+      MPESA_CALLBACK_TOKEN: TOKEN,
+      MPESA_CONSUMER_KEY: 'k'.repeat(40),
+      MPESA_CONSUMER_SECRET: 's'.repeat(40),
+      MPESA_PASSKEY: 'p'.repeat(64),
+      MPESA_SHORTCODE: '174379',
+    };
+    expect(loadEnv(daraja).billing.mpesa).toMatchObject({
+      environment: 'sandbox',
+      type: 'paybill',
+      partyB: '174379',
+    });
+    expect(() => loadEnv({ ...daraja, MPESA_TYPE: 'till' })).toThrow(
+      /MPESA_TILL/,
+    );
+    expect(
+      loadEnv({ ...daraja, MPESA_TYPE: 'till', MPESA_TILL: '5123456' }).billing
+        .mpesa?.partyB,
+    ).toBe('5123456');
+    expect(() => loadEnv({ ...daraja, MPESA_SHORTCODE: 'abc' })).toThrow(
+      /MPESA_SHORTCODE/,
+    );
+    expect(() => loadEnv({ ...BASE, BILLING_PAY_TO: 'x'.repeat(121) })).toThrow(
+      /BILLING_PAY_TO/,
+    );
   });
 
   it('open sign-up is off by default and needs an SMS provider for codes', () => {

@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { FREE_GROUPS, GROUP_LIMIT, Plans } from '../billing/plans.service';
 import { writeVcard } from '../contacts/vcard/write';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -78,6 +80,7 @@ export class GroupsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly plans: Plans,
   ) {}
 
   async list(ownerId: string): Promise<GroupSummary[]> {
@@ -149,6 +152,12 @@ export class GroupsService {
   }
 
   async create(ownerId: string, dto: GroupInputDto): Promise<GroupSummary> {
+    if (
+      (await this.prisma.group.count({ where: { ownerId } })) >= FREE_GROUPS &&
+      !(await this.plans.isPlus(ownerId))
+    ) {
+      throw new ForbiddenException(GROUP_LIMIT);
+    }
     const g = await this.unique(() =>
       this.prisma.$transaction(async (tx) => {
         const created = await tx.group.create({

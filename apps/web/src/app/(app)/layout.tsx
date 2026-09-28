@@ -49,6 +49,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
               <ProfileMenu
                 name={name}
                 email={user.email ?? user.phone ?? ''}
+                operator={user.operator ?? false}
                 colourKey={user.id}
                 theme={theme}
               />

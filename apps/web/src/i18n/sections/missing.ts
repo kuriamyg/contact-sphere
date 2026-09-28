@@ -3,6 +3,9 @@ import { section } from '../section';
 /** The "not found" pages. */
 export const missing = section(
   {
+    pageTitle: 'Page not found',
+    pageBody: 'The link may be wrong, or the page is not for this account.',
+    pageBack: 'Go to Today',
     contactTitle: 'Contact not found',
     contactBody: 'It may have been deleted for good, or the link is wrong.',
     contactBack: 'Back to contacts',
@@ -15,6 +18,9 @@ export const missing = section(
     pairBack: 'Back to duplicates',
   },
   {
+    pageTitle: 'Ukurasa haukupatikana',
+    pageBody: 'Huenda kiungo si sahihi, au ukurasa si wa akaunti hii.',
+    pageBack: 'Nenda kwa Leo',
     contactTitle: 'Anwani haikupatikana',
     contactBody: 'Huenda imefutwa kabisa, au kiungo si sahihi.',
     contactBack: 'Rudi kwenye anwani',
