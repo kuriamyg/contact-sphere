@@ -25,6 +25,8 @@ const EXACT: Record<string, string> = {
   'Use “Sign out” to leave this device.':
     'Tumia “Toka” kuondoka kwenye kifaa hiki.',
   'That device is already signed out.': 'Kifaa hicho kimeshatolewa.',
+  'Enter a code from your authenticator app.':
+    'Weka msimbo kutoka programu yako ya uthibitishaji.',
   'Start two-factor setup first.':
     'Anza kuweka uthibitisho wa hatua mbili kwanza.',
   'Two-factor is already on.': 'Uthibitisho wa hatua mbili tayari umewashwa.',

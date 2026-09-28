@@ -217,6 +217,14 @@ export const client = section(
       confirmSignOut:
         '{n} change(s) made without data have not been sent yet. Sign out and lose them?',
     },
+    deleteAccount: {
+      password: 'Your password',
+      code: 'Code from your authenticator app (or a recovery code)',
+      confirm: 'Type DELETE to confirm',
+      confirmHint: 'In capitals. This cannot be undone.',
+      submit: 'Delete my account and all its data',
+      deleting: 'Deleting…',
+    },
     clashes: {
       title: 'Changed in two places',
       body: 'You edited {name} without data, and it was also changed elsewhere. The other change was kept for:',
@@ -561,6 +569,14 @@ export const client = section(
       keepCopy: 'Weka nakala kwenye simu hii',
       confirmSignOut:
         'Mabadiliko {n} uliyofanya bila data bado hayajatumwa. Utoke na uyapoteze?',
+    },
+    deleteAccount: {
+      password: 'Nenosiri lako',
+      code: 'Msimbo kutoka programu yako ya uthibitishaji (au msimbo wa dharura)',
+      confirm: 'Andika DELETE ili kuthibitisha',
+      confirmHint: 'Kwa herufi kubwa. Hili haliwezi kutenduliwa.',
+      submit: 'Futa akaunti yangu na data yake yote',
+      deleting: 'Inafuta…',
     },
     clashes: {
       title: 'Imebadilishwa sehemu mbili',

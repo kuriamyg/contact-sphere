@@ -5,6 +5,17 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Delete your account; privacy policy and terms (B7)
+
+- **Profile → Delete your account**: removes your account and everything in
+  it at once, after your password (and a two-factor code if it is on) and
+  typing DELETE. It offers the .vcf export first and clears this phone's
+  offline copy afterwards.
+- **Privacy policy** and **terms of use**, public and linked from sign-in,
+  account creation, the home page and Profile. In English, with a Kiswahili
+  summary for Kiswahili readers.
+- The web server now runs in Frankfurt, next to the API and database.
+
 ### Security — Hardening (A5)
 
 - **See your devices**: Profile → Devices and sign-out lists where you are

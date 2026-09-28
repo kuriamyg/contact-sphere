@@ -32,6 +32,7 @@ mattered.
 | [0014](0014-languages.md)                        | Languages: English and Kiswahili                           | Accepted |
 | [0015](0015-offline-edits-and-conflicts.md)      | Offline edits: field-level merge, owner decides clashes    | Accepted |
 | [0016](0016-hardening.md)                        | Hardening: lock-out, devices, breached passwords, logs     | Accepted |
+| [0017](0017-account-deletion-and-legal.md)       | Account deletion, privacy policy and terms                 | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.

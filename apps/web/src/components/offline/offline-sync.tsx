@@ -8,6 +8,7 @@ import {
   readInfo,
   REFRESH_MS,
   syncNow,
+  wipe,
   wipeCopyOnly,
 } from '@/lib/offline-store';
 
@@ -45,6 +46,17 @@ export function OfflineSync() {
 export function OfflineGuard() {
   useEffect(() => {
     void wipeCopyOnly();
+  }, []);
+  return null;
+}
+
+/**
+ * After the account was deleted: remove everything this device kept for it
+ * — the copy, the switch, unsent changes and edit clashes (B7).
+ */
+export function WipeAll() {
+  useEffect(() => {
+    wipe();
   }, []);
   return null;
 }

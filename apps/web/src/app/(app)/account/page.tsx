@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { logout, logoutEverywhere, signOutDevice } from '@/app/actions/auth';
+import { DeleteAccountForm } from '@/components/account/delete-account-form';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { TwoFactorSection } from '@/components/auth/two-factor-section';
 import { Avatar } from '@/components/avatar';
@@ -14,6 +15,7 @@ import {
   QrIcon,
   ShieldIcon,
   SunIcon,
+  TrashIcon,
   UploadIcon,
   UserIcon,
 } from '@/components/icons';
@@ -166,7 +168,9 @@ export default async function ProfilePage() {
                 ['appearance-heading', m.client.shell.appearance],
                 ['offline-heading', t.offlineTitle],
                 ['data-heading', t.dataTitle],
+                ['legal-heading', t.legalTitle],
                 ['sessions-heading', t.signOutTitle],
+                ['delete-heading', t.deleteTitle],
               ] as const
             ).map(([id, label]) => (
               <li key={id}>
@@ -319,6 +323,24 @@ export default async function ProfilePage() {
           </section>
 
           <section
+            aria-labelledby="legal-heading"
+            className={`${card} space-y-3`}
+          >
+            <CardTitle id="legal-heading" icon={<ShieldIcon />}>
+              {t.legalTitle}
+            </CardTitle>
+            <p className="text-sm text-muted">{t.legalBody}</p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/privacy" className={button}>
+                {t.privacy}
+              </Link>
+              <Link href="/terms" className={button}>
+                {t.terms}
+              </Link>
+            </div>
+          </section>
+
+          <section
             aria-labelledby="sessions-heading"
             className={`${card} space-y-4`}
           >
@@ -404,6 +426,25 @@ export default async function ProfilePage() {
                 </form>
               </WipeOnSubmit>
             </div>
+          </section>
+
+          <section
+            aria-labelledby="delete-heading"
+            className={`${card} space-y-4`}
+          >
+            <CardTitle id="delete-heading" icon={<TrashIcon />}>
+              {t.deleteTitle}
+            </CardTitle>
+            <p className="max-w-prose text-sm text-muted">{t.deleteBody}</p>
+            <a
+              href="/contacts/export"
+              download
+              className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline"
+            >
+              <DownloadIcon className="size-4" />
+              {t.deleteExport}
+            </a>
+            <DeleteAccountForm twoFactor={user.totpEnabled} />
           </section>
         </div>
       </div>

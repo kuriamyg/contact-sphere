@@ -66,6 +66,14 @@ export const DownloadIcon = (p: IconProps) => (
     <path d="M5 21h14" />
   </Svg>
 );
+export const TrashIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7h16" />
+    <path d="M10 11v6M14 11v6" />
+    <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+    <path d="M9 7V4h6v3" />
+  </Svg>
+);
 export const UploadIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 21V9" />

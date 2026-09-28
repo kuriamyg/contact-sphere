@@ -544,3 +544,20 @@ including lock surviving a new instance and breach refusal/outage; browser
 A5 flow 19/19 (two devices, sign one out, Kiswahili, lock across a real
 API restart, 248 real log lines scanned: no contact data, email, password,
 token, secret, device label or search words).
+
+## 2026-09-28 — Portfolio F; B7: account deletion, privacy policy, terms
+
+Portfolio (coderiserdigital): services section, Contact Sphere case study with
+demo-data screenshots, printable CV, one-setting custom domain, GoatCounter
+stats (moseskuria) on, GA4 removed and `unsafe-inline` dropped from
+script-src; GitHub profile README created.
+
+B7: `POST /auth/account/delete` (password, code when 2FA, `DELETE`; one
+transaction, cascade; audit counts only), Profile section with export
+first, `?deleted=1` wipes the device copy — found and fixed a race where the
+sign-in guard re-created the deleted IndexedDB (`openExisting`). Public
+`/privacy` and `/terms` (English governs, Kiswahili summary), consent line on
+account creation, links everywhere; web server pinned to Frankfurt (fra1).
+ADR 0017. Tests: e2e +4 (wrong password/confirm, every table emptied for that
+owner only, audit counts only, 2FA needs a code and a recovery code works);
+browser B7 flow 20/20; A4 and offline flows re-run.

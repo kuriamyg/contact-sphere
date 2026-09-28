@@ -28,7 +28,12 @@ import {
   ProfileDto,
   SetupDto,
 } from './dto/credentials.dto';
-import { MfaLoginDto, TotpCodeDto, TotpDisableDto } from './dto/totp.dto';
+import {
+  DeleteAccountDto,
+  MfaLoginDto,
+  TotpCodeDto,
+  TotpDisableDto,
+} from './dto/totp.dto';
 import type { SessionView } from './session.service';
 import { TotpService } from './totp.service';
 
@@ -136,6 +141,17 @@ export class AuthController {
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<void> {
     return this.auth.endSession(a.userId, a.sessionId, id);
+  }
+
+  /** Deletes the account and all its data, for good. */
+  @Throttle(STRICT)
+  @Post('account/delete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteAccount(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: DeleteAccountDto,
+  ): Promise<void> {
+    return this.auth.deleteAccount(a.userId, dto.password, dto.code);
   }
 
   @Post('logout-all')
