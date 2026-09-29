@@ -85,6 +85,7 @@ describe('Continue with Google (ADR 0020)', () => {
       google: true,
       password: false,
       googleClientId: 'test-client',
+      turnstileSiteKey: null,
     });
     await api('post', '/auth/signup/code')
       .send({ phone: '0712000101' })

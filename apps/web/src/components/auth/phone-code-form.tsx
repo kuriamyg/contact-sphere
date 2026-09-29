@@ -13,6 +13,7 @@ import { useMessages } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
 
 import { Field, FormMessage, SubmitButton } from './field';
+import { Turnstile, type TurnstileProps } from './turnstile';
 
 const ACTIONS = {
   signup: { send: sendSignupCode, finish: signup },
@@ -23,7 +24,13 @@ const ACTIONS = {
  * Two steps on one page (B6): the mobile number, then the code from the SMS
  * with the new password. Used for sign-up and for "forgot password".
  */
-export function PhoneCodeForm({ purpose }: { purpose: 'signup' | 'reset' }) {
+export function PhoneCodeForm({
+  purpose,
+  turnstile,
+}: {
+  purpose: 'signup' | 'reset';
+  turnstile?: TurnstileProps | null;
+}) {
   const { send, finish } = ACTIONS[purpose];
   const [sent, sendAction, sending] = useActionState<PhoneCodeState, FormData>(
     send,
@@ -76,6 +83,7 @@ export function PhoneCodeForm({ purpose }: { purpose: 'signup' | 'reset' }) {
           required
           autoFocus
         />
+        {turnstile && <Turnstile {...turnstile} resetKey={sent} />}
         <SubmitButton spinner pending={sending} pendingText={t.sending}>
           {t.sendCode}
         </SubmitButton>

@@ -37,6 +37,7 @@ mattered.
 | [0019](0019-plans-and-payments.md)               | Plans, payments and the operator                           | Accepted |
 | [0020](0020-google-sign-in.md)                   | Continue with Google replaces SMS sign-up                  | Accepted |
 | [0021](0021-phone-password-signup.md)            | Sign-up with a phone number, a password and a recovery key | Accepted |
+| [0022](0022-bot-check-on-signup.md)              | "Not a robot" check on sign-up (Cloudflare Turnstile)      | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.

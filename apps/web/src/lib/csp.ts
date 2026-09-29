@@ -14,9 +14,17 @@
 export const DISPLAY_NONE_HASH =
   'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE=';
 
-export function buildCsp(nonce: string, dev: boolean): string {
+/** Cloudflare Turnstile's widget frame (C3), on sign-up pages only. */
+export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
+
+export function buildCsp(
+  nonce: string,
+  dev: boolean,
+  opts: { turnstile?: boolean } = {},
+): string {
   return [
     "default-src 'self'",
+    ...(opts.turnstile ? [`frame-src ${TURNSTILE_ORIGIN}`] : []),
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-hashes' '${DISPLAY_NONE_HASH}'`,
     "img-src 'self' blob: data:",

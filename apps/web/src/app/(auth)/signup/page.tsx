@@ -11,6 +11,7 @@ import { logoutToSignup } from '@/app/actions/auth';
 import { fmt } from '@/i18n/format';
 import { GoogleButton, OrDivider } from '@/components/auth/google-button';
 import { currentUser, signupStatus, whoIs } from '@/lib/auth';
+import { turnstileFor } from '@/lib/turnstile';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('signUp');
 
@@ -21,9 +22,10 @@ export const generateMetadata = (): Promise<Metadata> => pageTitle('signUp');
 export default async function SignupPage() {
   const status = await signupStatus();
   if (!status.open) redirect('/login');
-  const [user, m] = await Promise.all([
+  const [user, m, turnstile] = await Promise.all([
     currentUser().catch(() => null),
     getMessages(),
+    turnstileFor(status),
   ]);
   // Already signed in: the usual pattern — who, continue, or switch.
   if (user) {
@@ -75,9 +77,9 @@ export default async function SignupPage() {
       )}
       {/* An SMS code proves the number, so it wins when both are on. */}
       {status.sms ? (
-        <PhoneCodeForm purpose="signup" />
+        <PhoneCodeForm purpose="signup" turnstile={turnstile} />
       ) : (
-        status.password && <RegisterForm />
+        status.password && <RegisterForm turnstile={turnstile} />
       )}
       <Consent />
       <p className="text-sm text-muted">

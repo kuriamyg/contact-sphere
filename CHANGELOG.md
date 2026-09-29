@@ -5,6 +5,12 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — "Not a robot" check on sign-up (off until switched on)
+
+- Cloudflare Turnstile on phone + password sign-up and on SMS-code
+  requests: usually invisible, sometimes one tap. Switched on by setting
+  two free Cloudflare keys on the API.
+
 ### Added — Encrypted backup and restore
 
 - Profile → **Encrypted backup**: choose a passphrase and download all your

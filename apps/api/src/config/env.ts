@@ -91,12 +91,24 @@ export interface Env {
    */
   google?: GoogleConfig;
   /**
+   * Cloudflare Turnstile on password sign-up and SMS-code requests (C3).
+   * Unset = no check. `fake` accepts the token "pass" (tests only).
+   */
+  turnstile?: TurnstileConfig;
+  /**
    * How new people may join when OPEN_SIGNUP=on: SIGNUP_METHODS lists
    * google, sms and/or password. Google and SMS need their own
    * configuration; password (phone + password + recovery key, ADR 0021)
    * needs none.
    */
   signupMethods: SignupMethod[];
+}
+
+export interface TurnstileConfig {
+  provider: 'cloudflare' | 'fake';
+  /** Public: rendered in the sign-up page. */
+  siteKey: string;
+  secret: string;
 }
 
 const SIGNUP_METHODS = ['google', 'sms', 'password'] as const;
@@ -476,6 +488,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     ),
     logLevel: parseLogLevel(source.LOG_LEVEL, nodeEnv),
     ...parseSignup(source, nodeEnv),
+    turnstile: parseTurnstile(source, nodeEnv),
     billing: parseBilling(source, nodeEnv),
   };
 }
@@ -561,6 +574,31 @@ function parseMpesa(
     partyB: type === 'till' ? (till as string) : shortcode,
     callbackToken,
   };
+}
+
+function parseTurnstile(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): TurnstileConfig | undefined {
+  const siteKey = source.TURNSTILE_SITE_KEY?.trim();
+  const secret = source.TURNSTILE_SECRET_KEY?.trim();
+  if (!siteKey && !secret) return undefined;
+  if (!siteKey || !secret) {
+    throw new EnvError(
+      'Set both TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY, or neither.',
+    );
+  }
+  const key = /^[\w-]{10,100}$/;
+  if (!key.test(siteKey) || !key.test(secret)) {
+    throw new EnvError('TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY look wrong.');
+  }
+  const fake = source.TURNSTILE_PROVIDER?.trim() === 'fake';
+  if (fake && nodeEnv === 'production') {
+    throw new EnvError(
+      'TURNSTILE_PROVIDER=fake is for tests; not in production.',
+    );
+  }
+  return { provider: fake ? 'fake' : 'cloudflare', siteKey, secret };
 }
 
 function parseSignup(

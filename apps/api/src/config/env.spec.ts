@@ -69,6 +69,31 @@ describe('loadEnv', () => {
     );
   });
 
+  it('Turnstile needs both keys, and the fake only outside production (C3)', () => {
+    expect(loadEnv({ ...BASE }).turnstile).toBeUndefined();
+    expect(() =>
+      loadEnv({ ...BASE, TURNSTILE_SITE_KEY: '1x00000000000000000000AA' }),
+    ).toThrow(/both TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY/);
+    expect(
+      loadEnv({
+        ...BASE,
+        TURNSTILE_SITE_KEY: '0x4AAAAAAAabcdefghijkl',
+        TURNSTILE_SECRET_KEY: '0x4AAAAAAAsecret_secret-0123',
+      }).turnstile,
+    ).toEqual({
+      provider: 'cloudflare',
+      siteKey: '0x4AAAAAAAabcdefghijkl',
+      secret: '0x4AAAAAAAsecret_secret-0123',
+    });
+    expect(() =>
+      loadEnv({
+        ...BASE,
+        TURNSTILE_SITE_KEY: 'has spaces in it',
+        TURNSTILE_SECRET_KEY: '0x4AAAAAAAsecret_secret-0123',
+      }),
+    ).toThrow(/look wrong/);
+  });
+
   it('M-Pesa prompts are off unless fully configured', () => {
     const TOKEN = 'c'.repeat(64);
     expect(() => loadEnv({ ...BASE, MPESA_PROVIDER: 'log' })).toThrow(

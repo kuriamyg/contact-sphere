@@ -30,8 +30,8 @@ refresh) · 💤 waiting on something outside the code.
 | --- | -------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | C1  | Plan-ending nudge                            | ✅     | Banner before Plus ends and after it ends; morning push at 3 and 1 days left. People pay when reminded at the right moment.                                                         |
 | C2  | Encrypted backup and restore (ADR 0009)      | ✅     | A passphrase-encrypted file made on the phone; restore adds what is missing. "Last backup" date and a monthly reminder. Answers "what if I lose my phone / the service goes away?". |
-| C3  | Bot protection on sign-up (Turnstile)        | 🔨     | Invisible check on phone + password sign-up and SMS-code requests; off until the owner adds free Cloudflare keys.                                                                   |
-| C4  | Docs refresh                                 | ⏳     | Pilot playbook (new sign-up flow), backlog, roadmap, deployment settings.                                                                                                           |
+| C3  | Bot protection on sign-up (Turnstile)        | ✅     | Invisible check on phone + password sign-up and SMS-code requests; off until the owner adds free Cloudflare keys.                                                                   |
+| C4  | Docs refresh                                 | 🔨     | Pilot playbook (new sign-up flow), backlog, roadmap, deployment settings.                                                                                                           |
 | C5  | Server-kept encrypted backup history (later) | 💤     | Optional: keep the last N encrypted backups on the server (it still cannot read them). Only if people ask; costs storage.                                                           |
 
 ### Last — after the money comes in
@@ -71,7 +71,9 @@ refresh) · 💤 waiting on something outside the code.
 - [ ] Render: health check path `/health` on both services.
 - [ ] ODPC registration (pack in `docs/odpc/`, KES 4,000), then send the
       number for the privacy policy.
-- [ ] Cloudflare Turnstile keys (free) when C3 ships, if bots appear.
+- [ ] Cloudflare Turnstile keys (free, ADR 0022): Turnstile → Add widget
+      for `contact-sphere-nine.vercel.app`, then set `TURNSTILE_SITE_KEY` and
+      `TURNSTILE_SECRET_KEY` on the production API.
 - [ ] Later: a domain (email), a till/paybill for Daraja, a sender ID.
 - [ ] First pilot: send a friend `/signup`, give 3 free months on
       `/operator`, talk at week 2 and week 6 (`docs/product/pilot.md`).
