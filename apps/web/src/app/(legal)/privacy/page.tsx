@@ -176,6 +176,12 @@ export default async function PrivacyPage() {
           email. We send Google nothing about your contacts.
         </li>
         <li>
+          <strong>Cloudflare Turnstile</strong> — only on the sign-up and
+          password-reset pages, when this protection is switched on: it checks
+          that a person, not a program, is using the page. It sees your browser
+          and connection, never your contacts.
+        </li>
+        <li>
           <strong>Safaricom (M-Pesa)</strong> — only when you pay in the app:
           your M-Pesa number and the amount, for the payment prompt.
         </li>

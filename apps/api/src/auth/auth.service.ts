@@ -42,6 +42,7 @@ import {
   type SessionView,
 } from './session.service';
 import { GOOGLE_OIDC, type GoogleOidc } from './google-oidc';
+import { HUMAN_CHECK, type HumanCheck } from './turnstile';
 import {
   hashRecoveryKey,
   newRecoveryKey,
@@ -110,6 +111,7 @@ const NUMBER_TAKEN = 'This number already has an account. Sign in instead.';
 /** One message for every failed recovery, like INVALID_LOGIN. */
 const RECOVERY_FAILED =
   'That account and recovery key do not match. Check both and try again.';
+const NOT_HUMAN = 'Please confirm you are not a robot, then try again.';
 const TOO_MANY_ATTEMPTS =
   'Too many failed attempts for this account. Try again in 15 minutes.';
 
@@ -128,7 +130,15 @@ export class AuthService {
     private readonly codes: PhoneCodes,
     @Inject(ENV) private readonly env: Env,
     @Inject(GOOGLE_OIDC) private readonly google: GoogleOidc | null,
+    @Inject(HUMAN_CHECK) private readonly human: HumanCheck | null,
   ) {}
+
+  /** Cloudflare Turnstile, when configured (C3); a no-op otherwise. */
+  private async requireHuman(token: string | undefined): Promise<void> {
+    if (this.human && !(await this.human.verify(token))) {
+      throw new BadRequestException(NOT_HUMAN);
+    }
+  }
 
   /** Setup is possible only with a configured token and no account yet. */
   async setupAvailable(): Promise<boolean> {
@@ -605,6 +615,7 @@ export class AuthService {
     google: boolean;
     password: boolean;
     googleClientId: string | null;
+    turnstileSiteKey: string | null;
   } {
     return {
       open: this.signupOpen(),
@@ -612,6 +623,10 @@ export class AuthService {
       google: this.googleSignupOpen(),
       password: this.passwordSignupOpen(),
       googleClientId: this.google ? (this.env.google?.clientId ?? null) : null,
+      // Public by design: it is in the sign-up page.
+      turnstileSiteKey: this.human
+        ? (this.env.turnstile?.siteKey ?? null)
+        : null,
     };
   }
 
@@ -626,6 +641,7 @@ export class AuthService {
     device: string | null = null,
   ): Promise<SessionResult & { recoveryKey: string }> {
     if (!this.passwordSignupOpen()) throw new NotFoundException();
+    await this.requireHuman(dto.turnstileToken);
     const phone = kenyanMobile(dto.phone);
     if (!phone) throw new BadRequestException(NOT_A_MOBILE);
     const problem = passwordProblem(dto.password, phone);
@@ -768,8 +784,14 @@ export class AuthService {
   }
 
   /** Step 1 of sign-up: text a code to the number (B6). */
-  async sendSignupCode(phone: string, locale?: 'en' | 'sw'): Promise<void> {
+  async sendSignupCode(
+    phone: string,
+    locale?: 'en' | 'sw',
+    turnstileToken?: string,
+  ): Promise<void> {
     if (!this.smsSignupOpen()) throw new NotFoundException();
+    // Every text costs money: people only.
+    await this.requireHuman(turnstileToken);
     await this.codes.send('signup', phone, locale);
   }
 
@@ -830,8 +852,13 @@ export class AuthService {
   }
 
   /** Forgot password, step 1: a code to the account's number, if any. */
-  async sendResetCode(phone: string, locale?: 'en' | 'sw'): Promise<void> {
+  async sendResetCode(
+    phone: string,
+    locale?: 'en' | 'sw',
+    turnstileToken?: string,
+  ): Promise<void> {
     if (!this.codes.enabled) throw new NotFoundException();
+    await this.requireHuman(turnstileToken);
     await this.codes.send('reset', phone, locale);
   }
 

@@ -84,6 +84,12 @@ export class PhoneCodeDto {
   @MaxLength(32)
   phone!: string;
 
+  /** Cloudflare Turnstile's one-use token, when the check is on (C3). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  turnstileToken?: string;
+
   @IsOptional()
   @IsIn(LOCALES)
   locale?: 'en' | 'sw';
@@ -144,6 +150,12 @@ export class RegisterDto {
   @IsOptional()
   @IsIn(LOCALES)
   locale?: 'en' | 'sw';
+
+  /** Cloudflare Turnstile's one-use token, when the check is on (C3). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  turnstileToken?: string;
 }
 
 /** Forgot password without SMS: the recovery key proves the account. */

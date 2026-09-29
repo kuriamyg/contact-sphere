@@ -19,6 +19,8 @@ const EXACT: Record<string, string> = {
     'Msimbo huo umeisha muda. Omba mpya.',
   'This number already has an account. Sign in instead.':
     'Nambari hii tayari ina akaunti. Ingia badala yake.',
+  'Please confirm you are not a robot, then try again.':
+    'Tafadhali thibitisha kuwa wewe si roboti, kisha ujaribu tena.',
   'This is not a Contact Sphere backup.': 'Hii si nakala ya Contact Sphere.',
   'This backup was made by a newer version of Contact Sphere.':
     'Nakala hii ilitengenezwa na toleo jipya zaidi la Contact Sphere.',

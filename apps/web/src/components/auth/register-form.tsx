@@ -6,12 +6,17 @@ import { register, type RegisterState } from '@/app/actions/auth';
 import { useMessages } from '@/i18n/client';
 
 import { Field, FormMessage, SubmitButton } from './field';
+import { Turnstile, type TurnstileProps } from './turnstile';
 
 /**
  * Sign-up with a mobile number and a password (ADR 0021): one step, no
  * code. The recovery key is shown on the next page.
  */
-export function RegisterForm() {
+export function RegisterForm({
+  turnstile,
+}: {
+  turnstile?: TurnstileProps | null;
+}) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(
     register,
     {},
@@ -55,6 +60,7 @@ export function RegisterForm() {
         minLength={12}
         required
       />
+      {turnstile && <Turnstile {...turnstile} resetKey={state} />}
       <SubmitButton spinner pending={pending} pendingText={t.creating}>
         {t.create}
       </SubmitButton>

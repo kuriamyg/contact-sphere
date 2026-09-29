@@ -169,7 +169,11 @@ async function sendCode(
   const res = await api(path, {
     method: 'POST',
     auth: false,
-    body: { phone, locale: await getLocale() },
+    body: {
+      phone,
+      locale: await getLocale(),
+      ...optional('turnstileToken', field(form, 'turnstileToken')),
+    },
   });
   if (res.status !== 204) {
     // A failed resend keeps the code step open; a failed first send does not.
@@ -269,6 +273,7 @@ export async function register(
         password,
         locale: await getLocale(),
         ...optional('displayName', displayName),
+        ...optional('turnstileToken', field(form, 'turnstileToken')),
       },
     },
   );

@@ -100,7 +100,7 @@ export class AuthController {
   @Post('signup/code')
   @HttpCode(HttpStatus.NO_CONTENT)
   signupCode(@Body() dto: PhoneCodeDto): Promise<void> {
-    return this.auth.sendSignupCode(dto.phone, dto.locale);
+    return this.auth.sendSignupCode(dto.phone, dto.locale, dto.turnstileToken);
   }
 
   /** Sign-up step 2: the code, a password; returns a session. */
@@ -143,7 +143,7 @@ export class AuthController {
   @Post('reset/code')
   @HttpCode(HttpStatus.NO_CONTENT)
   resetCode(@Body() dto: PhoneCodeDto): Promise<void> {
-    return this.auth.sendResetCode(dto.phone, dto.locale);
+    return this.auth.sendResetCode(dto.phone, dto.locale, dto.turnstileToken);
   }
 
   /** Forgot password step 2: the code and a new password. */

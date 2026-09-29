@@ -73,6 +73,16 @@ Sign-in with Google (ADR 0020):
 no other setting. Production runs `SIGNUP_METHODS=google,password` once the
 Google client exists, `password` until then.
 
+Bot check on sign-up (ADR 0022), off unless both are set:
+
+| Variable               | Value                                  |
+| ---------------------- | -------------------------------------- |
+| `TURNSTILE_SITE_KEY`   | Cloudflare Turnstile site key (public) |
+| `TURNSTILE_SECRET_KEY` | Its secret key — secret, Render only   |
+
+In Cloudflare: Turnstile → Add widget → hostname
+`contact-sphere-nine.vercel.app`, mode "Managed".
+
 In Google Cloud the client's **authorised redirect URI** is
 `https://contact-sphere-nine.vercel.app/auth/google/callback` (every
 `WEB_ORIGIN` + `/auth/google/callback`).

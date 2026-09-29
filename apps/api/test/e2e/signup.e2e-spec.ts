@@ -79,6 +79,7 @@ describe('open sign-up (B6)', () => {
       google: false,
       password: false,
       googleClientId: null,
+      turnstileSiteKey: null,
     });
     const { app: closed } = await createTestApp();
     const s = closed.getHttpServer();

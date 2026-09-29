@@ -89,6 +89,8 @@ export interface SignupStatus {
   password: boolean;
   /** Set when "Continue with Google" works, for new or existing accounts. */
   googleClientId: string | null;
+  /** Cloudflare Turnstile's public site key, when the check is on (C3). */
+  turnstileSiteKey: string | null;
 }
 
 /** How people can join and sign in here. */
@@ -104,6 +106,7 @@ export async function signupStatus(): Promise<SignupStatus> {
     google: d.google ?? false,
     password: d.password ?? false,
     googleClientId: d.googleClientId ?? null,
+    turnstileSiteKey: d.turnstileSiteKey ?? null,
   };
 }
 

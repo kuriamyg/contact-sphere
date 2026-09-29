@@ -48,4 +48,10 @@ describe('newNonce', () => {
     expect(atob(a)).toHaveLength(16);
     expect(newNonce()).not.toBe(a);
   });
+  it('frames Cloudflare Turnstile only when asked (sign-up pages, C3)', () => {
+    expect(buildCsp('n', false)).not.toContain('frame-src');
+    expect(buildCsp('n', false, { turnstile: true })).toContain(
+      'frame-src https://challenges.cloudflare.com',
+    );
+  });
 });

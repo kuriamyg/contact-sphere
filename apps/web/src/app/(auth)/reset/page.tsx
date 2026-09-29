@@ -5,6 +5,7 @@ import { PhoneCodeForm } from '@/components/auth/phone-code-form';
 import { RecoverForm } from '@/components/auth/recovery-key';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { signupStatus } from '@/lib/auth';
+import { turnstileFor } from '@/lib/turnstile';
 
 export const generateMetadata = (): Promise<Metadata> =>
   pageTitle('resetPassword');
@@ -24,6 +25,7 @@ export default async function ResetPage({
     getMessages(),
   ]);
   const bySms = status.sms && sms === '1';
+  const turnstile = bySms ? await turnstileFor(status) : null;
   return (
     <>
       <header className="space-y-2">
@@ -34,7 +36,11 @@ export default async function ResetPage({
           {bySms ? m.auth.resetLead : m.auth.resetLeadKey}
         </p>
       </header>
-      {bySms ? <PhoneCodeForm purpose="reset" /> : <RecoverForm />}
+      {bySms ? (
+        <PhoneCodeForm purpose="reset" turnstile={turnstile} />
+      ) : (
+        <RecoverForm />
+      )}
       <div className="space-y-2 text-sm text-muted">
         {status.sms && !bySms && (
           <p>

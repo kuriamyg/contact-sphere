@@ -9,7 +9,11 @@ import { buildCsp, newNonce } from './lib/csp';
  */
 export function proxy(request: NextRequest) {
   const nonce = newNonce();
-  const csp = buildCsp(nonce, process.env.NODE_ENV === 'development');
+  // Only the pages with the "not a robot" check may frame Cloudflare (C3).
+  const { pathname } = request.nextUrl;
+  const csp = buildCsp(nonce, process.env.NODE_ENV === 'development', {
+    turnstile: pathname === '/signup' || pathname === '/reset',
+  });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
