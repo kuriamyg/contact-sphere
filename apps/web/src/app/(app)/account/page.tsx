@@ -37,6 +37,7 @@ import { getContactStats } from '@/lib/contacts';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
 import { getBilling } from '@/lib/billing';
+import { PlanNoticeSlot } from '@/components/billing/plan-notice-slot';
 import { PlanSection } from '@/components/billing/plan-section';
 import { fmt } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
@@ -232,6 +233,7 @@ export default async function ProfilePage() {
               <CardTitle id="plan-heading" icon={<CheckIcon />}>
                 {m.billing.planTitle}
               </CardTitle>
+              <PlanNoticeSlot user={user} locale={locale} />
               <PlanSection
                 billing={billing}
                 phone={user.phone ?? null}

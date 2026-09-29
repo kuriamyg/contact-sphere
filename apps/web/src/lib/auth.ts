@@ -19,6 +19,8 @@ export interface CurrentUser {
   operator?: boolean;
   plan?: 'plus' | 'free';
   plusUntil?: string | null;
+  /** Has ever paid for Plus (not only the trial or free months). */
+  paidPlus?: boolean;
   /** False for accounts that sign in with Google only (ADR 0020). */
   hasPassword?: boolean;
   google?: boolean;

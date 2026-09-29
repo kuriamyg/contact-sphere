@@ -88,6 +88,8 @@ export interface Me {
   plan: 'plus' | 'free';
   /** When Plus (or the trial) ends; null if never had it. */
   plusUntil: string | null;
+  /** Has ever paid for Plus (not only the trial or free months). */
+  paidPlus: boolean;
 }
 
 /** One message for every login failure, so it never reveals which part was wrong. */
@@ -496,6 +498,13 @@ export class AuthService {
     // A session whose user vanished cannot happen (cascade), but never
     // answer "who am I" with nothing.
     if (!user) throw new UnauthorizedException();
+    const paid = await this.prisma.payment.count({
+      where: {
+        ownerId: userId,
+        status: 'paid',
+        method: { in: ['mpesa_stk', 'manual'] },
+      },
+    });
     return {
       id: user.id,
       email: user.email,
@@ -518,6 +527,7 @@ export class AuthService {
           ? 'plus'
           : 'free',
       plusUntil: user.plusUntil?.toISOString() ?? null,
+      paidPlus: paid > 0,
     };
   }
 

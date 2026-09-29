@@ -12,7 +12,7 @@ import { Plans, PLUS_REMINDERS } from '../billing/plans.service';
 import type { Env } from '../config/env';
 import { ENV } from '../config/env.provider';
 import { PrismaService } from '../prisma/prisma.service';
-import { nairobiToday } from '../remember/dates';
+import { daysBetween, nairobiToday } from '../remember/dates';
 import { RememberService, type TodayView } from '../remember/remember.service';
 import { PushService } from './push.service';
 import { EMAIL_PROVIDER, type EmailProvider } from './email-provider';
@@ -111,6 +111,29 @@ export function digestText(v: TodayView, locale: Locale = 'en'): string | null {
       ? parts[0]
       : `${parts.slice(0, -1).join(', ')} ${w.and} ${parts[parts.length - 1]}`;
   return `${w.today}: ${list}.`;
+}
+
+/**
+ * The plan line of the morning reminder (C1): 3 days and 1 day before Plus
+ * ends. Trial or free months say "free Plus"; a paying owner is asked to
+ * renew. Safe on a locked screen: no names, no amounts owed.
+ */
+export function planReminder(
+  daysLeft: number,
+  paid: boolean,
+  locale: Locale = 'en',
+): string | null {
+  if (daysLeft !== 3 && daysLeft !== 1) return null;
+  if (locale === 'sw') {
+    const when = daysLeft === 1 ? 'kesho' : `baada ya siku ${daysLeft}`;
+    return paid
+      ? `Plus yako inaisha ${when}. Ilipie tena kwa KES 99 kwa mwezi.`
+      : `Plus yako ya bure inaisha ${when}. Iendeleze kwa KES 99 kwa mwezi.`;
+  }
+  const when = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+  return paid
+    ? `Your Plus ends ${when}. Renew for KES 99 a month.`
+    : `Your free Plus ends ${when}. Keep it for KES 99 a month.`;
 }
 
 const asLocale = (l: string | null | undefined): Locale =>
@@ -286,13 +309,27 @@ export class ReachService {
           { OR: [{ digestSentOn: null }, { digestSentOn: { lt: todayDate } }] },
         ],
       },
-      select: { id: true, locale: true, email: true, digestEmail: true },
+      select: {
+        id: true,
+        locale: true,
+        email: true,
+        digestEmail: true,
+        role: true,
+        plusUntil: true,
+      },
       take: 5000,
     });
     let sent = 0;
     let emailed = 0;
     let reached = 0;
-    for (const { id, locale, email, digestEmail: wantsEmail } of owners) {
+    for (const {
+      id,
+      locale,
+      email,
+      digestEmail: wantsEmail,
+      role,
+      plusUntil,
+    } of owners) {
       // Claim the day first: a second, overlapping run skips this owner.
       const claimed = await this.prisma.user.updateMany({
         where: {
@@ -302,16 +339,26 @@ export class ReachService {
         data: { digestSentOn: todayDate },
       });
       if (claimed.count === 0) continue;
-      const body = digestText(
+      const due = digestText(
         await this.remember.today(id, now),
         asLocale(locale),
       );
+      const plan =
+        role !== 'operator' && plusUntil
+          ? planReminder(
+              daysBetween(today, nairobiToday(plusUntil)),
+              await this.hasPaid(id),
+              asLocale(locale),
+            )
+          : null;
+      const body = [due, plan].filter(Boolean).join(' ');
       if (!body) continue;
       const n = this.push.enabled
         ? await this.pushToOwner(id, {
             title: 'Contact Sphere',
             body,
-            url: '/today',
+            // Only the plan to talk about: open the plan, not Today.
+            url: due ? '/today' : '/account#plan-heading',
             tag: 'today',
           })
         : 0;
@@ -326,6 +373,17 @@ export class ReachService {
       if (n > 0 || mailed) reached += 1;
     }
     return { owners: reached, sent, emailed };
+  }
+
+  private async hasPaid(ownerId: string): Promise<boolean> {
+    const paid = await this.prisma.payment.count({
+      where: {
+        ownerId,
+        status: 'paid',
+        method: { in: ['mpesa_stk', 'manual'] },
+      },
+    });
+    return paid > 0;
   }
 
   private async pushToOwner(

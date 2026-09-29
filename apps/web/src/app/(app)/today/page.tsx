@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { followUpDone, markContacted } from '@/app/actions/remember';
 import { Avatar } from '@/components/avatar';
+import { PlanNoticeSlot } from '@/components/billing/plan-notice-slot';
 import { Notice } from '@/components/contacts/notice';
 import {
   CheckIcon,
@@ -323,6 +324,7 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
 
   return (
     <div className="max-w-xl space-y-6 lg:max-w-none">
+      <PlanNoticeSlot user={user} locale={locale} />
       <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
         <header className="space-y-1">
           <p className="text-xs font-bold tracking-wider text-accent uppercase">

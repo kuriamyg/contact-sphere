@@ -128,6 +128,7 @@ describe('first-account setup', () => {
       operator: true,
       plan: 'plus',
       plusUntil: null,
+      paidPlus: false,
       hasPassword: true,
       google: false,
     });

@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Plan-ending reminders
+
+- A banner on Today and in Profile → Your plan from 5 days before Plus
+  ends ("Your free Plus ends in 3 days — Keep Plus"), and "You're on the
+  free plan now" for two weeks after. "Not now" hides it until tomorrow.
+- The morning reminder on the phone also says it, 3 days and 1 day before
+  the end, even on days with nothing else due.
+- `docs/unfinished-business.md`: the one ordered list of everything left.
+
 ### Added — First-run tour, full-screen account page, show password
 
 - **Guided tour** for new accounts: a card that glides between Today,
