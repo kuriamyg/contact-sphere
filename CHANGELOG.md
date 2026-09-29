@@ -5,6 +5,14 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — Sign up with Google
+
+- **Continue with Google** replaces the SMS code for new accounts: no code
+  to wait for, no new password. Existing accounts with the same email can
+  use it too. Two-factor still applies.
+- Google-only accounts have no password: "Change password" is hidden and
+  deleting the account asks you to type DELETE instead.
+
 ### Changed — Sign-up wording and code auto-fill
 
 - Sign-up and password reset now speak of a **verification code by SMS**,

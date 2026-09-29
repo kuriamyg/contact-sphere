@@ -107,7 +107,11 @@ export class TotpService {
   }
 
   /** Turns two-factor off. Needs the password AND a current second factor. */
-  async disable(userId: string, password: string, code: string): Promise<void> {
+  async disable(
+    userId: string,
+    password: string | undefined,
+    code: string,
+  ): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { passwordHash: true, totpEnabledAt: true },
@@ -115,7 +119,11 @@ export class TotpService {
     if (!user.totpEnabledAt) {
       throw new BadRequestException('Two-factor is not on.');
     }
-    if (!(await verifyPassword(user.passwordHash, password))) {
+    // Google-only accounts: the session plus a current code is enough.
+    if (
+      user.passwordHash !== null &&
+      !(await verifyPassword(user.passwordHash, password ?? ''))
+    ) {
       throw new UnauthorizedException('Your password is not correct.');
     }
     if (!(await this.verifySecondFactor(userId, code))) {

@@ -22,9 +22,11 @@ export class TotpCodeDto {
 }
 
 export class TotpDisableDto {
+  /** Not needed for accounts that sign in with Google only (ADR 0020). */
+  @IsOptional()
   @IsString()
   @Length(1, PASSWORD_MAX)
-  password!: string;
+  password?: string;
 
   @IsString()
   @Matches(CODE)
@@ -33,9 +35,11 @@ export class TotpDisableDto {
 
 /** Deleting the account: the password, a code if two-factor is on, and the word. */
 export class DeleteAccountDto {
+  /** Not needed for accounts that sign in with Google only (ADR 0020). */
+  @IsOptional()
   @IsString()
   @Length(1, PASSWORD_MAX)
-  password!: string;
+  password?: string;
 
   @IsOptional()
   @IsString()

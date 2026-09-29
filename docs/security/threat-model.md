@@ -132,6 +132,19 @@ parties_ who never signed up; this belongs in the privacy policy.
   operator's id, and cannot be deleted by the app role.
 - **Prompt spam:** one a minute and five a day per account.
 
+## Continue with Google (ADR 0020)
+
+- **Forged sign-in:** the ID token's RS256 signature is checked against
+  Google's keys, with issuer, audience (our client id), expiry and
+  `email_verified`. PKCE ties the code to our verifier; the nonce ties the
+  token to this browser's attempt; the state (in an HttpOnly cookie, one
+  use) stops login CSRF. The redirect address must be one of our origins.
+- **Account takeover by email:** linking by email needs a Google-verified
+  email, and an email already linked to another Google id is refused.
+- **Two-factor** still applies after Google.
+- **No password to steal** for Google-only accounts; deleting one needs the
+  session, the typed word and the second factor when on.
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before

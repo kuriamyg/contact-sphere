@@ -33,7 +33,40 @@ describe('loadEnv', () => {
       logLevel: 'info',
       openSignup: false,
       billing: { payTo: undefined, mpesa: undefined },
+      google: undefined,
+      signupMethods: ['sms'],
     });
+  });
+
+  it('Google sign-in needs a real client id and secret outside tests', () => {
+    const ID = '123456789-abc.apps.googleusercontent.com';
+    expect(() =>
+      loadEnv({ ...BASE, OPEN_SIGNUP: 'on', SIGNUP_METHODS: 'google' }),
+    ).toThrow(/GOOGLE_CLIENT_ID/);
+    expect(() => loadEnv({ ...PROD, GOOGLE_CLIENT_ID: 'nope' })).toThrow(
+      /googleusercontent/,
+    );
+    expect(() => loadEnv({ ...PROD, GOOGLE_CLIENT_ID: ID })).toThrow(
+      /GOOGLE_CLIENT_SECRET/,
+    );
+    const g = loadEnv({
+      ...PROD,
+      OPEN_SIGNUP: 'on',
+      SIGNUP_METHODS: 'google',
+      GOOGLE_CLIENT_ID: ID,
+      GOOGLE_CLIENT_SECRET: 'GOCSPX-' + 's'.repeat(28),
+    });
+    expect(g).toMatchObject({
+      openSignup: true,
+      signupMethods: ['google'],
+      google: { provider: 'google', clientId: ID },
+    });
+    expect(() =>
+      loadEnv({ ...PROD, GOOGLE_CLIENT_ID: 'x', GOOGLE_OAUTH: 'fake' }),
+    ).toThrow(/not in production/);
+    expect(() => loadEnv({ ...BASE, SIGNUP_METHODS: 'email' })).toThrow(
+      /SIGNUP_METHODS/,
+    );
   });
 
   it('M-Pesa prompts are off unless fully configured', () => {

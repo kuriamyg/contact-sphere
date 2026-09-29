@@ -23,6 +23,7 @@ import { type AuthContext, CurrentAuth, Public } from './decorators';
 import { deviceLabel } from './device';
 import {
   ChangePasswordDto,
+  GoogleSignInDto,
   LoginDto,
   LocaleDto,
   PhoneCodeDto,
@@ -71,11 +72,23 @@ export class AuthController {
     return this.auth.setup(dto, deviceLabel(ua));
   }
 
-  /** Is open sign-up on? (B6) */
+  /** How people can join and sign in (B6, ADR 0020). */
   @Public()
   @Get('signup')
-  signupStatus(): { open: boolean } {
-    return { open: this.auth.signupOpen() };
+  signupStatus(): ReturnType<AuthService['signupStatus']> {
+    return this.auth.signupStatus();
+  }
+
+  /** "Continue with Google": code + PKCE verifier from the web server. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  google(
+    @Body() dto: GoogleSignInDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult | MfaRequired> {
+    return this.auth.googleSignIn(dto, deviceLabel(ua));
   }
 
   /** Sign-up step 1: text a code to the number. Same answer either way. */

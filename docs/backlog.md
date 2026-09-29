@@ -99,6 +99,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Plans (Free, Plus KES 99/990, 30-day trial), operator page (accounts,
       free months, hand-recorded M-Pesa), M-Pesa prompt via Daraja behind
       config (ADR 0019) — B9a
+- [x] Continue with Google replaces SMS sign-up (Do Not Disturb blocked
+      SMS codes); SMS stays in the code for a sender ID later (ADR 0020)
 - [ ] B9b: Daraja go-live on a till/paybill; M-Pesa Ratiba renewals
 - [ ] B8: ODPC registration — pack ready in `docs/odpc/` (voluntary for now,
       KES 4,000); owner registers on the portal, then add the number to the

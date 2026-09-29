@@ -611,3 +611,18 @@ privacy policy, threat model, ODPC 02/07/08, pilot playbook. Tests: unit
 sign-up → trial → lapse → prompt → callback through the web server → paid
 without a reload; operator sees the client, records a hand payment,
 refuses the same code twice, gives a free month; Kiswahili; no CSP errors.
+
+## 2026-09-29 — SMS sign-up blocked by Do Not Disturb; Continue with Google
+
+Production SMS sign-up failed: Africa's Talking answered `UserInBlacklist
+(406)` (found after PR #45 made the reason visible) — the shared sender is
+promotional and the line blocks company messages. Without budget for a
+sender ID, and to avoid codes from a personal number, the owner chose
+Google sign-in only. ADR 0020: OIDC code flow with PKCE, state and nonce;
+the API verifies the ID token signature (RS256, Google's keys), issuer,
+audience, expiry, nonce and verified email; accounts by Google id, else
+linked by verified email, else created on the Plus trial. Migration
+`google_signin`: `google_sub` unique, `password_hash` nullable, CHECK that
+every account can sign in. Password-only features adapt. Tests: unit (token
+checks with a local RSA key, exchange, config, web helpers), e2e +8, DB +1,
+browser flow 18/18 with Playwright standing in for Google.

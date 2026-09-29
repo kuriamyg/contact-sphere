@@ -14,6 +14,8 @@ export const account = section(
     personal: 'Personal details',
     email: 'Email',
     phone: 'Mobile number',
+    signInMethod: 'Sign-in',
+    withGoogle: 'Continue with Google ({email})',
     emailNeedsAddress:
       'Email reminders need an email address, and this account signs in with a mobile number. Phone reminders above work without one.',
     security: 'Security',
@@ -82,6 +84,8 @@ export const account = section(
     personal: 'Taarifa binafsi',
     email: 'Barua pepe',
     phone: 'Nambari ya simu',
+    signInMethod: 'Kuingia',
+    withGoogle: 'Endelea na Google ({email})',
     emailNeedsAddress:
       'Vikumbusho vya barua pepe vinahitaji anwani ya barua pepe, na akaunti hii huingia kwa nambari ya simu. Vikumbusho vya simu hapo juu hufanya kazi bila hiyo.',
     security: 'Usalama',

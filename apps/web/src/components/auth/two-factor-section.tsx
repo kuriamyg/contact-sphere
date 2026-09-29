@@ -119,7 +119,13 @@ function Enrol() {
   );
 }
 
-function Disable({ recoveryCodesLeft }: { recoveryCodesLeft: number }) {
+function Disable({
+  recoveryCodesLeft,
+  hasPassword,
+}: {
+  recoveryCodesLeft: number;
+  hasPassword: boolean;
+}) {
   const t = useMessages().twoFactor;
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     disableTotp,
@@ -140,13 +146,15 @@ function Disable({ recoveryCodesLeft }: { recoveryCodesLeft: number }) {
         </summary>
         <form action={formAction} className="mt-4 space-y-4" noValidate>
           <FormMessage error={state.error} />
-          <Field
-            label={t.passwordLabel}
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
+          {hasPassword && (
+            <Field
+              label={t.passwordLabel}
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+          )}
           <Field
             label={t.codeOrRecovery}
             name="code"
@@ -165,12 +173,15 @@ function Disable({ recoveryCodesLeft }: { recoveryCodesLeft: number }) {
 export function TwoFactorSection({
   enabled,
   recoveryCodesLeft,
+  hasPassword = true,
 }: {
   enabled: boolean;
   recoveryCodesLeft: number;
+  /** False for accounts that sign in with Google only (ADR 0020). */
+  hasPassword?: boolean;
 }) {
   return enabled ? (
-    <Disable recoveryCodesLeft={recoveryCodesLeft} />
+    <Disable recoveryCodesLeft={recoveryCodesLeft} hasPassword={hasPassword} />
   ) : (
     <Enrol />
   );

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Inject,
@@ -17,6 +18,7 @@ import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
   ChangePasswordDto,
+  GoogleSignInDto,
   LoginDto,
   ResetPasswordDto,
   SetupDto,
@@ -37,6 +39,7 @@ import {
   SessionService,
   type SessionView,
 } from './session.service';
+import { GOOGLE_OIDC, type GoogleOidc } from './google-oidc';
 import { hashToken, newSessionToken, secretsEqual } from './tokens';
 import { TotpService } from './totp.service';
 import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
@@ -67,6 +70,10 @@ export interface Me {
   recoveryCodesLeft: number;
   /** Runs the service: sees /operator (B9). */
   operator: boolean;
+  /** False for accounts that sign in with Google only (ADR 0020). */
+  hasPassword: boolean;
+  /** Signs in with "Continue with Google". */
+  google: boolean;
   plan: 'plus' | 'free';
   /** When Plus (or the trial) ends; null if never had it. */
   plusUntil: string | null;
@@ -74,6 +81,15 @@ export interface Me {
 
 /** One message for every login failure, so it never reveals which part was wrong. */
 const INVALID_LOGIN = 'Those sign-in details are not right.';
+const GOOGLE_FAILED = 'Signing in with Google did not work. Try again.';
+const GOOGLE_UNVERIFIED =
+  'Google has not verified the email on that account yet. Verify it with Google, then try again.';
+const GOOGLE_OTHER_ACCOUNT =
+  'That email already belongs to an account linked to a different Google account.';
+const NO_ACCOUNT =
+  'There is no Contact Sphere account for this Google account.';
+const NO_PASSWORD =
+  'This account signs in with Google, so it has no password to change.';
 
 const BREACHED_PASSWORD =
   'This password has appeared in known data breaches, so attackers try it first. Choose a different one.';
@@ -89,6 +105,7 @@ export class AuthService {
     private readonly breached: BreachedPasswords,
     private readonly codes: PhoneCodes,
     @Inject(ENV) private readonly env: Env,
+    @Inject(GOOGLE_OIDC) private readonly google: GoogleOidc | null,
   ) {}
 
   /** Setup is possible only with a configured token and no account yet. */
@@ -190,9 +207,25 @@ export class AuthService {
     }
 
     await this.failures.clear(key);
+    return this.finishSignIn(user, device, 'password');
+  }
 
+  /**
+   * The identity is proven (password or Google): a two-factor challenge
+   * when two-factor is on, else a session.
+   */
+  private async finishSignIn(
+    user: {
+      id: string;
+      email: string | null;
+      phone: string | null;
+      totpEnabledAt: Date | null;
+    },
+    device: string | null | undefined,
+    method: 'password' | 'google',
+  ): Promise<SessionResult | MfaRequired> {
     if (user.totpEnabledAt) {
-      // The password alone is not enough: issue a short-lived challenge.
+      // The first factor alone is not enough: a short-lived challenge.
       const challenge = newSessionToken();
       const expiresAt = new Date(Date.now() + MFA_CHALLENGE_MS);
       await this.prisma.mfaChallenge.create({
@@ -210,17 +243,111 @@ export class AuthService {
       user.id,
       undefined,
       undefined,
-      device,
+      device ?? undefined,
     );
     await this.audit.record('auth.login_succeeded', {
       actorUserId: user.id,
       entityType: 'user',
       entityId: user.id,
+      ...(method === 'google' ? { metadata: { method } } : {}),
     });
     return {
       ...session,
       user: { id: user.id, email: user.email, phone: user.phone },
     };
+  }
+
+  /**
+   * "Continue with Google" (ADR 0020). Google proves the email; we then
+   * sign in the account with this Google id, or link the account with the
+   * same verified email, or — when sign-up with Google is open — create one
+   * on the Plus trial.
+   */
+  async googleSignIn(
+    dto: GoogleSignInDto,
+    device: string | null,
+  ): Promise<SessionResult | MfaRequired> {
+    if (!this.google || !this.env.google) throw new NotFoundException();
+    const allowed = this.env.webOrigins.map((o) => `${o}/auth/google/callback`);
+    if (!allowed.includes(dto.redirectUri)) {
+      throw new BadRequestException(GOOGLE_FAILED);
+    }
+    const claims = await this.google.exchange(
+      dto.code,
+      dto.codeVerifier,
+      dto.redirectUri,
+    );
+    if (!claims || !claims.nonce || !secretsEqual(claims.nonce, dto.nonce)) {
+      throw new BadRequestException(GOOGLE_FAILED);
+    }
+    if (!claims.emailVerified) {
+      throw new BadRequestException(GOOGLE_UNVERIFIED);
+    }
+    const select = {
+      id: true,
+      email: true,
+      phone: true,
+      totpEnabledAt: true,
+      googleSub: true,
+    } as const;
+    let user = await this.prisma.user.findUnique({
+      where: { googleSub: claims.sub },
+      select,
+    });
+    if (!user) {
+      const byEmail = await this.prisma.user.findUnique({
+        where: { email: claims.email },
+        select,
+      });
+      if (byEmail?.googleSub) {
+        // That email belongs to an account linked to another Google id.
+        throw new ConflictException(GOOGLE_OTHER_ACCOUNT);
+      }
+      if (byEmail) {
+        user = await this.prisma.$transaction(async (tx) => {
+          const u = await tx.user.update({
+            where: { id: byEmail.id },
+            data: { googleSub: claims.sub },
+            select,
+          });
+          await this.audit.record(
+            'auth.google_linked',
+            { actorUserId: u.id, entityType: 'user', entityId: u.id },
+            tx,
+          );
+          return u;
+        });
+      }
+    }
+    if (!user) {
+      if (!this.googleSignupOpen()) throw new ForbiddenException(NO_ACCOUNT);
+      const name = claims.name?.trim().slice(0, 100) || null;
+      user = await this.prisma.$transaction(async (tx) => {
+        const u = await tx.user.create({
+          data: {
+            email: claims.email,
+            googleSub: claims.sub,
+            displayName: name,
+            locale: dto.locale ?? 'en',
+            // Everyone starts with a Plus trial (B9, ADR 0019).
+            plusUntil: new Date(Date.now() + TRIAL_DAYS * 86_400_000),
+          },
+          select,
+        });
+        await this.audit.record(
+          'auth.signup_completed',
+          {
+            actorUserId: u.id,
+            entityType: 'user',
+            entityId: u.id,
+            metadata: { method: 'google' },
+          },
+          tx,
+        );
+        return u;
+      });
+    }
+    return this.finishSignIn(user, device, 'google');
   }
 
   /** Second step of sign-in: the challenge plus a TOTP or recovery code. */
@@ -345,6 +472,8 @@ export class AuthService {
         totpEnabledAt: true,
         role: true,
         plusUntil: true,
+        passwordHash: true,
+        googleSub: true,
       },
     });
     // A session whose user vanished cannot happen (cascade), but never
@@ -362,6 +491,8 @@ export class AuthService {
         ? await this.totp.remainingRecoveryCodes(userId)
         : 0,
       operator: user.role === 'operator',
+      hasPassword: user.passwordHash !== null,
+      google: user.googleSub !== null,
       plan:
         user.role === 'operator' ||
         (!!user.plusUntil && user.plusUntil > new Date())
@@ -399,14 +530,50 @@ export class AuthService {
     }
   }
 
-  /** Is open sign-up on here? Public: the web shows or hides the link. */
+  /** Can new people join by SMS code (B6)? */
+  smsSignupOpen(): boolean {
+    return (
+      this.env.openSignup &&
+      this.env.signupMethods.includes('sms') &&
+      this.codes.enabled
+    );
+  }
+
+  /** Can new people join with Google (ADR 0020)? */
+  googleSignupOpen(): boolean {
+    return (
+      this.env.openSignup &&
+      this.env.signupMethods.includes('google') &&
+      !!this.google
+    );
+  }
+
+  /** Is open sign-up on here, by any method? */
   signupOpen(): boolean {
-    return this.env.openSignup && this.codes.enabled;
+    return this.smsSignupOpen() || this.googleSignupOpen();
+  }
+
+  /**
+   * What the sign-in pages offer. The Google client id is public (it is in
+   * every "Continue with Google" link).
+   */
+  signupStatus(): {
+    open: boolean;
+    sms: boolean;
+    google: boolean;
+    googleClientId: string | null;
+  } {
+    return {
+      open: this.signupOpen(),
+      sms: this.smsSignupOpen(),
+      google: this.googleSignupOpen(),
+      googleClientId: this.google ? (this.env.google?.clientId ?? null) : null,
+    };
   }
 
   /** Step 1 of sign-up: text a code to the number (B6). */
   async sendSignupCode(phone: string, locale?: 'en' | 'sw'): Promise<void> {
-    if (!this.signupOpen()) throw new NotFoundException();
+    if (!this.smsSignupOpen()) throw new NotFoundException();
     await this.codes.send('signup', phone, locale);
   }
 
@@ -418,7 +585,7 @@ export class AuthService {
     dto: SignupDto,
     device: string | null = null,
   ): Promise<SessionResult> {
-    if (!this.signupOpen()) throw new NotFoundException();
+    if (!this.smsSignupOpen()) throw new NotFoundException();
     const phone = this.codes.mobile(dto.phone);
     const problem = passwordProblem(dto.password, phone);
     if (problem) throw new BadRequestException(problem);
@@ -510,14 +677,19 @@ export class AuthService {
    */
   async deleteAccount(
     userId: string,
-    password: string,
+    password: string | undefined,
     code: string | undefined,
   ): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { passwordHash: true, totpEnabledAt: true },
     });
-    if (!(await verifyPassword(user.passwordHash, password))) {
+    // Google-only accounts have no password: the session, the typed word
+    // and (when on) the second factor are the proof.
+    if (
+      user.passwordHash !== null &&
+      !(await verifyPassword(user.passwordHash, password ?? ''))
+    ) {
       throw new UnauthorizedException('Your password is not correct.');
     }
     if (user.totpEnabledAt) {
@@ -559,6 +731,7 @@ export class AuthService {
       where: { id: userId },
       select: { email: true, phone: true, passwordHash: true },
     });
+    if (user.passwordHash === null) throw new BadRequestException(NO_PASSWORD);
     if (!(await verifyPassword(user.passwordHash, dto.currentPassword))) {
       throw new UnauthorizedException('Your current password is not correct.');
     }

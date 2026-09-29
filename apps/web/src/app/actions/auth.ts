@@ -41,6 +41,10 @@ const field = (form: FormData, name: string) => {
   return typeof v === 'string' ? v : '';
 };
 
+/** { [key]: value } when a value was typed, else nothing. */
+const optional = (key: string, value: string) =>
+  value ? { [key]: value } : {};
+
 async function startSession(session: SessionResponse): Promise<void> {
   (await cookies()).set(
     sessionCookieName(isProduction()),
@@ -258,7 +262,8 @@ export async function deleteAccount(
   const res = await api('/auth/account/delete', {
     method: 'POST',
     body: {
-      password: field(form, 'password'),
+      // Absent for Google-only accounts, which have no password.
+      ...optional('password', field(form, 'password')),
       confirm: 'DELETE',
       ...(code ? { code } : {}),
     },
@@ -344,7 +349,7 @@ export async function disableTotp(
   const res = await api('/auth/totp/disable', {
     method: 'POST',
     body: {
-      password: field(form, 'password'),
+      ...optional('password', field(form, 'password')),
       code: field(form, 'code').trim(),
     },
   });

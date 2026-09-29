@@ -19,6 +19,9 @@ export interface CurrentUser {
   operator?: boolean;
   plan?: 'plus' | 'free';
   plusUntil?: string | null;
+  /** False for accounts that sign in with Google only (ADR 0020). */
+  hasPassword?: boolean;
+  google?: boolean;
 }
 
 /** Thrown when the API cannot say who is signed in (down, slow, 5xx). */
@@ -68,10 +71,35 @@ export async function setupAvailable(): Promise<boolean> {
   return res.data?.setupAvailable ?? false;
 }
 
-/** Whether anyone can create an account with a mobile number (B6). */
+export interface SignupStatus {
+  /** Anyone can create an account, by some method. */
+  open: boolean;
+  /** …with a mobile number and an SMS code (B6). */
+  sms: boolean;
+  /** …with Google (ADR 0020). */
+  google: boolean;
+  /** Set when "Continue with Google" works, for new or existing accounts. */
+  googleClientId: string | null;
+}
+
+/** How people can join and sign in here. */
+export async function signupStatus(): Promise<SignupStatus> {
+  const res = await api<Partial<SignupStatus>>('/auth/signup', {
+    auth: false,
+  });
+  const d = res.data ?? {};
+  return {
+    open: d.open ?? false,
+    // Older APIs sent only { open }, which meant SMS.
+    sms: d.sms ?? d.open ?? false,
+    google: d.google ?? false,
+    googleClientId: d.googleClientId ?? null,
+  };
+}
+
+/** Whether anyone can create an account here (B6, ADR 0020). */
 export async function signupOpen(): Promise<boolean> {
-  const res = await api<{ open: boolean }>('/auth/signup', { auth: false });
-  return res.data?.open ?? false;
+  return (await signupStatus()).open;
 }
 
 /** How to show who is signed in: their name, email or number. */
