@@ -6,7 +6,7 @@ import { Consent } from '@/components/auth/consent';
 import { PhoneCodeForm } from '@/components/auth/phone-code-form';
 import { WipeOnSubmit } from '@/components/offline/offline-toggle';
 import { getMessages, pageTitle } from '@/i18n/server';
-import { logout } from '@/app/actions/auth';
+import { logoutToSignup } from '@/app/actions/auth';
 import { fmt } from '@/i18n/format';
 import { currentUser, signupOpen, whoIs } from '@/lib/auth';
 
@@ -19,35 +19,31 @@ export default async function SignupPage() {
     currentUser().catch(() => null),
     getMessages(),
   ]);
-  // Signed in already: say so instead of silently leaving the page.
+  // Already signed in: the usual pattern — who, continue, or switch.
   if (user) {
+    const name = whoIs(user);
     return (
       <>
         <header className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {m.auth.signUpTitle}
+            {m.auth.alreadySignedInTitle}
           </h1>
-          <p>{fmt(m.auth.alreadySignedIn, { name: whoIs(user) })}</p>
-          <p className="text-muted">{m.auth.signOutToCreate}</p>
+          <p className="text-muted">{fmt(m.auth.alreadySignedIn, { name })}</p>
         </header>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/contacts"
-            className="inline-flex items-center rounded-lg btn-primary px-4 py-2.5 font-medium"
-          >
-            {m.auth.goToContacts}
-          </Link>
-          <WipeOnSubmit>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="inline-flex items-center rounded-lg border border-border px-4 py-2.5 font-medium"
-              >
-                {m.auth.signOut}
-              </button>
-            </form>
-          </WipeOnSubmit>
-        </div>
+        <Link
+          href="/today"
+          className="inline-flex w-full items-center justify-center rounded-lg btn-primary px-4 py-2.5 text-base font-medium"
+        >
+          {m.auth.continueToApp}
+        </Link>
+        <WipeOnSubmit>
+          <form action={logoutToSignup} className="text-center text-sm">
+            <span className="text-muted">{fmt(m.auth.notYou, { name })} </span>
+            <button type="submit" className="font-medium underline">
+              {m.auth.signOut}
+            </button>
+          </form>
+        </WipeOnSubmit>
       </>
     );
   }

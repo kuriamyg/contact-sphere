@@ -10,8 +10,11 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 - Sign-up and password reset now speak of a **verification code by SMS**,
   and the SMS reads "Your Contact Sphere verification code is …".
 - On Android (Chrome), the code can **fill itself in** from the SMS.
-- Opening the sign-up link while signed in now says so, with "Sign out"
-  and "Go to your contacts", instead of silently going to your contacts.
+- Opening the sign-up link while signed in shows the usual "You're already
+  signed in" with **Continue** and "Not you? Sign out" (back to sign-up).
+- When a code cannot be sent, the page now says why instead of "service
+  unavailable" — including when a line blocks messages from companies (Do
+  Not Disturb). The server logs the SMS provider's reason (never the number).
 
 ### Added — Plans and paying with M-Pesa (B9a)
 

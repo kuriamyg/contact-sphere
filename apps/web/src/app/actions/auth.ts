@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 import QRCode from 'qrcode';
 
-import { apiText, getLocale, getMessages } from '@/i18n/server';
+import { apiError, getLocale, getMessages } from '@/i18n/server';
 import { api, isProduction } from '@/lib/api';
 import {
   mfaCookieName,
@@ -77,10 +77,7 @@ async function endMfaChallenge(): Promise<void> {
 }
 
 async function failure(status: number, message?: string): Promise<FormState> {
-  const t = (await getMessages()).errors;
-  if (status >= 500 || status === 0) return { error: t.unavailable };
-  const said = await apiText(message);
-  return { error: said ?? (status === 429 ? t.tooMany : t.generic) };
+  return { error: await apiError(status, message) };
 }
 
 /** "me@example.com" signs in by email; anything else is a phone number. */
@@ -269,6 +266,13 @@ export async function deleteAccount(
   if (res.status !== 204) return failure(res.status, res.message);
   await endSession();
   redirect('/login?deleted=1');
+}
+
+/** "Not you? Sign out" on the sign-up page: sign out, stay on sign-up. */
+export async function logoutToSignup(): Promise<void> {
+  await api('/auth/logout', { method: 'POST' });
+  await endSession();
+  redirect('/signup');
 }
 
 export async function logoutEverywhere(): Promise<void> {

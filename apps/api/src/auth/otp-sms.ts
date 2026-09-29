@@ -2,10 +2,19 @@ import { Logger } from '@nestjs/common';
 
 import type { OtpSmsConfig } from '../config/env';
 
-/** Sends one text. Resolves false instead of throwing. */
+/**
+ * How a send went. `reason` is the provider's own word for a refusal
+ * ("UserInBlacklist", "HTTP 401", "unreachable"): safe to log, never holds
+ * the number. `blocked` = the line refuses messages from companies (Do Not
+ * Disturb), which only its owner can change.
+ */
+export type SmsResult =
+  { ok: true } | { ok: false; blocked: boolean; reason: string };
+
+/** Sends one text. Resolves with the outcome instead of throwing. */
 export interface OtpSms {
   readonly name: string;
-  send(to: string, text: string): Promise<boolean>;
+  send(to: string, text: string): Promise<SmsResult>;
 }
 
 export const OTP_SMS = Symbol('OTP_SMS');
@@ -18,14 +27,20 @@ export class LogOtpSms implements OtpSms {
   readonly name = 'log';
   readonly sent: { to: string; text: string }[] = [];
   private readonly logger = new Logger('OtpSms');
-  send(to: string, text: string): Promise<boolean> {
+  send(to: string, text: string): Promise<SmsResult> {
     this.sent.push({ to, text });
     this.logger.log(`SMS (not sent) to ${to}: ${text}`);
-    return Promise.resolve(true);
+    return Promise.resolve({ ok: true });
   }
 }
 
 const TIMEOUT_MS = 10_000;
+
+const refused = (reason: string): SmsResult => ({
+  ok: false,
+  blocked: false,
+  reason,
+});
 
 /**
  * Africa's Talking SMS (B6). POST form data to /version1/messaging with an
@@ -46,7 +61,7 @@ export class AfricasTalkingOtpSms implements OtpSms {
       : 'https://api.africastalking.com/version1/messaging';
   }
 
-  async send(to: string, text: string): Promise<boolean> {
+  async send(to: string, text: string): Promise<SmsResult> {
     const form = new URLSearchParams({
       username: this.cfg.username ?? '',
       to,
@@ -64,14 +79,26 @@ export class AfricasTalkingOtpSms implements OtpSms {
         body: form.toString(),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
-      if (!res.ok) return false;
+      if (!res.ok) return refused(`HTTP ${res.status}`);
       const body = (await res.json()) as {
-        SMSMessageData?: { Recipients?: { statusCode?: number }[] };
+        SMSMessageData?: {
+          Recipients?: { statusCode?: number; status?: string }[];
+        };
       };
-      const code = body.SMSMessageData?.Recipients?.[0]?.statusCode;
-      return typeof code === 'number' && code >= 100 && code <= 102;
+      const r = body.SMSMessageData?.Recipients?.[0];
+      const code = r?.statusCode;
+      if (typeof code === 'number' && code >= 100 && code <= 102) {
+        return { ok: true };
+      }
+      // 406 UserInBlacklist: the line blocks messages from companies (DND).
+      const status = String(r?.status ?? 'no recipient').slice(0, 40);
+      return {
+        ok: false,
+        blocked: code === 406 || status === 'UserInBlacklist',
+        reason: `${status} (${code ?? '-'})`,
+      };
     } catch {
-      return false;
+      return refused('unreachable');
     }
   }
 }

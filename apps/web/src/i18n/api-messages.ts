@@ -19,6 +19,8 @@ const EXACT: Record<string, string> = {
     'Msimbo huo umeisha muda. Omba mpya.',
   'This number already has an account. Sign in instead.':
     'Nambari hii tayari ina akaunti. Ingia badala yake.',
+  'Your line is blocking messages from companies (Do Not Disturb), so the code could not be delivered. Allow promotional messages on your line, or use another number.':
+    'Laini yako inazuia jumbe kutoka kwa kampuni (Usinisumbue), kwa hiyo msimbo haukuweza kufika. Ruhusu jumbe za matangazo kwenye laini yako, au tumia nambari nyingine.',
   'Could not send the code just now. Try again in a minute.':
     'Imeshindikana kutuma msimbo sasa hivi. Jaribu tena baada ya dakika moja.',
   'Morning reminders are part of Plus.':
@@ -128,6 +130,17 @@ const PATTERNS: [RegExp, (m: RegExpMatchArray) => string][] = [
     (m) => `Unaweza kuhifadhi hadi utafutaji ${m[1]}. Futa mmoja kwanza.`,
   ],
 ];
+
+/**
+ * One of our own user-facing messages (not a framework default such as
+ * "Internal server error"). Server errors show only these, else a generic
+ * "unavailable".
+ */
+export function isKnownApiMessage(message: string | undefined): boolean {
+  return (
+    !!message && (message in EXACT || PATTERNS.some(([re]) => re.test(message)))
+  );
+}
 
 export function localizeApiMessage(
   message: string | undefined,

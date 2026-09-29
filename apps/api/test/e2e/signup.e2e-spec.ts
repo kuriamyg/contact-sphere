@@ -111,6 +111,32 @@ describe('open sign-up (B6)', () => {
     expect(rows[0].code_hash).not.toContain(lastCode());
   });
 
+  it('says so when the line blocks messages from companies (DND)', async () => {
+    jest.spyOn(sms, 'send').mockResolvedValueOnce({
+      ok: false,
+      blocked: true,
+      reason: 'UserInBlacklist (406)',
+    });
+    const res = await api('post', '/auth/signup/code')
+      .send({ phone: PHONE })
+      .expect(422);
+    expect(res.body.message).toMatch(/Do Not Disturb/);
+    jest.spyOn(sms, 'send').mockResolvedValueOnce({
+      ok: false,
+      blocked: false,
+      reason: 'HTTP 500',
+    });
+    const other = await api('post', '/auth/signup/code')
+      .send({ phone: '+254712000909' })
+      .expect(503);
+    expect(other.body.message).toMatch(/Could not send the code/);
+    // Neither failure leaves a code behind or uses up the number's limit.
+    const { rows } = await owner.query<{ n: number }>(
+      'SELECT count(*)::int n FROM phone_codes',
+    );
+    expect(rows[0].n).toBe(0);
+  });
+
   it('refuses numbers that are not Kenyan mobiles', async () => {
     for (const phone of ['020 222 2222', '+44 7700 900123', 'hello']) {
       const res = await api('post', '/auth/signup/code')
