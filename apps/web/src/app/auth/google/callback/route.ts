@@ -53,6 +53,7 @@ export async function GET(request: Request): Promise<Response> {
     expiresAt: string;
     mfaRequired?: true;
     challenge?: string;
+    handoff?: string;
   }>('/auth/google', {
     method: 'POST',
     auth: false,
@@ -62,10 +63,18 @@ export async function GET(request: Request): Promise<Response> {
       nonce: saved.nonce,
       redirectUri: `${origin}${CALLBACK_PATH}`,
       locale: await getLocale(),
+      ...(saved.app ? { appChallenge: saved.app } : {}),
     },
   });
   if (res.status !== 200 || !res.data) {
     return back(problemFor(res.status, res.message));
+  }
+  // Started in the Android app: no session here; back to the app.
+  if (saved.app) {
+    if (!res.data.handoff) return back('failed');
+    return NextResponse.redirect(
+      `${origin}/auth/app/return?code=${encodeURIComponent(res.data.handoff)}`,
+    );
   }
   const expires = new Date(res.data.expiresAt);
   if (res.data.mfaRequired && res.data.challenge) {

@@ -66,3 +66,28 @@ and tested. Rewriting every screen natively would double the work forever.
 - The app's User-Agent ends in `ContactSphereAndroid/<version>` — used
   only to choose what to show (e.g. no Google button yet), never for
   security.
+
+## P5b as built (2026-09-29)
+
+1. In the app, "Continue with Google" (a native call, app 0.2+) makes a
+   random 256-bit **verifier**, keeps it in the app's private storage, and
+   opens `/auth/google?app=<challenge>` in a **Chrome tab**, where
+   `challenge = base64url(SHA-256(verifier))`.
+2. The web server carries the challenge through Google's round trip in its
+   short-lived OAuth cookie. After Google, the API does **not** create a
+   session: it stores a **single-use code** (SHA-256 only, 2 minutes,
+   `app_handoffs`, database CHECKs) tied to the challenge.
+3. The browser shows **Open Contact Sphere**: an `intent://` link that only
+   our package (`com.coderiserdigital.contactsphere`) can receive. It is a
+   tap, because Chrome opens apps only from a tap.
+4. The app loads `/auth/app#code=…&v=verifier` in its own web view. The
+   fragment never reaches a server or its logs; the page clears it and
+   trades both at `POST /auth/app/redeem` for a normal session — or the
+   usual second-factor step when two-factor is on.
+
+A code without the verifier is useless (another app catching the link, or
+someone reading a log); wrong verifier, expired and reused codes all get
+the same answer; racing redeems claim the row once. Someone sending a
+victim a crafted `?app=` link gains nothing unless the victim also hands
+over the code shown after Google. Old test builds (0.1) keep the note in
+place of the Google button.

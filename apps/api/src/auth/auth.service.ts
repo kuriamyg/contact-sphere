@@ -51,6 +51,7 @@ import {
 import { hashToken, newSessionToken, secretsEqual } from './tokens';
 import { TotpService } from './totp.service';
 import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
+import { APP_HANDOFF_FAILED, APP_HANDOFF_MS, challengeOf } from './app-handoff';
 
 export interface SessionResult extends IssuedSession {
   user: { id: string; email: string | null; phone: string | null };
@@ -60,6 +61,12 @@ export interface SessionResult extends IssuedSession {
 export interface MfaRequired {
   mfaRequired: true;
   challenge: string;
+  expiresAt: Date;
+}
+
+/** Google proved who this is; the Android app redeems this (ADR 0025). */
+export interface AppHandoffIssued {
+  handoff: string;
   expiresAt: Date;
 }
 
@@ -295,7 +302,7 @@ export class AuthService {
   async googleSignIn(
     dto: GoogleSignInDto,
     device: string | null,
-  ): Promise<SessionResult | MfaRequired> {
+  ): Promise<SessionResult | MfaRequired | AppHandoffIssued> {
     if (!this.google || !this.env.google) throw new NotFoundException();
     const allowed = this.env.webOrigins.map((o) => `${o}/auth/google/callback`);
     if (!allowed.includes(dto.redirectUri)) {
@@ -376,7 +383,66 @@ export class AuthService {
         return u;
       });
     }
+    if (dto.appChallenge)
+      return this.issueAppHandoff(user.id, dto.appChallenge);
     return this.finishSignIn(user, device, 'google');
+  }
+
+  /** A single-use code for the app instead of a browser session. */
+  private async issueAppHandoff(
+    userId: string,
+    challenge: string,
+  ): Promise<AppHandoffIssued> {
+    const handoff = newSessionToken();
+    const expiresAt = new Date(Date.now() + APP_HANDOFF_MS);
+    await this.prisma.appHandoff.create({
+      data: { userId, codeHash: hashToken(handoff), challenge, expiresAt },
+    });
+    return { handoff, expiresAt };
+  }
+
+  /**
+   * The app, inside its own web view, trades the code and its secret for a
+   * session (or a two-factor challenge, as any sign-in). Once only; wrong
+   * secret, expired or reused all get the same answer.
+   */
+  async redeemAppHandoff(
+    code: string,
+    verifier: string,
+    device: string | null,
+  ): Promise<SessionResult | MfaRequired> {
+    const now = new Date();
+    const found = await this.prisma.appHandoff.findUnique({
+      where: { codeHash: hashToken(code) },
+      select: {
+        id: true,
+        challenge: true,
+        expiresAt: true,
+        usedAt: true,
+        user: {
+          select: { id: true, email: true, phone: true, totpEnabledAt: true },
+        },
+      },
+    });
+    if (
+      !found ||
+      found.usedAt ||
+      found.expiresAt <= now ||
+      !secretsEqual(challengeOf(verifier), found.challenge)
+    ) {
+      throw new BadRequestException(APP_HANDOFF_FAILED);
+    }
+    // Claim it: of two racing redeems, only one updates the row.
+    const { count } = await this.prisma.appHandoff.updateMany({
+      where: { id: found.id, usedAt: null },
+      data: { usedAt: now },
+    });
+    if (count !== 1) throw new BadRequestException(APP_HANDOFF_FAILED);
+    // Old hand-offs are of no use to anyone.
+    await this.prisma.appHandoff.deleteMany({
+      where: { expiresAt: { lt: new Date(now.getTime() - 86_400_000) } },
+    });
+    return this.finishSignIn(found.user, device, 'google');
   }
 
   /** Second step of sign-in: the challenge plus a TOTP or recovery code. */

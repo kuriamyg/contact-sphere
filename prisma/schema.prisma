@@ -86,6 +86,7 @@ model User {
   sessions      Session[]
   recoveryCodes RecoveryCode[]
   mfaChallenges MfaChallenge[]
+  appHandoffs   AppHandoff[]
   contacts      Contact[]
   savedSearches SavedSearch[]
   groups        Group[]
@@ -208,6 +209,24 @@ model MfaChallenge {
 
   @@index([userId])
   @@map("mfa_challenges")
+}
+
+/// Google sign-in for the Android app (P5b, ADR 0025): Google proved who
+/// this is in the phone's browser; the app redeems the code once, with the
+/// secret whose SHA-256 is `challenge`, to get its own session.
+model AppHandoff {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @unique @map("code_hash") @db.Char(64)
+  challenge String    @db.Char(43)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("app_handoffs")
 }
 
 /// A person or organisation in the owner's address book.

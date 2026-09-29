@@ -68,3 +68,14 @@ describe('Continue with Google (web side)', () => {
     expect(problemFor(500)).toBe('failed');
   });
 });
+
+describe('sign-in started by the Android app (ADR 0025)', () => {
+  it('keeps a well-formed app challenge in the state, and drops anything else', () => {
+    const s = newOAuthState();
+    const app = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
+    expect(decodeState(encodeState({ ...s, app }))).toEqual({ ...s, app });
+    expect(
+      decodeState(encodeState({ ...s, app: 'javascript:alert(1)' })),
+    ).toEqual(s);
+  });
+});

@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Continue with Google inside the Android app
+
+- In the app (test build 0.2), **Continue with Google** opens Google in a
+  Chrome tab; after choosing your account, tap **Open Contact Sphere** and
+  you are signed in inside the app — with the usual two-factor step if you
+  turned it on.
+- Safe by design: the browser never gets a session, and the one-time code
+  it passes back works only once, for two minutes, and only together with
+  a secret that never left the app.
+
 ### Added — Android app (first test build)
 
 - An Android app (`apps/android`): Contact Sphere in a native shell, always

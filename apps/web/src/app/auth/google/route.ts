@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { isProduction } from '@/lib/api';
 import { signupStatus } from '@/lib/auth';
 import {
+  BASE64URL_43,
   CALLBACK_PATH,
   encodeState,
   googleAuthUrl,
@@ -19,7 +20,12 @@ export async function GET(request: Request): Promise<Response> {
   const origin = new URL(request.url).origin;
   const { googleClientId } = await signupStatus();
   if (!googleClientId) return NextResponse.redirect(`${origin}/login`);
-  const s = newOAuthState();
+  // From the Android app: remember its challenge for the way back.
+  const app = new URL(request.url).searchParams.get('app');
+  const s = {
+    ...newOAuthState(),
+    ...(app && BASE64URL_43.test(app) ? { app } : {}),
+  };
   (await cookies()).set(
     oauthCookieName(isProduction()),
     encodeState(s),

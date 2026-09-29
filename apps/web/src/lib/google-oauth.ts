@@ -14,7 +14,12 @@ export interface OAuthState {
   state: string;
   verifier: string;
   nonce: string;
+  /** Sign-in started by the Android app (ADR 0025): its challenge. */
+  app?: string;
 }
+
+/** base64url of a SHA-256: the app's challenge, and the hand-off code. */
+export const BASE64URL_43 = /^[A-Za-z0-9_-]{43}$/;
 
 export function newOAuthState(): OAuthState {
   const r = () => randomBytes(32).toString('base64url');
@@ -75,7 +80,14 @@ export function decodeState(value: string | undefined): OAuthState | null {
     return typeof s.state === 'string' &&
       typeof s.verifier === 'string' &&
       typeof s.nonce === 'string'
-      ? { state: s.state, verifier: s.verifier, nonce: s.nonce }
+      ? {
+          state: s.state,
+          verifier: s.verifier,
+          nonce: s.nonce,
+          ...(typeof s.app === 'string' && BASE64URL_43.test(s.app)
+            ? { app: s.app }
+            : {}),
+        }
       : null;
   } catch {
     return null;

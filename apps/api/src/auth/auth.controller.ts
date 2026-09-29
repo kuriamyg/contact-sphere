@@ -16,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 import {
   AuthService,
   type Me,
+  type AppHandoffIssued,
   type MfaRequired,
   type SessionResult,
 } from './auth.service';
@@ -23,6 +24,7 @@ import { type AuthContext, CurrentAuth, Public } from './decorators';
 import { deviceLabel } from './device';
 import {
   ChangePasswordDto,
+  AppHandoffDto,
   GoogleSignInDto,
   LoginDto,
   LocaleDto,
@@ -90,8 +92,20 @@ export class AuthController {
   google(
     @Body() dto: GoogleSignInDto,
     @Headers('x-client-ua') ua?: string,
-  ): Promise<SessionResult | MfaRequired> {
+  ): Promise<SessionResult | MfaRequired | AppHandoffIssued> {
     return this.auth.googleSignIn(dto, deviceLabel(ua));
+  }
+
+  /** The Android app redeeming its Google sign-in hand-off (ADR 0025). */
+  @Public()
+  @Throttle(STRICT)
+  @Post('app/redeem')
+  @HttpCode(HttpStatus.OK)
+  redeemApp(
+    @Body() dto: AppHandoffDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult | MfaRequired> {
+    return this.auth.redeemAppHandoff(dto.code, dto.verifier, deviceLabel(ua));
   }
 
   /** Sign-up step 1: text a code to the number. Same answer either way. */
