@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { OrbitMark } from '@/components/brand/orbit-mark';
 import { NavLink } from '@/components/nav-link';
 import { EditClashes } from '@/components/offline/edit-clashes';
+import { Tour } from '@/components/onboarding/tour';
 import { OfflineSync } from '@/components/offline/offline-sync';
 import { BottomNav } from '@/components/shell/bottom-nav';
 import { ProfileMenu } from '@/components/shell/profile-menu';
@@ -42,9 +43,15 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
                 aria-label={t.sections}
                 className="hidden items-center gap-1 sm:flex"
               >
-                <NavLink href="/today">{t.today}</NavLink>
-                <NavLink href="/contacts">{t.contacts}</NavLink>
-                <NavLink href="/groups">{t.groups}</NavLink>
+                <NavLink href="/today" tour="today">
+                  {t.today}
+                </NavLink>
+                <NavLink href="/contacts" tour="contacts">
+                  {t.contacts}
+                </NavLink>
+                <NavLink href="/groups" tour="groups">
+                  {t.groups}
+                </NavLink>
               </nav>
               <ProfileMenu
                 name={name}
@@ -64,6 +71,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
           {children}
         </main>
         <BottomNav />
+        <Tour userId={user.id} createdAt={user.createdAt} name={name} />
       </div>
     </div>
   );

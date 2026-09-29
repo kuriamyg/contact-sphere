@@ -33,6 +33,7 @@ export function BottomNav() {
           <Link
             key={i.label}
             href={i.href}
+            data-tour={i.label}
             aria-current={on ? 'page' : undefined}
             className={`flex h-full flex-col items-center justify-center gap-1 rounded-2xl text-[11px] focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${
               on ? 'font-bold text-accent' : 'font-semibold text-muted'

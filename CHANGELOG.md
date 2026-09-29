@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — First-run tour, full-screen account page, show password
+
+- **Guided tour** for new accounts: a card that glides between Today,
+  Contacts, Groups, Search and your account, with a spotlight and an arrow
+  on each, Back / Next / Skip, and an "Import contacts" finish. Shown once
+  per device; replay it any time from "Take the tour".
+- The avatar now opens a **full-screen account page** instead of a small
+  pop-up.
+- Every password box has an **eye button** to show or hide what you type.
+
 ### Added — Sign up with a phone number and a password
 
 - For people without Google (or who prefer not to use it): a mobile number

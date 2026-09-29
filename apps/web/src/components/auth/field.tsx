@@ -2,6 +2,8 @@ import type { InputHTMLAttributes, Ref } from 'react';
 
 import { ChromeRing } from '@/components/brand/chrome-ring';
 
+import { PasswordInput } from './password-input';
+
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
@@ -9,7 +11,13 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   ref?: Ref<HTMLInputElement>;
 };
 
-/** A labelled input. The label is always visible — never a placeholder-only field. */
+const INPUT =
+  'block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40';
+
+/**
+ * A labelled input. The label is always visible — never a placeholder-only
+ * field. Password boxes get a show/hide eye.
+ */
 export function Field({ label, name, hint, id, ref, ...input }: FieldProps) {
   const inputId = id ?? name;
   const hintId = hint ? `${inputId}-hint` : undefined;
@@ -18,14 +26,25 @@ export function Field({ label, name, hint, id, ref, ...input }: FieldProps) {
       <label htmlFor={inputId} className="block text-sm font-medium">
         {label}
       </label>
-      <input
-        ref={ref}
-        id={inputId}
-        name={name}
-        aria-describedby={hintId}
-        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
-        {...input}
-      />
+      {input.type === 'password' ? (
+        <PasswordInput
+          ref={ref}
+          id={inputId}
+          name={name}
+          aria-describedby={hintId}
+          className={INPUT}
+          {...input}
+        />
+      ) : (
+        <input
+          ref={ref}
+          id={inputId}
+          name={name}
+          aria-describedby={hintId}
+          className={INPUT}
+          {...input}
+        />
+      )}
       {hint && (
         <p id={hintId} className="text-sm text-muted">
           {hint}

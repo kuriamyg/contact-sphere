@@ -7,6 +7,8 @@ export const client = section(
       saving: 'Saving…',
       save: 'Save',
       cancel: 'Cancel',
+      showPassword: 'Show password',
+      hidePassword: 'Hide password',
       remove: 'Remove',
     },
     login: {
@@ -414,6 +416,48 @@ export const client = section(
       tools: 'Tools',
       profileSettings: 'Profile & settings',
       searchPlaceholder: 'Search contacts…',
+      account: 'Account',
+      close: 'Close',
+      tour: 'Take the tour',
+    },
+    tour: {
+      progress: 'Step {n} of {total}',
+      skip: 'Skip',
+      back: 'Back',
+      next: 'Next',
+      start: 'Show me',
+      later: 'Later',
+      importNow: 'Import contacts',
+      steps: {
+        welcome: {
+          title: 'Welcome, {name}',
+          body: 'Contact Sphere keeps the people you know in one private place. Here is a one-minute tour of where everything is.',
+        },
+        today: {
+          title: 'Today',
+          body: 'Your plan for the day: people to follow up with, birthdays and catch-ups. Start here every morning.',
+        },
+        contacts: {
+          title: 'Contacts',
+          body: 'Everyone you know, private to you. Add someone with +, or open a contact to call, text or WhatsApp in one tap.',
+        },
+        groups: {
+          title: 'Groups',
+          body: 'Put people together — family, chama, church, clients — and text or WhatsApp the whole group at once.',
+        },
+        search: {
+          title: 'Search',
+          body: 'Find anyone fast by name, number, skill, tag or area.',
+        },
+        account: {
+          title: 'Your account',
+          body: 'Profile and security, your QR card, import and export, theme and language. You can replay this tour from here.',
+        },
+        finish: {
+          title: 'You’re all set',
+          body: 'Bring your people in: import the contacts from your phone in a minute. Nothing is shared with anyone.',
+        },
+      },
     },
   },
   {
@@ -421,6 +465,8 @@ export const client = section(
       saving: 'Inahifadhi…',
       save: 'Hifadhi',
       cancel: 'Ghairi',
+      showPassword: 'Onyesha nenosiri',
+      hidePassword: 'Ficha nenosiri',
       remove: 'Ondoa',
     },
     login: {
@@ -844,6 +890,48 @@ export const client = section(
       tools: 'Zana',
       profileSettings: 'Wasifu na mipangilio',
       searchPlaceholder: 'Tafuta anwani…',
+      account: 'Akaunti',
+      close: 'Funga',
+      tour: 'Pitia mwongozo',
+    },
+    tour: {
+      progress: 'Hatua {n} kati ya {total}',
+      skip: 'Ruka',
+      back: 'Rudi',
+      next: 'Endelea',
+      start: 'Nionyeshe',
+      later: 'Baadaye',
+      importNow: 'Leta anwani',
+      steps: {
+        welcome: {
+          title: 'Karibu, {name}',
+          body: 'Contact Sphere huweka watu unaowajua mahali pamoja pa faragha. Huu ni mwongozo wa dakika moja wa kila kitu kilipo.',
+        },
+        today: {
+          title: 'Leo',
+          body: 'Mpango wa siku yako: watu wa kufuatilia, siku za kuzaliwa na wa kusalimia. Anza hapa kila asubuhi.',
+        },
+        contacts: {
+          title: 'Anwani',
+          body: 'Kila mtu unayemjua, faragha kwako. Ongeza mtu kwa +, au fungua anwani upige simu, utume ujumbe au WhatsApp kwa mguso mmoja.',
+        },
+        groups: {
+          title: 'Vikundi',
+          body: 'Weka watu pamoja — familia, chama, kanisa, wateja — na utume ujumbe au WhatsApp kwa kikundi kizima mara moja.',
+        },
+        search: {
+          title: 'Tafuta',
+          body: 'Mpate mtu yeyote haraka kwa jina, nambari, ujuzi, lebo au eneo.',
+        },
+        account: {
+          title: 'Akaunti yako',
+          body: 'Wasifu na usalama, kadi yako ya QR, kuleta na kutoa anwani, mandhari na lugha. Unaweza kurudia mwongozo huu hapa.',
+        },
+        finish: {
+          title: 'Uko tayari',
+          body: 'Walete watu wako: leta anwani kutoka kwa simu yako kwa dakika moja. Hakuna kinachoshirikiwa na mtu yeyote.',
+        },
+      },
     },
   },
 );
