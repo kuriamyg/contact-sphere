@@ -52,10 +52,13 @@ export const client = section(
     phoneCode: {
       phone: 'Mobile number',
       phoneHint: 'A Safaricom, Airtel or Telkom number, like 0712 345 678.',
-      sendCode: 'Text me a code',
+      sendCode: 'Send verification code',
       sending: 'Sending…',
-      sentTo: 'We texted a 6-digit code to {phone}. It works for 10 minutes.',
-      code: 'Code from the SMS',
+      sentTo:
+        'We sent a verification code by SMS to {phone}. It is valid for 10 minutes.',
+      code: 'Verification code',
+      codeHint:
+        'The 6-digit code in the SMS. On Android it may fill in by itself.',
       name: 'Your name (optional)',
       password: 'Password',
       newPassword: 'New password',
@@ -64,7 +67,7 @@ export const client = section(
       creating: 'Creating account…',
       save: 'Save new password',
       saving: 'Saving…',
-      resend: 'Send a new code',
+      resend: 'Resend code',
       otherNumber: 'Use a different number',
     },
     mfa: {
@@ -442,11 +445,13 @@ export const client = section(
     phoneCode: {
       phone: 'Nambari ya simu',
       phoneHint: 'Nambari ya Safaricom, Airtel au Telkom, kama 0712 345 678.',
-      sendCode: 'Nitumie msimbo',
+      sendCode: 'Tuma msimbo wa uthibitisho',
       sending: 'Inatuma…',
       sentTo:
-        'Tumetuma msimbo wa tarakimu 6 kwa {phone}. Unafanya kazi kwa dakika 10.',
-      code: 'Msimbo kutoka kwenye SMS',
+        'Tumetuma msimbo wa uthibitisho kwa SMS kwa {phone}. Unatumika kwa dakika 10.',
+      code: 'Msimbo wa uthibitisho',
+      codeHint:
+        'Msimbo wa tarakimu 6 ulio kwenye SMS. Kwenye Android unaweza kujaza wenyewe.',
       name: 'Jina lako (si lazima)',
       password: 'Nenosiri',
       newPassword: 'Nenosiri jipya',
@@ -456,7 +461,7 @@ export const client = section(
       creating: 'Inaunda akaunti…',
       save: 'Hifadhi nenosiri jipya',
       saving: 'Inahifadhi…',
-      resend: 'Tuma msimbo mpya',
+      resend: 'Tuma msimbo tena',
       otherNumber: 'Tumia nambari nyingine',
     },
     mfa: {

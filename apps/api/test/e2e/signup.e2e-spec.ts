@@ -98,7 +98,12 @@ describe('open sign-up (B6)', () => {
       .expect(204);
     expect(sms.sent).toHaveLength(1);
     expect(sms.sent[0].to).toBe(PHONE);
-    expect(sms.sent[0].text).toMatch(/^Msimbo wa Contact Sphere: \d{6}\./);
+    expect(sms.sent[0].text).toMatch(
+      /^Msimbo wako wa uthibitisho wa Contact Sphere ni (\d{6})\./,
+    );
+    // Android fills the code in from the last line, for our site only.
+    expect(sms.sent[0].text).toMatch(/\n\n@localhost:3000 #\d{6}$/);
+    expect(sms.sent[0].text.length).toBeLessThanOrEqual(160);
     const { rows } = await owner.query<{ code_hash: string }>(
       'SELECT code_hash FROM phone_codes',
     );
@@ -243,7 +248,10 @@ describe('forgot password, by SMS', () => {
     expect(sms.sent).toHaveLength(0);
     await signUp();
     await api('post', '/auth/reset/code').send({ phone: PHONE }).expect(204);
-    expect(sms.sent.at(-1)?.text).toMatch(/^Contact Sphere code: \d{6}/);
+    expect(sms.sent.at(-1)?.text).toMatch(
+      /^Your Contact Sphere verification code is \d{6}\./,
+    );
+    expect(sms.sent.at(-1)?.text.length).toBeLessThanOrEqual(160);
   });
 
   it('sets the new password and signs every device out', async () => {

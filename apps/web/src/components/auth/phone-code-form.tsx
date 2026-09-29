@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 
 import {
   type PhoneCodeState,
@@ -35,8 +35,28 @@ export function PhoneCodeForm({ purpose }: { purpose: 'signup' | 'reset' }) {
   >(finish, {});
   const [changing, setChanging] = useState(false);
   const t = useMessages().phoneCode;
+  const codeInput = useRef<HTMLInputElement>(null);
+  const waitingForCode = !!sent.phone && !changing;
 
-  if (!sent.phone || changing) {
+  // WebOTP: Chrome on Android offers to fill the code in from the SMS
+  // (its last line is "@<our host> #<code>"). Elsewhere, typing works.
+  useEffect(() => {
+    if (!waitingForCode || !('OTPCredential' in window)) return;
+    const stop = new AbortController();
+    navigator.credentials
+      .get({
+        otp: { transport: ['sms'] },
+        signal: stop.signal,
+      } as CredentialRequestOptions)
+      .then((otp) => {
+        const code = (otp as { code?: string } | null)?.code;
+        if (code && codeInput.current) codeInput.current.value = code;
+      })
+      .catch(() => {});
+    return () => stop.abort();
+  }, [waitingForCode, sent.phone]);
+
+  if (!waitingForCode || !sent.phone) {
     return (
       <form
         action={sendAction}
@@ -72,7 +92,9 @@ export function PhoneCodeForm({ purpose }: { purpose: 'signup' | 'reset' }) {
         />
         <input type="hidden" name="phone" value={sent.phone} />
         <Field
+          ref={codeInput}
           label={t.code}
+          hint={t.codeHint}
           name="code"
           inputMode="numeric"
           autoComplete="one-time-code"
