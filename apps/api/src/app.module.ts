@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AuditModule } from './audit/audit.module';
+import { BackupModule } from './backup/backup.module';
 import { BillingModule } from './billing/billing.module';
 import { AuthModule } from './auth/auth.module';
 import { BffGuard } from './auth/bff.guard';
@@ -45,6 +46,7 @@ export class AppModule {
         SyncModule,
         ReachModule,
         BillingModule,
+        BackupModule,
       ],
       // Global guards run in this order for EVERY route (ADR 0006):
       // 1. is the caller our web server?  2. rate limit  3. valid session?

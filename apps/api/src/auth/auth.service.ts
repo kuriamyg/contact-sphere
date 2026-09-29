@@ -90,6 +90,8 @@ export interface Me {
   plusUntil: string | null;
   /** Has ever paid for Plus (not only the trial or free months). */
   paidPlus: boolean;
+  /** When the owner last downloaded an encrypted backup (C2). */
+  lastBackupAt: string | null;
 }
 
 /** One message for every login failure, so it never reveals which part was wrong. */
@@ -493,6 +495,7 @@ export class AuthService {
         googleSub: true,
         phoneVerifiedAt: true,
         recoveryKeyHash: true,
+        lastBackupAt: true,
       },
     });
     // A session whose user vanished cannot happen (cascade), but never
@@ -528,6 +531,7 @@ export class AuthService {
           : 'free',
       plusUntil: user.plusUntil?.toISOString() ?? null,
       paidPlus: paid > 0,
+      lastBackupAt: user.lastBackupAt?.toISOString() ?? null,
     };
   }
 

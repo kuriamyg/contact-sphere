@@ -37,6 +37,7 @@ import { getContactStats } from '@/lib/contacts';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
 import { getBilling } from '@/lib/billing';
+import { BackupSection } from '@/components/backup/backup-section';
 import { PlanNoticeSlot } from '@/components/billing/plan-notice-slot';
 import { PlanSection } from '@/components/billing/plan-section';
 import { fmt } from '@/i18n/format';
@@ -175,6 +176,7 @@ export default async function ProfilePage() {
                 ['appearance-heading', m.client.shell.appearance],
                 ['offline-heading', t.offlineTitle],
                 ['data-heading', t.dataTitle],
+                ['backup-heading', m.client.backup.title],
                 ['legal-heading', t.legalTitle],
                 ['sessions-heading', t.signOutTitle],
                 ['delete-heading', t.deleteTitle],
@@ -385,6 +387,21 @@ export default async function ProfilePage() {
                 {t.importContacts}
               </Link>
             </div>
+          </section>
+
+          <section
+            aria-labelledby="backup-heading"
+            className={`${card} space-y-4`}
+          >
+            <CardTitle id="backup-heading" icon={<ShieldIcon />}>
+              {m.client.backup.title}
+            </CardTitle>
+            <BackupSection
+              lastBackup={
+                user.lastBackupAt ? formatDate(user.lastBackupAt, locale) : null
+              }
+              locale={locale}
+            />
           </section>
 
           <section

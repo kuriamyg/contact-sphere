@@ -5,6 +5,16 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Encrypted backup and restore
+
+- Profile → **Encrypted backup**: choose a passphrase and download all your
+  contacts, groups and follow-ups as one locked file. Encryption happens on
+  your phone; Contact Sphere never sees the passphrase or the file.
+- **Restore** from a backup file: see what will be added first; nothing
+  you have now is changed or deleted, and restoring twice adds nothing.
+- "Last backup" on Profile, and a monthly "Back up your contacts" card on
+  Today once you have 10 contacts.
+
 ### Added — Plan-ending reminders
 
 - A banner on Today and in Profile → Your plan from 5 days before Plus

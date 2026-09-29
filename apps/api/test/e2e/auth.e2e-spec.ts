@@ -129,6 +129,7 @@ describe('first-account setup', () => {
       plan: 'plus',
       plusUntil: null,
       paidPlus: false,
+      lastBackupAt: null,
       hasPassword: true,
       google: false,
     });

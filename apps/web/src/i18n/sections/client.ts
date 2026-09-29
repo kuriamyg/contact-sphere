@@ -420,6 +420,70 @@ export const client = section(
       close: 'Close',
       tour: 'Take the tour',
     },
+    backup: {
+      title: 'Encrypted backup',
+      intro:
+        'Download everything — contacts, groups, follow-ups — as one file locked with a passphrase you choose. Keep it somewhere safe: Google Drive, an email to yourself, a flash disk.',
+      last: 'Last backup: {date}.',
+      never: 'No backup yet.',
+      passphrase: 'Passphrase',
+      passphraseHint:
+        'At least 10 characters. A few unrelated words work well.',
+      confirm: 'Confirm passphrase',
+      understand:
+        'I understand: if I forget this passphrase, nobody can open this backup — not even Contact Sphere.',
+      download: 'Download encrypted backup',
+      working: 'Encrypting…',
+      saved: 'Saved {file}. Keep it somewhere safe, away from this phone.',
+      tooShort: 'Use a passphrase of at least 10 characters.',
+      differ: 'The passphrases do not match.',
+      mustAgree: 'Tick the box to confirm you will keep the passphrase safe.',
+      failed: 'Could not make the backup. Try again.',
+      restoreTitle: 'Restore from a backup',
+      restoreIntro:
+        'Adds what is missing from a backup file. Nothing you have now is changed or deleted.',
+      file: 'Backup file',
+      open: 'Open backup',
+      opening: 'Opening…',
+      notBackup: 'That file is not a Contact Sphere backup.',
+      newer:
+        'That backup was made by a newer version of Contact Sphere. Refresh the page and try again.',
+      wrongPass: 'That passphrase does not open this backup.',
+      previewTitle: 'Backup from {date}',
+      contactsAdd: { one: '{n} contact to add', other: '{n} contacts to add' },
+      alreadySaved: {
+        one: '{n} already saved (left as it is)',
+        other: '{n} already saved (left as they are)',
+      },
+      groupsAdd: { one: '{n} new group', other: '{n} new groups' },
+      groupsUpdate: {
+        one: '{n} group gets members back',
+        other: '{n} groups get members back',
+      },
+      followUps: { one: '{n} follow-up', other: '{n} follow-ups' },
+      overLimit: {
+        one: '{n} group left out: the free plan holds 3.',
+        other: '{n} groups left out: the free plan holds 3.',
+      },
+      unreadable: {
+        one: '{n} entry in the file could not be read.',
+        other: '{n} entries in the file could not be read.',
+      },
+      nothing: 'Everything in this backup is already saved.',
+      restore: 'Restore',
+      restoring: 'Restoring…',
+      done: {
+        one: 'Restored: {n} contact added.',
+        other: 'Restored: {n} contacts added.',
+      },
+      cancel: 'Cancel',
+      remindTitle: 'Back up your contacts',
+      remindNever:
+        'You have not made a backup yet. It takes a minute and keeps your contacts safe if you lose your phone.',
+      remindOld: 'Your last backup was on {date}.',
+      remindCta: 'Back up now',
+      notNow: 'Not now',
+    },
     planNotice: {
       freeInDays: 'Your free Plus ends in {n} days',
       freeTomorrow: 'Your free Plus ends tomorrow',
@@ -912,6 +976,73 @@ export const client = section(
       account: 'Akaunti',
       close: 'Funga',
       tour: 'Pitia mwongozo',
+    },
+    backup: {
+      title: 'Nakala salama iliyofungwa',
+      intro:
+        'Pakua kila kitu — anwani, vikundi, ufuatiliaji — kama faili moja lililofungwa kwa neno la siri unalochagua. Liweke mahali salama: Google Drive, barua pepe kwako mwenyewe, flash disk.',
+      last: 'Nakala ya mwisho: {date}.',
+      never: 'Bado hujatengeneza nakala.',
+      passphrase: 'Neno la siri',
+      passphraseHint:
+        'Angalau herufi 10. Maneno machache yasiyohusiana hufanya kazi vizuri.',
+      confirm: 'Thibitisha neno la siri',
+      understand:
+        'Naelewa: nikisahau neno hili la siri, hakuna anayeweza kufungua nakala hii — hata Contact Sphere.',
+      download: 'Pakua nakala iliyofungwa',
+      working: 'Inafunga…',
+      saved: 'Imehifadhiwa {file}. Iweke mahali salama, mbali na simu hii.',
+      tooShort: 'Tumia neno la siri la angalau herufi 10.',
+      differ: 'Maneno ya siri hayalingani.',
+      mustAgree: 'Weka alama kuthibitisha utalihifadhi neno la siri salama.',
+      failed: 'Imeshindwa kutengeneza nakala. Jaribu tena.',
+      restoreTitle: 'Rejesha kutoka kwa nakala',
+      restoreIntro:
+        'Huongeza kinachokosekana kutoka kwa faili la nakala. Hakuna ulicho nacho sasa kitakachobadilishwa au kufutwa.',
+      file: 'Faili la nakala',
+      open: 'Fungua nakala',
+      opening: 'Inafungua…',
+      notBackup: 'Faili hilo si nakala ya Contact Sphere.',
+      newer:
+        'Nakala hiyo ilitengenezwa na toleo jipya zaidi la Contact Sphere. Onyesha upya ukurasa ujaribu tena.',
+      wrongPass: 'Neno hilo la siri halifungui nakala hii.',
+      previewTitle: 'Nakala ya {date}',
+      contactsAdd: {
+        one: 'Anwani {n} ya kuongeza',
+        other: 'Anwani {n} za kuongeza',
+      },
+      alreadySaved: {
+        one: '{n} tayari imehifadhiwa (haibadilishwi)',
+        other: '{n} tayari zimehifadhiwa (hazibadilishwi)',
+      },
+      groupsAdd: { one: 'Kikundi {n} kipya', other: 'Vikundi {n} vipya' },
+      groupsUpdate: {
+        one: 'Kikundi {n} kinarudishiwa wanachama',
+        other: 'Vikundi {n} vinarudishiwa wanachama',
+      },
+      followUps: { one: 'Ufuatiliaji {n}', other: 'Ufuatiliaji {n}' },
+      overLimit: {
+        one: 'Kikundi {n} kimeachwa: mpango wa bure una vikundi 3.',
+        other: 'Vikundi {n} vimeachwa: mpango wa bure una vikundi 3.',
+      },
+      unreadable: {
+        one: 'Kipengele {n} kwenye faili hakikusomeka.',
+        other: 'Vipengele {n} kwenye faili havikusomeka.',
+      },
+      nothing: 'Kila kitu kwenye nakala hii tayari kimehifadhiwa.',
+      restore: 'Rejesha',
+      restoring: 'Inarejesha…',
+      done: {
+        one: 'Imerejeshwa: anwani {n} imeongezwa.',
+        other: 'Imerejeshwa: anwani {n} zimeongezwa.',
+      },
+      cancel: 'Ghairi',
+      remindTitle: 'Hifadhi nakala ya anwani zako',
+      remindNever:
+        'Bado hujatengeneza nakala. Inachukua dakika moja na hulinda anwani zako ukipoteza simu.',
+      remindOld: 'Nakala yako ya mwisho ilikuwa tarehe {date}.',
+      remindCta: 'Tengeneza nakala sasa',
+      notNow: 'Si sasa',
     },
     planNotice: {
       freeInDays: 'Plus yako ya bure inaisha baada ya siku {n}',

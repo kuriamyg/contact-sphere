@@ -40,6 +40,9 @@ model User {
   /// sign-up; with the phone number it resets a forgotten password when
   /// SMS is off. Never the key itself. ADR 0021.
   recoveryKeyHash String?   @map("recovery_key_hash") @db.Char(64)
+  /// When the owner last downloaded an encrypted backup (ADR 0009). The
+  /// server never sees the file; this only drives the "back up" reminder.
+  lastBackupAt    DateTime? @map("last_backup_at") @db.Timestamptz(3)
   /// How the app greets the owner ("Kuria"). Optional; trimmed, never blank.
   displayName   String?   @map("display_name") @db.VarChar(100)
   /// argon2id, in PHC string format (algorithm, parameters and salt are

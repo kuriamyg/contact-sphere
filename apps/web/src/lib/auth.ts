@@ -21,6 +21,8 @@ export interface CurrentUser {
   plusUntil?: string | null;
   /** Has ever paid for Plus (not only the trial or free months). */
   paidPlus?: boolean;
+  /** When the owner last downloaded an encrypted backup (C2). */
+  lastBackupAt?: string | null;
   /** False for accounts that sign in with Google only (ADR 0020). */
   hasPassword?: boolean;
   google?: boolean;
