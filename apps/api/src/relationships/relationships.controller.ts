@@ -8,11 +8,13 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { type AuthContext, CurrentAuth } from '../auth/decorators';
 import { AddRelationshipDto, DismissSuggestionDto } from './relationships.dto';
 import {
+  type RelationshipMap,
   type RelationshipView,
   RelationshipsService,
   type Suggestion,
@@ -24,6 +26,15 @@ const Id = () => new ParseUUIDPipe();
 @Controller('relationships')
 export class RelationshipsController {
   constructor(private readonly rel: RelationshipsService) {}
+
+  /** Plus only (403 otherwise). `focus` must be one of the owner's contacts. */
+  @Get('map')
+  map(
+    @CurrentAuth() a: AuthContext,
+    @Query('focus', new ParseUUIDPipe({ optional: true })) focus?: string,
+  ): Promise<RelationshipMap> {
+    return this.rel.map(a.userId, focus);
+  }
 
   @Get('suggestions')
   suggestions(@CurrentAuth() a: AuthContext): Promise<Suggestion[]> {

@@ -39,6 +39,12 @@ export default async function SuggestedLinksPage({
         <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
         <p className="text-muted">{t.lead}</p>
       </div>
+      <Link
+        href="/contacts/map"
+        className="inline-block text-sm font-medium text-accent hover:underline"
+      >
+        {m.relationships.map.title} →
+      </Link>
       <Notice code={sp.done} />
 
       {suggestions.length === 0 ? (

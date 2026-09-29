@@ -6,10 +6,12 @@ import {
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { Plans } from '../billing/plans.service';
 import { fold } from '../contacts/contact-names';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { type RelationshipKind, type Role, roleFor, toRow } from './kinds';
+import { type MapEdge, neighbourhood, pickFocus } from './map';
 
 export interface RelationshipView {
   id: string;
@@ -18,6 +20,16 @@ export interface RelationshipView {
   label: string | null;
   other: { id: string; displayName: string };
 }
+
+export interface RelationshipMap {
+  focusId: string | null;
+  people: { id: string; displayName: string; depth: number }[];
+  links: MapEdge[];
+  /** More people are linked than the map draws at once. */
+  truncated: boolean;
+}
+
+export const PLUS_MAP = 'The relationship map is part of Plus.';
 
 export interface Suggestion {
   kind: 'relative' | 'introduced';
@@ -51,7 +63,50 @@ export class RelationshipsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly plans: Plans,
   ) {}
+
+  /**
+   * The map around one person (P6b, Plus): them, their links and their
+   * links' links, drawn by the page. Without a focus: the owner's card, or
+   * whoever has the most links.
+   */
+  async map(ownerId: string, focus?: string): Promise<RelationshipMap> {
+    await this.plans.requirePlus(ownerId, PLUS_MAP);
+    if (focus) await this.requireLive(ownerId, focus);
+    const [rows, user] = await Promise.all([
+      this.prisma.relationship.findMany({
+        where: { ownerId, from: live, to: live },
+        select: { id: true, fromId: true, toId: true, kind: true, label: true },
+        orderBy: { createdAt: 'asc' },
+        take: 20_000,
+      }),
+      this.prisma.user.findUnique({
+        where: { id: ownerId },
+        select: { cardContactId: true },
+      }),
+    ]);
+    const edges = rows as MapEdge[];
+    const focusId = pickFocus(
+      edges,
+      focus ?? null,
+      user?.cardContactId ?? null,
+    );
+    if (!focusId)
+      return { focusId: null, people: [], links: [], truncated: false };
+    const n = neighbourhood(edges, focusId);
+    const names = await this.prisma.contact.findMany({
+      where: { ownerId, id: { in: [...n.depth.keys()] }, ...live },
+      select: { id: true, displayName: true },
+    });
+    const people = names
+      .map((c) => ({ ...c, depth: n.depth.get(c.id)! }))
+      .sort(
+        (a, b) =>
+          a.depth - b.depth || a.displayName.localeCompare(b.displayName),
+      );
+    return { focusId, people, links: n.edges, truncated: n.truncated };
+  }
 
   /** Everyone linked to a contact, and how, from that contact's side. */
   async forContact(

@@ -4,6 +4,7 @@ import type { Messages } from '@/i18n/en';
 import { fmt } from '@/i18n/format';
 
 import { api } from './api';
+import type { MapData } from './map-layout';
 import { failedLoad } from './auth';
 import { UUID } from './contacts';
 
@@ -54,4 +55,33 @@ export async function listSuggestions(): Promise<Suggestion[]> {
   const res = await api<Suggestion[]>('/relationships/suggestions');
   if (res.status !== 200 || !res.data) failedLoad(res.status);
   return res.data;
+}
+
+/** How a stored link reads from one person's side (mirrors the API). */
+export function roleFor(kind: string, otherIsFrom: boolean): Role {
+  switch (kind) {
+    case 'parent':
+      return otherIsFrom ? 'parent' : 'child';
+    case 'introduced':
+      return otherIsFrom ? 'introducedBy' : 'introduced';
+    case 'client':
+      return otherIsFrom ? 'client' : 'supplier';
+    case 'mentor':
+      return otherIsFrom ? 'mentor' : 'mentee';
+    default:
+      return isRole(kind) ? kind : 'other';
+  }
+}
+
+export type MapResult =
+  { kind: 'ok'; data: MapData } | { kind: 'plus' } | { kind: 'missing' };
+
+/** The map around `focus` (or the API's choice). Plus only (403 → upsell). */
+export async function getMap(focus?: string): Promise<MapResult> {
+  const q = focus && UUID.test(focus) ? `?focus=${focus}` : '';
+  const res = await api<MapData>(`/relationships/map${q}`);
+  if (res.status === 403) return { kind: 'plus' };
+  if (res.status === 404 || res.status === 400) return { kind: 'missing' };
+  if (res.status !== 200 || !res.data) failedLoad(res.status);
+  return { kind: 'ok', data: res.data };
 }

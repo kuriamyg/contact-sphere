@@ -227,3 +227,77 @@ describe('relationships (P6, ADR 0023)', () => {
     expect(twice).toMatchObject({ relationships: 0 });
   });
 });
+
+describe('the relationship map (P6b, Plus)', () => {
+  it('draws two steps around the card or the best-connected person', async () => {
+    const [a, b, c, d, lone] = [
+      await mk({ givenName: 'Wanjiru', familyName: 'Kamau' }),
+      await mk({ givenName: 'Peter', familyName: 'Kamau' }),
+      await mk({ givenName: 'Otieno' }),
+      await mk({ givenName: 'Far' }),
+      await mk({ givenName: 'Lone' }),
+    ];
+    await api('post', `/relationships/for-contact/${a}`)
+      .send({ otherId: b, role: 'child' })
+      .expect(201);
+    await api('post', `/relationships/for-contact/${a}`)
+      .send({ otherId: c, role: 'friend' })
+      .expect(201);
+    await api('post', `/relationships/for-contact/${c}`)
+      .send({ otherId: d, role: 'colleague', label: 'Same office' })
+      .expect(201);
+
+    // No focus, no card: Wanjiru and Otieno both have two links; the
+    // smaller id wins. Asking for Peter centres on him.
+    const auto = (await api('get', '/relationships/map').expect(200)).body as {
+      focusId: string;
+      people: Body[];
+    };
+    expect([a, c]).toContain(auto.focusId);
+
+    const m = (await api('get', `/relationships/map?focus=${b}`).expect(200))
+      .body as {
+      focusId: string;
+      people: { id: string; depth: number }[];
+      links: Body[];
+      truncated: boolean;
+    };
+    expect(m.focusId).toBe(b);
+    expect(m.people.map((p) => [p.id, p.depth])).toEqual([
+      [b, 0],
+      [a, 1],
+      [c, 2],
+    ]);
+    expect(m.links).toHaveLength(2);
+    expect(m.links[0]).toMatchObject({ fromId: a, toId: b, kind: 'parent' });
+    expect(m.truncated).toBe(false);
+
+    // A person with no links is a map of one; trashed people are left out.
+    const one = (
+      await api('get', `/relationships/map?focus=${lone}`).expect(200)
+    ).body as { people: Body[] };
+    expect(one.people).toHaveLength(1);
+    await api('delete', `/contacts/${c}`).expect(204);
+    const m2 = (await api('get', `/relationships/map?focus=${a}`).expect(200))
+      .body as { people: Body[]; links: Body[] };
+    expect(m2.people).toHaveLength(2);
+    expect(m2.links).toHaveLength(1);
+  });
+
+  it('is Plus only, and never shows another account’s people', async () => {
+    const theirs = await member('bob@example.com');
+    const bobs = await mk({ givenName: 'Zawadi' }, theirs);
+    await api('get', `/relationships/map?focus=${bobs}`).expect(404);
+    await api('get', '/relationships/map?focus=not-a-uuid').expect(400);
+    await owner.query(
+      "UPDATE users SET plus_until = now() - interval '1 minute' WHERE email = 'bob@example.com'",
+    );
+    const res = await api('get', '/relationships/map', theirs).expect(403);
+    expect(res.body.message).toBe('The relationship map is part of Plus.');
+    // Adding links stays free.
+    const other = await mk({ givenName: 'Juma' }, theirs);
+    await api('post', `/relationships/for-contact/${bobs}`, theirs)
+      .send({ otherId: other, role: 'friend' })
+      .expect(201);
+  });
+});

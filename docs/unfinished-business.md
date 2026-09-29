@@ -24,7 +24,8 @@ refresh) · 💤 waiting on something outside the code.
 
 **Where we are (2026-09-29):** Commercial C1–C4 are done. The owner chose
 to build **P6 then P5** first (P1–P4 wait; the owner handles the bot
-themselves). P6a (relationships) is in progress. L1 and L2 wait for money.
+themselves). P6a (relationships) is live; P6b (the map) is in progress. L1
+and L2 wait for money.
 
 ---
 
@@ -49,8 +50,8 @@ themselves). P6a (relationships) is in progress. L1 and L2 wait for money.
 
 | #   | Item                                      | Status | What                                                                                                                                                                                                         |
 | --- | ----------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| P6a | Relationships                             | 🔨     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.                                                        |
-| P6b | Relationship map (Plus)                   | ⏳     | Pick a graph library (ADR, CSP-safe); `/map`: focus on a person, filter by kind, family layout, zoom/pan, a list view for small screens; ~300 people smooth.                                                 |
+| P6a | Relationships                             | ✅     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.                                                        |
+| P6b | Relationship map (Plus)                   | 🔨     | Own SVG, no library (ADR 0024). `/contacts/map`: focus on a person, filter by kind, family tree, zoom/pan, the same people as a list; up to 300 people.                                                      |
 | P5  | **Android app with phone sync (largest)** | ⏳     | Native Android app, two-way sync with the phone's own address book, with consent. Separate project (own ADRs, repo folder, Play Store listing). The adoption unlock: people will not keep two address books. |
 | P1  | Tour follow-ups                           | ⏳     | The owner picks a tour design (A–E, see the tour PR); tips inside pages (the + on Contacts, the import wizard, a contact's page).                                                                            |
 | P2  | Reminders by WhatsApp / SMS; more dates   | ⏳     | Morning reminder over WhatsApp or SMS (paid channels, costed in `docs/product/messaging-costs.md`); anniversaries and other important dates.                                                                 |
@@ -76,9 +77,8 @@ themselves). P6a (relationships) is in progress. L1 and L2 wait for money.
 - [ ] Render: health check path `/health` on both services.
 - [ ] ODPC registration (pack in `docs/odpc/`, KES 4,000), then send the
       number for the privacy policy.
-- [ ] Cloudflare Turnstile keys (free, ADR 0022): Turnstile → Add widget
-      for `contact-sphere-nine.vercel.app`, then set `TURNSTILE_SITE_KEY` and
-      `TURNSTILE_SECRET_KEY` on the production API.
+- [x] Cloudflare Turnstile keys set on the production API (checked live
+      2026-09-29: sign-up without the check is refused).
 - [ ] For the Android app (P5): a Google Play developer account (USD 25,
       one-off; new personal accounts need 12 testers for 14 days before
       release), an Android phone to test on, and the app id (suggested

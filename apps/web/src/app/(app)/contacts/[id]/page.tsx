@@ -386,6 +386,14 @@ export default async function ContactPage({
             <Link href={`/contacts/${c.id}/link`} className={button}>
               {rt.section.add}
             </Link>
+            {links.length > 0 && (
+              <Link
+                href={`/contacts/map?focus=${c.id}`}
+                className="self-center text-sm font-medium text-accent hover:underline"
+              >
+                {rt.map.seeMap}
+              </Link>
+            )}
             <Link
               href="/contacts/links"
               className="self-center text-sm font-medium text-accent hover:underline"

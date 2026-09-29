@@ -105,6 +105,8 @@ const EXACT: Record<string, string> = {
   'Choose someone other than this contact.':
     'Chagua mtu mwingine, si anwani hii yenyewe.',
   'Link not found.': 'Kiungo hakikupatikana.',
+  'The relationship map is part of Plus.':
+    'Ramani ya mahusiano ni sehemu ya Plus.',
   'You already have a group with that name.':
     'Tayari una kikundi chenye jina hilo.',
   'Not a member of that group.': 'Si mwanachama wa kikundi hicho.',

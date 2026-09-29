@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Relationship map (Plus)
+
+- **Relationship map** (a contact's page → See on the map, or from
+  Suggested links): everyone within two links of one person. Tap someone to
+  open them or centre the map on them; drag, pinch or scroll to move and
+  zoom.
+- **Family tree** layout: parents above, children below; husband or wife,
+  brothers and sisters beside.
+- Show or hide family, how you met, life and work links. The same people
+  are listed under the map.
+- Part of Plus; adding links stays free.
+
 ### Added — Relationships between contacts
 
 - A contact's page now has **Relationships**: link them to anyone else you
