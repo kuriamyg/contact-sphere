@@ -8,13 +8,15 @@ import { WipeOnSubmit } from '@/components/offline/offline-toggle';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { logoutToSignup } from '@/app/actions/auth';
 import { fmt } from '@/i18n/format';
-import { currentUser, signupOpen, whoIs } from '@/lib/auth';
+import { GoogleButton, OrDivider } from '@/components/auth/google-button';
+import { currentUser, signupStatus, whoIs } from '@/lib/auth';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('signUp');
 
-/** Open sign-up with a mobile number and an SMS code (B6, ADR 0018). */
+/** Open sign-up: with Google (ADR 0020) and/or an SMS code (B6). */
 export default async function SignupPage() {
-  if (!(await signupOpen())) redirect('/login');
+  const status = await signupStatus();
+  if (!status.open) redirect('/login');
   const [user, m] = await Promise.all([
     currentUser().catch(() => null),
     getMessages(),
@@ -53,9 +55,13 @@ export default async function SignupPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           {m.auth.signUpTitle}
         </h1>
-        <p className="text-muted">{m.auth.signUpLead}</p>
+        <p className="text-muted">
+          {status.sms ? m.auth.signUpLead : m.auth.signUpLeadGoogle}
+        </p>
       </header>
-      <PhoneCodeForm purpose="signup" />
+      {status.google && <GoogleButton label={m.auth.continueWithGoogle} />}
+      {status.google && status.sms && <OrDivider label={m.auth.or} />}
+      {status.sms && <PhoneCodeForm purpose="signup" />}
       <Consent />
       <p className="text-sm text-muted">
         {m.auth.haveAccount}{' '}

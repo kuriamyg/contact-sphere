@@ -80,6 +80,12 @@ export default async function PrivacyPage() {
           and, if you add one, your display name.
         </li>
         <li>
+          If you use &ldquo;Continue with Google&rdquo;: your Google
+          account&rsquo;s id, email address and name, as Google shares them with
+          your permission. Never your Google password, and nothing else from
+          your Google account.
+        </li>
+        <li>
           Your password — only as a one-way argon2 hash; nobody, including me,
           can read it.
         </li>
@@ -163,6 +169,11 @@ export default async function PrivacyPage() {
           <strong>Resend</strong> — only if you turn on email reminders: your
           email address and the number of people to reach that day, never their
           names.
+        </li>
+        <li>
+          <strong>Google</strong> — only if you choose &ldquo;Continue with
+          Google&rdquo;: Google confirms who you are and tells us your name and
+          email. We send Google nothing about your contacts.
         </li>
         <li>
           <strong>Safaricom (M-Pesa)</strong> — only when you pay in the app:

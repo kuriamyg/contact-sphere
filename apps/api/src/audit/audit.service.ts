@@ -15,6 +15,7 @@ export type AuditAction =
   | 'auth.signup_completed'
   | 'auth.phone_code_sent'
   | 'auth.password_reset'
+  | 'auth.google_linked'
   | 'auth.password_changed'
   | 'auth.mfa_challenged'
   | 'auth.mfa_failed'

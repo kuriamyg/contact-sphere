@@ -210,6 +210,14 @@ export default async function ProfilePage() {
                 <p className="text-muted">{user.phone}</p>
               </div>
             )}
+            {user.google && (
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{t.signInMethod}</p>
+                <p className="break-all text-muted">
+                  {fmt(t.withGoogle, { email: user.email ?? '' })}
+                </p>
+              </div>
+            )}
           </section>
 
           {billing && (
@@ -240,16 +248,20 @@ export default async function ProfilePage() {
               <TwoFactorSection
                 enabled={user.totpEnabled}
                 recoveryCodesLeft={user.recoveryCodesLeft}
+                hasPassword={user.hasPassword !== false}
               />
             </div>
-            <details className="border-t border-border pt-4">
-              <summary className="cursor-pointer font-medium">
-                {t.changePassword}
-              </summary>
-              <div className="mt-4">
-                <ChangePasswordForm />
-              </div>
-            </details>
+            {/* Google-only accounts have no password to change (ADR 0020). */}
+            {user.hasPassword !== false && (
+              <details className="border-t border-border pt-4">
+                <summary className="cursor-pointer font-medium">
+                  {t.changePassword}
+                </summary>
+                <div className="mt-4">
+                  <ChangePasswordForm />
+                </div>
+              </details>
+            )}
           </section>
 
           <section
@@ -477,7 +489,10 @@ export default async function ProfilePage() {
               <DownloadIcon className="size-4" />
               {t.deleteExport}
             </a>
-            <DeleteAccountForm twoFactor={user.totpEnabled} />
+            <DeleteAccountForm
+              twoFactor={user.totpEnabled}
+              hasPassword={user.hasPassword !== false}
+            />
           </section>
         </div>
       </div>

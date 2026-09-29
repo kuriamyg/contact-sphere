@@ -10,7 +10,14 @@ import { useMessages } from '@/i18n/client';
  * Profile → Delete your account (B7). Password, a code when two-factor is
  * on, and DELETE typed out — a stolen session or a slip cannot do it.
  */
-export function DeleteAccountForm({ twoFactor }: { twoFactor: boolean }) {
+export function DeleteAccountForm({
+  twoFactor,
+  hasPassword = true,
+}: {
+  twoFactor: boolean;
+  /** False for accounts that sign in with Google only (ADR 0020). */
+  hasPassword?: boolean;
+}) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     deleteAccount,
     {},
@@ -19,13 +26,15 @@ export function DeleteAccountForm({ twoFactor }: { twoFactor: boolean }) {
   return (
     <form action={formAction} className="max-w-md space-y-5" noValidate>
       <FormMessage error={state.error} />
-      <Field
-        label={t.password}
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-      />
+      {hasPassword && (
+        <Field
+          label={t.password}
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+      )}
       {twoFactor && (
         <Field
           label={t.code}

@@ -126,6 +126,8 @@ describe('first-account setup', () => {
       operator: true,
       plan: 'plus',
       plusUntil: null,
+      hasPassword: true,
+      google: false,
     });
     expect(await auditActions()).toEqual(['auth.setup_completed']);
     const { rows } = await owner.query('SELECT metadata::text FROM audit_logs');

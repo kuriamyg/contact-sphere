@@ -75,6 +75,9 @@ describe('open sign-up (B6)', () => {
   it('says whether sign-up is open; off by default elsewhere', async () => {
     expect((await api('get', '/auth/signup').expect(200)).body).toEqual({
       open: true,
+      sms: true,
+      google: false,
+      googleClientId: null,
     });
     const { app: closed } = await createTestApp();
     const s = closed.getHttpServer();
@@ -82,7 +85,7 @@ describe('open sign-up (B6)', () => {
       .get('/auth/signup')
       .set('x-bff-secret', TEST_SECRET)
       .expect(200);
-    expect(res.body).toEqual({ open: false });
+    expect(res.body).toMatchObject({ open: false, sms: false, google: false });
     await request(s)
       .post('/auth/signup/code')
       .set('x-bff-secret', TEST_SECRET)

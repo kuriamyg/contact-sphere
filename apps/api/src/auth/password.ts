@@ -31,9 +31,14 @@ export function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(
-  hash: string,
+  hash: string | null,
   password: string,
 ): Promise<boolean> {
+  // Google-only accounts have no password: spend the same time, then no.
+  if (hash === null) {
+    await verifyAgainstDummy(password);
+    return false;
+  }
   try {
     return await argon2.verify(hash, password);
   } catch {

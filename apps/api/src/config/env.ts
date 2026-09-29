@@ -85,6 +85,24 @@ export interface Env {
   otpSms?: OtpSmsConfig;
   /** Plans and payments (B9, ADR 0019). */
   billing: BillingConfig;
+  /**
+   * "Continue with Google" (OpenID Connect, ADR 0020). Unset = no Google
+   * button. `fake` reads test claims from the code (tests only).
+   */
+  google?: GoogleConfig;
+  /**
+   * How new people may join when OPEN_SIGNUP=on: SIGNUP_METHODS=google,
+   * sms or both. Each needs its own configuration.
+   */
+  signupMethods: SignupMethod[];
+}
+
+export type SignupMethod = 'google' | 'sms';
+
+export interface GoogleConfig {
+  provider: 'google' | 'fake';
+  clientId: string;
+  clientSecret?: string;
 }
 
 export interface BillingConfig {
@@ -545,15 +563,59 @@ function parseMpesa(
 function parseSignup(
   source: NodeJS.ProcessEnv,
   nodeEnv: NodeEnv,
-): { openSignup: boolean; otpSms?: OtpSmsConfig } {
+): {
+  openSignup: boolean;
+  otpSms?: OtpSmsConfig;
+  google?: GoogleConfig;
+  signupMethods: SignupMethod[];
+} {
   const otpSms = parseOtpSms(source, nodeEnv);
+  const google = parseGoogle(source, nodeEnv);
   const openSignup = parseOnOff('OPEN_SIGNUP', source.OPEN_SIGNUP, false);
-  if (openSignup && !otpSms) {
+  const raw = source.SIGNUP_METHODS?.trim();
+  // Before ADR 0020 sign-up was SMS only; keep that as the default.
+  const methods = (raw ? raw.split(',') : ['sms']).map((m) => m.trim());
+  if (!methods.every((m) => m === 'google' || m === 'sms')) {
+    throw new EnvError('SIGNUP_METHODS must list google and/or sms.');
+  }
+  const signupMethods = [...new Set(methods)] as SignupMethod[];
+  if (openSignup) {
+    if (signupMethods.includes('sms') && !otpSms) {
+      throw new EnvError(
+        'Sign-up by SMS needs OTP_SMS_PROVIDER to send sign-up codes.',
+      );
+    }
+    if (signupMethods.includes('google') && !google) {
+      throw new EnvError(
+        'Sign-up with Google needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+      );
+    }
+  }
+  return { openSignup, otpSms, google, signupMethods };
+}
+
+function parseGoogle(
+  source: NodeJS.ProcessEnv,
+  nodeEnv: NodeEnv,
+): GoogleConfig | undefined {
+  const clientId = source.GOOGLE_CLIENT_ID?.trim();
+  if (!clientId) return undefined;
+  if (source.GOOGLE_OAUTH?.trim() === 'fake') {
+    if (nodeEnv === 'production') {
+      throw new EnvError('GOOGLE_OAUTH=fake is for tests; not in production.');
+    }
+    return { provider: 'fake', clientId };
+  }
+  if (!/^[\w.-]{10,200}\.apps\.googleusercontent\.com$/.test(clientId)) {
     throw new EnvError(
-      'OPEN_SIGNUP=on needs OTP_SMS_PROVIDER to send sign-up codes.',
+      'GOOGLE_CLIENT_ID must be an OAuth client id ending in .apps.googleusercontent.com.',
     );
   }
-  return { openSignup, otpSms };
+  const clientSecret = source.GOOGLE_CLIENT_SECRET?.trim();
+  if (!clientSecret || clientSecret.length < 10 || /\s/.test(clientSecret)) {
+    throw new EnvError('GOOGLE_CLIENT_SECRET must be the OAuth client secret.');
+  }
+  return { provider: 'google', clientId, clientSecret };
 }
 
 function parseOtpSms(

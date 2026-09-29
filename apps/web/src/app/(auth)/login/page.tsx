@@ -5,14 +5,16 @@ import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/auth/login-form';
 import { WipeAll } from '@/components/offline/offline-sync';
 import { getMessages, pageTitle } from '@/i18n/server';
-import { currentUser, setupAvailable, signupOpen } from '@/lib/auth';
+import { GoogleButton, OrDivider } from '@/components/auth/google-button';
+import { FormMessage } from '@/components/auth/field';
+import { currentUser, setupAvailable, signupStatus } from '@/lib/auth';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('signIn');
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ deleted?: string; reset?: string }>;
+  searchParams: Promise<{ deleted?: string; reset?: string; google?: string }>;
 }) {
   const query = await searchParams;
   const deleted = query.deleted === '1';
@@ -20,11 +22,15 @@ export default async function LoginPage({
   // If the API is unreachable, still show the form: signing in will then
   // say the service is unavailable, which is more useful than an error page.
   if (await currentUser().catch(() => null)) redirect('/contacts');
-  const [canSetUp, open, m] = await Promise.all([
+  const [canSetUp, status, m] = await Promise.all([
     setupAvailable(),
-    signupOpen(),
+    signupStatus(),
     getMessages(),
   ]);
+  const googleProblem =
+    query.google && query.google in m.auth.google
+      ? m.auth.google[query.google as keyof typeof m.auth.google]
+      : undefined;
   return (
     <>
       <header className="space-y-2">
@@ -50,14 +56,23 @@ export default async function LoginPage({
           {m.auth.passwordReset}
         </p>
       )}
+      <FormMessage error={googleProblem} />
+      {status.googleClientId && (
+        <>
+          <GoogleButton label={m.auth.continueWithGoogle} />
+          <OrDivider label={m.auth.or} />
+        </>
+      )}
       <LoginForm />
-      {open && (
+      {status.open && (
         <div className="space-y-2 text-sm text-muted">
-          <p>
-            <Link href="/reset" className="underline">
-              {m.auth.forgot}
-            </Link>
-          </p>
+          {status.sms && (
+            <p>
+              <Link href="/reset" className="underline">
+                {m.auth.forgot}
+              </Link>
+            </p>
+          )}
           <p>
             {m.auth.newHere}{' '}
             <Link

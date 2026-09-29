@@ -765,3 +765,32 @@ describe('payments (B9, ADR 0019)', () => {
     ).toBe(CHECK_VIOLATION);
   });
 });
+
+describe('Google sign-in (ADR 0020)', () => {
+  it('every account keeps a way to sign in, and Google ids are unique', async () => {
+    expect(
+      await sqlState(
+        app.query(
+          "INSERT INTO users (id, email, updated_at) VALUES (gen_random_uuid(), 'nobody@example.com', now())",
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
+    await app.query(
+      "INSERT INTO users (id, email, google_sub, updated_at) VALUES (gen_random_uuid(), 'g1@example.com', '1001', now())",
+    );
+    expect(
+      await sqlState(
+        app.query(
+          "INSERT INTO users (id, email, google_sub, updated_at) VALUES (gen_random_uuid(), 'g2@example.com', '1001', now())",
+        ),
+      ),
+    ).toBe('23505');
+    expect(
+      await sqlState(
+        app.query(
+          "INSERT INTO users (id, email, google_sub, updated_at) VALUES (gen_random_uuid(), 'g3@example.com', 'bad id!', now())",
+        ),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
+});

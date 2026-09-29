@@ -4,14 +4,15 @@ import { redirect } from 'next/navigation';
 
 import { PhoneCodeForm } from '@/components/auth/phone-code-form';
 import { getMessages, pageTitle } from '@/i18n/server';
-import { signupOpen } from '@/lib/auth';
+import { signupStatus } from '@/lib/auth';
 
 export const generateMetadata = (): Promise<Metadata> =>
   pageTitle('resetPassword');
 
 /** Forgot password: a code by SMS to the number on the account (B6). */
 export default async function ResetPage() {
-  if (!(await signupOpen())) redirect('/login');
+  // Reset by SMS exists only where SMS codes are on.
+  if (!(await signupStatus()).sms) redirect('/login');
   const m = await getMessages();
   return (
     <>

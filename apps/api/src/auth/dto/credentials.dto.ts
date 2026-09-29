@@ -132,3 +132,29 @@ export class ResetPasswordDto {
   @Length(1, PASSWORD_MAX)
   newPassword!: string;
 }
+
+/**
+ * "Continue with Google" (ADR 0020): what the web server got back from
+ * Google, plus the PKCE verifier and nonce it kept in a cookie.
+ */
+export class GoogleSignInDto {
+  @IsString()
+  @Length(1, 2048)
+  code!: string;
+
+  @IsString()
+  @Length(43, 128)
+  codeVerifier!: string;
+
+  @IsString()
+  @Length(16, 128)
+  nonce!: string;
+
+  @IsString()
+  @MaxLength(300)
+  redirectUri!: string;
+
+  @IsOptional()
+  @IsIn(LOCALES)
+  locale?: 'en' | 'sw';
+}
