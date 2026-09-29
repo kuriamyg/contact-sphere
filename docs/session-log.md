@@ -626,3 +626,30 @@ linked by verified email, else created on the Plus trial. Migration
 every account can sign in. Password-only features adapt. Tests: unit (token
 checks with a local RSA key, exchange, config, web helpers), e2e +8, DB +1,
 browser flow 18/18 with Playwright standing in for Google.
+
+## 2026-09-29 — People without Google; first real sign-in; commercial round
+
+- **Phone + password sign-up (ADR 0021, #47):** no code; the number is a
+  username marked not verified; a one-time recovery key (80 bits, SHA-256
+  stored) resets a forgotten password, wrong keys count toward the lock-out;
+  SMS reset only for proven numbers. Production: `SIGNUP_METHODS=google,password`
+  with the owner's new Google OAuth client (the first client was rotated
+  after its JSON was opened in a third-party tool). The owner signed in
+  with Google in production.
+- **#48:** first-run tour (coach marks, spotlight, 7 steps, en/sw), the
+  avatar opens a full-screen account page (portalled: the blurred header
+  trapped the fixed panel), show/hide eye on every password box.
+- **Commercial round, in the owner's order** (tracked in the new
+  `docs/unfinished-business.md`):
+  - C1 (#49): banner and morning push before Plus ends; free-plan notice
+    after.
+  - C2 (#50): encrypted backup and restore, made in the browser (WebCrypto
+    PBKDF2-SHA-256 600k + AES-256-GCM); restore only adds; "last backup"
+    and a monthly reminder. ADR 0009 accepted. Migration
+    `backup_reminder`.
+  - C3 (#51): Cloudflare Turnstile on password sign-up and SMS-code
+    requests, off until its keys are set (ADR 0022).
+  - C4: this docs refresh (pilot playbook, backlog, roadmap).
+- Each shipped through the routine: CI green, staging then production
+  migrated with no drift before merge, clean API deploys, live checks
+  (staging with test accounts, deleted after; production read-only).

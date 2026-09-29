@@ -5,6 +5,12 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — Docs match what is live
+
+- Pilot playbook: Google or phone + password sign-up, recovery key, tour,
+  plan reminders, backups. Backlog and roadmap updated; the ordered list
+  of remaining work is `docs/unfinished-business.md`.
+
 ### Added — "Not a robot" check on sign-up (off until switched on)
 
 - Cloudflare Turnstile on phone + password sign-up and on SMS-code

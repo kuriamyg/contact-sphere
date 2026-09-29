@@ -79,28 +79,29 @@ which cost us money (SMS/WhatsApp messages, storage) and deliver ongoing value.
 
 ### Done (live in production, each verified on staging then production)
 
-| Phase            | What shipped                                                                 |
-| ---------------- | ---------------------------------------------------------------------------- |
-| 0 Planning       | Handoff analysis, 13 ADRs, threat model, backlog                             |
-| 1 Foundation     | Monorepo, Next.js web on Vercel, NestJS API on Render, CI                    |
-| 2 Database       | Neon Postgres, migrations, least-privilege roles, append-only audit          |
-| 3 Authentication | Owner setup, sessions, rate limits, CSP, TOTP two-factor with recovery codes |
-| 4 Contacts       | Create/edit, E.164 numbers (KE default), search, sort, archive, 30-day trash |
-| 5a Import/export | `.vcf` 2.1/3.0/4.0 import with preview and repeat-skipping; export           |
-| 6a Profile       | Profile page with avatar ring, name, stats, security, sign-out; polish       |
-| 5b Clean-up      | Duplicates with reasons, review, safe merge, undo for 30 days                |
+| Phase            | What shipped                                                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 Planning       | Handoff analysis, 13 ADRs, threat model, backlog                                                                                                                    |
+| 1 Foundation     | Monorepo, Next.js web on Vercel, NestJS API on Render, CI                                                                                                           |
+| 2 Database       | Neon Postgres, migrations, least-privilege roles, append-only audit                                                                                                 |
+| 3 Authentication | Owner setup, sessions, rate limits, CSP, TOTP two-factor with recovery codes                                                                                        |
+| 4 Contacts       | Create/edit, E.164 numbers (KE default), search, sort, archive, 30-day trash                                                                                        |
+| 5a Import/export | `.vcf` 2.1/3.0/4.0 import with preview and repeat-skipping; export                                                                                                  |
+| 6a Profile       | Profile page with avatar ring, name, stats, security, sign-out; polish                                                                                              |
+| 5b Clean-up      | Duplicates with reasons, review, safe merge, undo for 30 days                                                                                                       |
+| 7 Know-who       | Tags, area, met-through, word search, saved searches                                                                                                                |
+| 8 Communities    | Groups with roles, SMS/WhatsApp the group, group export                                                                                                             |
+| 9 Remember       | Keep-in-touch, follow-ups, birthdays, Today                                                                                                                         |
+| 10 On the phone  | Installable app, offline copy and offline edits with conflict review                                                                                                |
+| 11 Reach         | Morning push reminders, cheap group texts, QR card, Kiswahili; email built                                                                                          |
+| 12 Commercial    | Google and phone+password sign-up, plans and trial, operator page, manual M-Pesa, reminders before Plus ends, encrypted backups, bot check, deletion, privacy/terms |
 
-### Next, in order (why this order: each step makes the next one valuable)
+### Next
 
-| Phase                                                                                 | What                                                                                                                                 | Why now                                                    |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| **7 Know-who**                                                                        | Tags (skills/services), area, "met through", notes search, saved searches                                                            | The everyday reason to open the app instead of the dialler |
-| **8 Communities**                                                                     | Groups with roles, WhatsApp-the-group, group export                                                                                  | Chama/church beachhead                                     |
-| **9 Remember**                                                                        | Important dates, keep-in-touch cadences, follow-ups, a Today screen, email digest                                                    | Makes the app proactive — the core paid value              |
-| **10 On the phone**                                                                   | Installable PWA + offline; Android app with consented two-way phone sync                                                             | Removes "two address books" — the adoption unlock          |
-| **11 Reach** (11a live: push reminders, cheap group texts, QR card; 11b Swahili next) | WhatsApp/SMS reminders, business card QR, Swahili                                                                                    | Where Kenyans are; the viral loop                          |
-| **12 Commercial**                                                                     | Open sign-up (phone OTP), plans, M-Pesa billing, ODPC registration, privacy policy, account deletion, encrypted backups with history | Required before charging                                   |
-| **13 Map**                                                                            | Relationship map (family tree, introductions)                                                                                        | Delight and differentiation once data is rich              |
+The ordered list of everything still to build — commercial first, then
+product, with the Android app as the largest project — lives in
+[`docs/unfinished-business.md`](../unfinished-business.md). It is updated
+in every PR.
 
 ## 8. Risks to watch
 

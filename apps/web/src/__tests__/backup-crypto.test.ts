@@ -53,7 +53,8 @@ describe('encrypted backup files (ADR 0009)', () => {
     const data = f.data as string;
     const flipped = {
       ...f,
-      data: (data[5] === 'A' ? 'B' : 'A') + data.slice(1),
+      // Always a real change: swap the first character for a different one.
+      data: (data[0] === 'A' ? 'B' : 'A') + data.slice(1),
     };
     expect(await problem(decryptBackup(JSON.stringify(flipped), PASS))).toBe(
       'wrong-passphrase',
