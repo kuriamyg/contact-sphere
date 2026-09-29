@@ -38,6 +38,8 @@
   --accent: #047857;
   --accent-soft: #e3f6ec;
   --violet: #6d28d9;
+  --amber: #b45309;
+  --sky: #0369a1;
   --primary-from: #10b981;
   --primary-to: #047857;
   --on-primary: #ffffff;
@@ -63,6 +65,8 @@
   --accent: #34d399;
   --accent-soft: rgba(52, 211, 153, 0.13);
   --violet: #c4b5fd;
+  --amber: #fbbf24;
+  --sky: #7dd3fc;
   --primary-from: #34d399;
   --primary-to: #10b981;
   --on-primary: #03261b;
@@ -87,6 +91,8 @@
     --accent: #34d399;
     --accent-soft: rgba(52, 211, 153, 0.13);
     --violet: #c4b5fd;
+    --amber: #fbbf24;
+    --sky: #7dd3fc;
     --primary-from: #34d399;
     --primary-to: #10b981;
     --on-primary: #03261b;
@@ -427,4 +433,47 @@ h3 {
 }
 .legal .summary h2 {
   margin-top: 0;
+}
+
+/*
+ * Relationship map (P6b, ADR 0024): colours per kind of link, as classes
+ * (the CSP allows no inline styles). Dashes as well as colour, so the
+ * kinds can be told apart without colour.
+ */
+.map-link {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.map-family {
+  stroke: var(--accent);
+  color: var(--accent);
+}
+.map-met {
+  stroke: var(--violet);
+  stroke-dasharray: 2 5;
+  color: var(--violet);
+}
+.map-life {
+  stroke: var(--amber);
+  stroke-dasharray: 9 5;
+  color: var(--amber);
+}
+.map-work {
+  stroke: var(--sky);
+  stroke-dasharray: 12 4 2 4;
+  color: var(--sky);
+}
+.map-name {
+  paint-order: stroke;
+  stroke: var(--background);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.map-canvas {
+  touch-action: none;
+  cursor: grab;
+}
+.map-canvas:active {
+  cursor: grabbing;
 }
