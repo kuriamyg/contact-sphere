@@ -192,7 +192,8 @@ function Restore({ t, locale }: { t: T; locale: string }) {
       p.contacts.toAdd === 0 &&
       p.groups.toAdd === 0 &&
       p.groups.toUpdate === 0 &&
-      p.followUps === 0;
+      p.followUps === 0 &&
+      !p.relationships;
     const date = new Date(opened.createdAt).toLocaleDateString(
       locale === 'sw' ? 'sw-KE' : 'en-KE',
       { day: 'numeric', month: 'short', year: 'numeric' },
@@ -204,6 +205,7 @@ function Restore({ t, locale }: { t: T; locale: string }) {
       p.groups.toAdd > 0 && plural(p.groups.toAdd, t.groupsAdd),
       p.groups.toUpdate > 0 && plural(p.groups.toUpdate, t.groupsUpdate),
       p.followUps > 0 && plural(p.followUps, t.followUps),
+      !!p.relationships && plural(p.relationships, t.relationships),
       p.groups.overLimit > 0 && plural(p.groups.overLimit, t.overLimit),
       p.unreadable > 0 && plural(p.unreadable, t.unreadable),
     ].filter((l): l is string => !!l);

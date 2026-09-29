@@ -21,6 +21,8 @@ export interface RestorePlan {
   };
   memberships: number;
   followUps: number;
+  /** Absent from an API older than P6. */
+  relationships?: number;
   unreadable: number;
 }
 

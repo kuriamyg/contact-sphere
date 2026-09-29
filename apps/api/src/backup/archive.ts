@@ -1,5 +1,9 @@
 import { KEEP_IN_TOUCH_DAYS } from '../remember/dates';
 import { GROUP_KINDS, type GroupKind } from '../groups/groups.dto';
+import {
+  RELATIONSHIP_KINDS,
+  type RelationshipKind,
+} from '../relationships/kinds';
 
 /**
  * The backup archive (ADR 0009): everything the owner keeps, as plain JSON.
@@ -16,6 +20,7 @@ export const ARCHIVE_VERSION = 1;
 export const MAX_CONTACTS = 5_000;
 export const MAX_GROUPS = 500;
 export const MAX_FOLLOW_UPS = 10_000;
+export const MAX_RELATIONSHIPS = 20_000;
 const MAX_PHONES = 50;
 const MAX_EMAILS = 50;
 const MAX_MEMBERS = 2_000;
@@ -56,6 +61,14 @@ export interface ArchiveFollowUp {
   done: boolean;
 }
 
+/** A link between two contacts of the archive (P6, ADR 0023). */
+export interface ArchiveRelationship {
+  fromId: string;
+  toId: string;
+  kind: RelationshipKind;
+  label: string | null;
+}
+
 export interface Archive {
   format: typeof ARCHIVE_FORMAT;
   version: typeof ARCHIVE_VERSION;
@@ -63,6 +76,8 @@ export interface Archive {
   contacts: ArchiveContact[];
   groups: ArchiveGroup[];
   followUps: ArchiveFollowUp[];
+  /** Absent from backups made before P6. */
+  relationships: ArchiveRelationship[];
 }
 
 export class ArchiveError extends Error {}
@@ -184,6 +199,26 @@ function followUp(v: unknown): ArchiveFollowUp | null {
   };
 }
 
+function relationship(v: unknown): ArchiveRelationship | null {
+  if (
+    !isObj(v) ||
+    typeof v.fromId !== 'string' ||
+    typeof v.toId !== 'string' ||
+    !UUID.test(v.fromId) ||
+    !UUID.test(v.toId) ||
+    v.fromId.toLowerCase() === v.toId.toLowerCase() ||
+    !(RELATIONSHIP_KINDS as readonly string[]).includes(v.kind as string)
+  ) {
+    return null;
+  }
+  return {
+    fromId: v.fromId.toLowerCase(),
+    toId: v.toId.toLowerCase(),
+    kind: v.kind as RelationshipKind,
+    label: tidy(v.label, 40)?.toLowerCase() ?? null,
+  };
+}
+
 /**
  * Reads an archive the owner is restoring. Throws ArchiveError when it is
  * not an archive at all (or too big); otherwise returns what can be used
@@ -211,14 +246,17 @@ export function readArchive(input: unknown): {
   const rawContacts = list(input.contacts, MAX_CONTACTS);
   const rawGroups = list(input.groups, MAX_GROUPS);
   const rawFollowUps = list(input.followUps, MAX_FOLLOW_UPS);
+  const rawRelationships = list(input.relationships, MAX_RELATIONSHIPS);
   const contacts = rawContacts.map(contact);
   const groups = rawGroups.map(group);
   const followUps = rawFollowUps.map(followUp);
+  const relationships = rawRelationships.map(relationship);
   const ok = <T>(x: T | null): x is T => x !== null;
   const unreadable =
     contacts.filter((c) => !c).length +
     groups.filter((g) => !g).length +
-    followUps.filter((f) => !f).length;
+    followUps.filter((f) => !f).length +
+    relationships.filter((r) => !r).length;
   return {
     archive: {
       format: ARCHIVE_FORMAT,
@@ -227,6 +265,7 @@ export function readArchive(input: unknown): {
       contacts: contacts.filter(ok),
       groups: groups.filter(ok),
       followUps: followUps.filter(ok),
+      relationships: relationships.filter(ok),
     },
     unreadable,
   };

@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE payments, phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE relationships, relationship_dismissals, payments, phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -816,5 +816,83 @@ describe('Google sign-in (ADR 0020)', () => {
         ),
       ),
     ).toBe(CHECK_VIOLATION);
+  });
+});
+
+describe('relationships (P6, ADR 0023)', () => {
+  const contact = async (owner: string) =>
+    (
+      await app.query<{ id: string }>(
+        `INSERT INTO contacts (id, owner_id, display_name, sort_name, updated_at)
+         VALUES (gen_random_uuid(), $1, 'Ann', 'ann', now()) RETURNING id`,
+        [owner],
+      )
+    ).rows[0].id;
+  const link = (
+    owner: string,
+    from: string,
+    to: string,
+    kind: string,
+    label: string | null = null,
+  ) =>
+    app.query(
+      `INSERT INTO relationships (id, owner_id, from_contact_id, to_contact_id, kind, label)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4::varchar, $5::varchar)`,
+      [owner, from, to, kind, label],
+    );
+  const pairOf = async (owner: string) => {
+    const [x, y] = [await contact(owner), await contact(owner)];
+    return x < y ? [x, y] : [y, x];
+  };
+
+  it('never link two owners’ contacts, or a contact to itself', async () => {
+    const a = await insertUser(app, 'ann@example.com');
+    const b = await insertUser(app, 'bob@example.com');
+    const mine = await contact(a);
+    const theirs = await contact(b);
+    expect(await sqlState(link(a, mine, theirs, 'parent'))).toBe(
+      FOREIGN_KEY_VIOLATION,
+    );
+    expect(await sqlState(link(b, mine, theirs, 'parent'))).toBe(
+      FOREIGN_KEY_VIOLATION,
+    );
+    expect(await sqlState(link(a, mine, mine, 'parent'))).toBe(CHECK_VIOLATION);
+  });
+
+  it('know their kinds, store two-way links once, and keep labels tidy', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const [lo, hi] = await pairOf(u);
+    expect(await sqlState(link(u, lo, hi, 'enemy'))).toBe(CHECK_VIOLATION);
+    // Two-way kinds are stored smaller id first, so a pair is never doubled.
+    expect(await sqlState(link(u, hi, lo, 'sibling'))).toBe(CHECK_VIOLATION);
+    await link(u, lo, hi, 'sibling');
+    expect(await sqlState(link(u, lo, hi, 'sibling'))).toBe(UNIQUE_VIOLATION);
+    // Directed kinds go either way.
+    await link(u, hi, lo, 'parent');
+    expect(await sqlState(link(u, lo, hi, 'friend', 'Old Friend'))).toBe(
+      CHECK_VIOLATION,
+    );
+    expect(await sqlState(link(u, lo, hi, 'friend', ''))).toBe(CHECK_VIOLATION);
+    await link(u, lo, hi, 'friend', 'from school');
+  });
+
+  it('disappear with their contacts, and dismissals stay ordered', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    const [lo, hi] = await pairOf(u);
+    await link(u, lo, hi, 'cousin');
+    const dismiss = (x: string, y: string, kind = 'relative') =>
+      app.query(
+        `INSERT INTO relationship_dismissals (owner_id, a_id, b_id, kind) VALUES ($1, $2, $3, $4::varchar)`,
+        [u, x, y, kind],
+      );
+    expect(await sqlState(dismiss(hi, lo))).toBe(CHECK_VIOLATION);
+    expect(await sqlState(dismiss(lo, hi, 'friend'))).toBe(CHECK_VIOLATION);
+    await dismiss(lo, hi);
+    await app.query('DELETE FROM contacts WHERE id = $1', [lo]);
+    const { rows } = await app.query(
+      `SELECT (SELECT count(*) FROM relationships)::int AS r,
+              (SELECT count(*) FROM relationship_dismissals)::int AS d`,
+    );
+    expect(rows[0]).toEqual({ r: 0, d: 0 });
   });
 });
