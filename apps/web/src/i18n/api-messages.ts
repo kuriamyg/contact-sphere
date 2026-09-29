@@ -19,6 +19,11 @@ const EXACT: Record<string, string> = {
     'Msimbo huo umeisha muda. Omba mpya.',
   'This number already has an account. Sign in instead.':
     'Nambari hii tayari ina akaunti. Ingia badala yake.',
+  'This is not a Contact Sphere backup.': 'Hii si nakala ya Contact Sphere.',
+  'This backup was made by a newer version of Contact Sphere.':
+    'Nakala hii ilitengenezwa na toleo jipya zaidi la Contact Sphere.',
+  'This backup is too large to restore at once.':
+    'Nakala hii ni kubwa mno kurejesha kwa mara moja.',
   'That account and recovery key do not match. Check both and try again.':
     'Akaunti hiyo na ufunguo wa kurejesha havilingani. Kagua vyote viwili ujaribu tena.',
   'Your line is blocking messages from companies (Do Not Disturb), so the code could not be delivered. Allow promotional messages on your line, or use another number.':

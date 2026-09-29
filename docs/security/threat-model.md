@@ -156,6 +156,16 @@ parties_ who never signed up; this belongs in the privacy policy.
 | Recovery bypassing two-factor                 | The key resets only the password; TOTP is still asked at sign-in                                                                                                                     |
 | Bot sign-ups                                  | 5/min per address; add a challenge (Turnstile) if abused                                                                                                                             |
 
+## Encrypted backups (ADR 0009)
+
+| Threat                                   | Control                                                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Someone gets the backup file             | AES-256-GCM, key from the passphrase by PBKDF2-SHA-256 (600,000 rounds); the file holds no readable names or numbers                        |
+| The server or its operator reads backups | Encryption happens in the browser; the server never sees the passphrase or the file                                                         |
+| A doctored file                          | GCM authenticates the header too; absurd work factors refused; on restore the server re-checks every field and only ever adds, with new ids |
+| Restoring into the wrong account         | A restore can only add to the signed-in owner's own account; it never touches rows of another account                                       |
+| Guessing the passphrase offline          | At least 10 characters; 600,000 PBKDF2 rounds per guess                                                                                     |
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before

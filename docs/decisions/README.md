@@ -24,7 +24,7 @@ mattered.
 | [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                | Accepted |
 | [0007](0007-last-used.md)                        | Definition of "last used"                                  | Accepted |
 | [0008](0008-environments-and-isolation.md)       | Environments and isolation                                 | Accepted |
-| [0009](0009-backup-encryption.md)                | Encrypted local backups                                    | Proposed |
+| [0009](0009-backup-encryption.md)                | Encrypted backups                                          | Accepted |
 | [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                           | Accepted |
 | [0011](0011-public-source-code.md)               | Public source code, private data                           | Accepted |
 | [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL    | Accepted |

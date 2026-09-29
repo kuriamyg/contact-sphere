@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { followUpDone, markContacted } from '@/app/actions/remember';
 import { Avatar } from '@/components/avatar';
+import { BackupReminder } from '@/components/backup/backup-reminder';
 import { PlanNoticeSlot } from '@/components/billing/plan-notice-slot';
 import { Notice } from '@/components/contacts/notice';
 import {
@@ -18,7 +19,9 @@ import type { Messages } from '@/i18n/en';
 import { fmt, plural } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { requireUser } from '@/lib/auth';
-import { formatDay, whatsappHref } from '@/lib/format';
+import { backupDueNow } from '@/lib/backup-reminder';
+import { getContactStats } from '@/lib/contacts';
+import { formatDate, formatDay, whatsappHref } from '@/lib/format';
 import {
   cadenceLabel,
   getToday,
@@ -301,12 +304,14 @@ function Checklist({
 /** Who to reach today: follow-ups, keep-in-touch, birthdays. */
 export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
   const { done: doneCode } = await searchParams;
-  const [t, user, m, locale] = await Promise.all([
+  const [t, user, m, locale, stats] = await Promise.all([
     getToday(),
     requireUser(),
     getMessages(),
     getLocale(),
+    getContactStats(),
   ]);
+  const backup = backupDueNow(user, stats?.active ?? 0);
   const w = m.today;
   const people = new Set([
     ...t.followUps.filter((f) => f.daysAway <= 0).map((f) => f.contactId),
@@ -325,6 +330,16 @@ export default async function TodayPage({ searchParams }: PageProps<'/today'>) {
   return (
     <div className="max-w-xl space-y-6 lg:max-w-none">
       <PlanNoticeSlot user={user} locale={locale} />
+      {backup.due && (
+        <BackupReminder
+          userId={user.id}
+          due={backup.due}
+          last={
+            user.lastBackupAt ? formatDate(user.lastBackupAt, locale) : null
+          }
+          now={backup.now}
+        />
+      )}
       <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
         <header className="space-y-1">
           <p className="text-xs font-bold tracking-wider text-accent uppercase">
