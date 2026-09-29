@@ -1,0 +1,16 @@
+{
+  "appId": "com.coderiserdigital.contactsphere",
+  "appName": "Contact Sphere",
+  "webDir": "www",
+  "server": {
+    "url": "https://contact-sphere-nine.vercel.app/today",
+    "androidScheme": "https",
+    "allowNavigation": ["contact-sphere-nine.vercel.app"]
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "appendUserAgent": "ContactSphereAndroid/0.1"
+  }
+}

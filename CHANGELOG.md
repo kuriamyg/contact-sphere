@@ -5,6 +5,18 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Android app (first test build)
+
+- An Android app (`apps/android`): Contact Sphere in a native shell, always
+  showing the latest version of the web app.
+- **Import from this phone** (inside the app): reads the phone's contacts
+  after Android asks your permission, then shows the usual preview —
+  what will be added, what you already have. Read-only: it never changes
+  the contacts on your phone.
+- Test builds are published as the "Android app (test build)" download on
+  GitHub. Inside the app, sign in with your phone number and password for
+  now; Google sign-in inside the app comes next.
+
 ### Added — Relationship map (Plus)
 
 - **Relationship map** (a contact's page → See on the map, or from

@@ -1,13 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, useTransition } from 'react';
+import { useRef, useState, useSyncExternalStore, useTransition } from 'react';
+
+const noop = () => () => {};
 
 import {
   type ImportPlan,
   previewImport,
   runImport,
 } from '@/app/actions/import';
+import {
+  canReadPhoneContacts,
+  PhoneContactsDenied,
+  readPhoneContacts,
+  toVcf,
+} from '@/lib/phone-contacts';
 import { FormMessage } from '@/components/auth/field';
 import { Avatar } from '@/components/avatar';
 import {
@@ -15,6 +23,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   FileIcon,
+  PhoneIcon,
   ShieldIcon,
   UploadIcon,
 } from '@/components/icons';
@@ -47,11 +56,28 @@ export function ImportWizard() {
   const [pending, start] = useTransition();
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  // Known only in the browser; the server renders the file picker alone.
+  const inApp = useSyncExternalStore(noop, canReadPhoneContacts, () => false);
 
   function reset() {
     setStage({ name: 'choose' });
     setError(undefined);
     if (input.current) input.current.value = '';
+  }
+
+  /** Shared by a file and "this phone": check, then show the preview. */
+  async function preview(vcf: string, fileName: string) {
+    if (countCards(vcf) === 0) {
+      setError(t.noCards);
+      return;
+    }
+    if (vcf.length > MAX_VCF_CHARS) {
+      setError(t.tooLarge);
+      return;
+    }
+    const res = await previewImport(vcf);
+    if ('error' in res) setError(res.error);
+    else setStage({ name: 'preview', fileName, vcf, plan: res.plan });
   }
 
   function onFile(file: File | undefined) {
@@ -65,18 +91,21 @@ export function ImportWizard() {
         setError(t.unreadable);
         return;
       }
-      if (countCards(vcf) === 0) {
-        setError(t.noCards);
-        return;
+      await preview(vcf, file.name);
+    });
+  }
+
+  /** Android app only (ADR 0025): read the phone's own address book. */
+  function onPhone() {
+    setError(undefined);
+    start(async () => {
+      try {
+        await preview(toVcf(await readPhoneContacts()), t.thisPhone);
+      } catch (e) {
+        setError(
+          e instanceof PhoneContactsDenied ? t.phoneDenied : t.unreadable,
+        );
       }
-      if (vcf.length > MAX_VCF_CHARS) {
-        setError(t.tooLarge);
-        return;
-      }
-      const res = await previewImport(vcf);
-      if ('error' in res) setError(res.error);
-      else
-        setStage({ name: 'preview', fileName: file.name, vcf, plan: res.plan });
     });
   }
 
@@ -261,6 +290,20 @@ export function ImportWizard() {
     <div className="space-y-5">
       {progress}
       <FormMessage error={error} />
+      {inApp && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={onPhone}
+            disabled={pending}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl btn-primary px-4 py-4 font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            <PhoneIcon className="size-5" />
+            {pending ? t.reading : t.fromPhone}
+          </button>
+          <p className="text-center text-sm text-muted">{t.fromPhoneHint}</p>
+        </div>
+      )}
       <label
         htmlFor="vcf"
         onDragOver={(e) => {

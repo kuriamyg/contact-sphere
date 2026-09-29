@@ -1,0 +1,83 @@
+# The Android app (P5, ADR 0025): a native shell around the live web app,
+# plus read-only access to the phone's contacts. Built here because the
+# Android SDK comes with GitHub's runners.
+#
+# Pull requests: build the APK (proves it compiles). Pushes to main: also
+# publish it as the "android-latest" pre-release, for testers to install.
+name: Android
+
+on:
+  pull_request:
+    paths:
+      - 'apps/android/**'
+      - '.github/workflows/android.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build the Android app
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Install
+        run: npm ci --ignore-scripts
+      - name: Copy the config into the native project
+        working-directory: apps/android
+        run: npx cap sync android
+      - name: Build the APK
+        working-directory: apps/android/android
+        run: ./gradlew --no-daemon assembleDebug
+      - name: Name it
+        run: cp apps/android/android/app/build/outputs/apk/debug/app-debug.apk contact-sphere.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: contact-sphere-apk
+          path: contact-sphere.apk
+          retention-days: 14
+
+  publish:
+    name: Publish the test build
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: contact-sphere-apk
+      - name: Attach to the android-latest pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          notes="Test build of the Contact Sphere Android app from ${GITHUB_SHA::7}. Install on Android 7 or newer: open this page on the phone, tap contact-sphere.apk, allow installing from this source. Test builds are signed with a temporary key: uninstall the previous one before installing a new one."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release edit android-latest --notes "$notes" --prerelease
+          else
+            gh release create android-latest --target "$GITHUB_SHA" --prerelease \
+              --title "Android app (test build)" --notes "$notes"
+          fi
+          gh release upload android-latest contact-sphere.apk --clobber

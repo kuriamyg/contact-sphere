@@ -14,32 +14,33 @@ mattered.
 | Proposed   | A recommendation. Decided at the start of the phase that needs it. |
 | Superseded | Replaced; kept for history.                                        |
 
-| #                                                | Title                                                      | Status   |
-| ------------------------------------------------ | ---------------------------------------------------------- | -------- |
-| [0001](0001-record-decisions.md)                 | Record decisions as ADRs                                   | Accepted |
-| [0002](0002-monorepo-and-toolchain.md)           | Monorepo, Node 24, npm workspaces, pinned framework majors | Accepted |
-| [0003](0003-hosting.md)                          | Hosting: Vercel + Render + Neon (Frankfurt)                | Accepted |
-| [0004](0004-single-user-multi-user-ready.md)     | Single-user first release, multi-user-ready data model     | Accepted |
-| [0005](0005-deletion-policy.md)                  | Archive, trash, then hard delete                           | Accepted |
-| [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                | Accepted |
-| [0007](0007-last-used.md)                        | Definition of "last used"                                  | Accepted |
-| [0008](0008-environments-and-isolation.md)       | Environments and isolation                                 | Accepted |
-| [0009](0009-backup-encryption.md)                | Encrypted backups                                          | Accepted |
-| [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                           | Accepted |
-| [0011](0011-public-source-code.md)               | Public source code, private data                           | Accepted |
-| [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL    | Accepted |
-| [0013](0013-two-factor-totp.md)                  | Two-factor sign-in with TOTP                               | Accepted |
-| [0014](0014-languages.md)                        | Languages: English and Kiswahili                           | Accepted |
-| [0015](0015-offline-edits-and-conflicts.md)      | Offline edits: field-level merge, owner decides clashes    | Accepted |
-| [0016](0016-hardening.md)                        | Hardening: lock-out, devices, breached passwords, logs     | Accepted |
-| [0017](0017-account-deletion-and-legal.md)       | Account deletion, privacy policy and terms                 | Accepted |
-| [0018](0018-open-signup-sms-codes.md)            | Open sign-up with a mobile number and SMS codes            | Accepted |
-| [0019](0019-plans-and-payments.md)               | Plans, payments and the operator                           | Accepted |
-| [0020](0020-google-sign-in.md)                   | Continue with Google replaces SMS sign-up                  | Accepted |
-| [0021](0021-phone-password-signup.md)            | Sign-up with a phone number, a password and a recovery key | Accepted |
-| [0022](0022-bot-check-on-signup.md)              | "Not a robot" check on sign-up (Cloudflare Turnstile)      | Accepted |
-| [0023](0023-relationships.md)                    | Relationships between contacts                             | Accepted |
-| [0024](0024-relationship-map.md)                 | Relationship map: our own SVG, no graph library            | Accepted |
+| #                                                | Title                                                        | Status   |
+| ------------------------------------------------ | ------------------------------------------------------------ | -------- |
+| [0001](0001-record-decisions.md)                 | Record decisions as ADRs                                     | Accepted |
+| [0002](0002-monorepo-and-toolchain.md)           | Monorepo, Node 24, npm workspaces, pinned framework majors   | Accepted |
+| [0003](0003-hosting.md)                          | Hosting: Vercel + Render + Neon (Frankfurt)                  | Accepted |
+| [0004](0004-single-user-multi-user-ready.md)     | Single-user first release, multi-user-ready data model       | Accepted |
+| [0005](0005-deletion-policy.md)                  | Archive, trash, then hard delete                             | Accepted |
+| [0006](0006-authentication-and-sessions.md)      | Authentication and sessions                                  | Accepted |
+| [0007](0007-last-used.md)                        | Definition of "last used"                                    | Accepted |
+| [0008](0008-environments-and-isolation.md)       | Environments and isolation                                   | Accepted |
+| [0009](0009-backup-encryption.md)                | Encrypted backups                                            | Accepted |
+| [0010](0010-contact-fields-and-phone-numbers.md) | Contact fields and phone numbers                             | Accepted |
+| [0011](0011-public-source-code.md)               | Public source code, private data                             | Accepted |
+| [0012](0012-database-access.md)                  | Database access: Prisma 7, two roles, guarantees in SQL      | Accepted |
+| [0013](0013-two-factor-totp.md)                  | Two-factor sign-in with TOTP                                 | Accepted |
+| [0014](0014-languages.md)                        | Languages: English and Kiswahili                             | Accepted |
+| [0015](0015-offline-edits-and-conflicts.md)      | Offline edits: field-level merge, owner decides clashes      | Accepted |
+| [0016](0016-hardening.md)                        | Hardening: lock-out, devices, breached passwords, logs       | Accepted |
+| [0017](0017-account-deletion-and-legal.md)       | Account deletion, privacy policy and terms                   | Accepted |
+| [0018](0018-open-signup-sms-codes.md)            | Open sign-up with a mobile number and SMS codes              | Accepted |
+| [0019](0019-plans-and-payments.md)               | Plans, payments and the operator                             | Accepted |
+| [0020](0020-google-sign-in.md)                   | Continue with Google replaces SMS sign-up                    | Accepted |
+| [0021](0021-phone-password-signup.md)            | Sign-up with a phone number, a password and a recovery key   | Accepted |
+| [0022](0022-bot-check-on-signup.md)              | "Not a robot" check on sign-up (Cloudflare Turnstile)        | Accepted |
+| [0023](0023-relationships.md)                    | Relationships between contacts                               | Accepted |
+| [0024](0024-relationship-map.md)                 | Relationship map: our own SVG, no graph library              | Accepted |
+| [0025](0025-android-app.md)                      | The Android app: native shell, phone contacts in native code | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.
