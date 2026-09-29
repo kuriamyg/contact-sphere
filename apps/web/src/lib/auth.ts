@@ -22,6 +22,9 @@ export interface CurrentUser {
   /** False for accounts that sign in with Google only (ADR 0020). */
   hasPassword?: boolean;
   google?: boolean;
+  /** False for a number typed in at a password sign-up (ADR 0021). */
+  phoneVerified?: boolean;
+  hasRecoveryKey?: boolean;
 }
 
 /** Thrown when the API cannot say who is signed in (down, slow, 5xx). */
@@ -78,6 +81,8 @@ export interface SignupStatus {
   sms: boolean;
   /** …with Google (ADR 0020). */
   google: boolean;
+  /** …with a mobile number and a password, no code (ADR 0021). */
+  password: boolean;
   /** Set when "Continue with Google" works, for new or existing accounts. */
   googleClientId: string | null;
 }
@@ -93,6 +98,7 @@ export async function signupStatus(): Promise<SignupStatus> {
     // Older APIs sent only { open }, which meant SMS.
     sms: d.sms ?? d.open ?? false,
     google: d.google ?? false,
+    password: d.password ?? false,
     googleClientId: d.googleClientId ?? null,
   };
 }

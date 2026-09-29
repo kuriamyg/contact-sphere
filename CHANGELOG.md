@@ -5,6 +5,15 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Sign up with a phone number and a password
+
+- For people without Google (or who prefer not to use it): a mobile number
+  and a password, no code. The number is marked **not verified**.
+- A **recovery key** is shown once at sign-up (Copy, "I've saved it").
+  "Forgot your password?" takes the number, the key and a new password;
+  each use gives a new key. Profile → Recovery key makes a new one.
+- A reset code by SMS is only ever sent to a proven number.
+
 ### Changed — Sign up with Google
 
 - **Continue with Google** replaces the SMS code for new accounts: no code

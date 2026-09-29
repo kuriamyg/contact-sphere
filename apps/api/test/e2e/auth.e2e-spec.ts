@@ -118,6 +118,8 @@ describe('first-account setup', () => {
       id: expect.any(String),
       email: EMAIL,
       phone: null,
+      phoneVerified: false,
+      hasRecoveryKey: false,
       displayName: null,
       locale: 'en',
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),

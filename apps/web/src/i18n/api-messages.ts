@@ -19,6 +19,8 @@ const EXACT: Record<string, string> = {
     'Msimbo huo umeisha muda. Omba mpya.',
   'This number already has an account. Sign in instead.':
     'Nambari hii tayari ina akaunti. Ingia badala yake.',
+  'That account and recovery key do not match. Check both and try again.':
+    'Akaunti hiyo na ufunguo wa kurejesha havilingani. Kagua vyote viwili ujaribu tena.',
   'Your line is blocking messages from companies (Do Not Disturb), so the code could not be delivered. Allow promotional messages on your line, or use another number.':
     'Laini yako inazuia jumbe kutoka kwa kampuni (Usinisumbue), kwa hiyo msimbo haukuweza kufika. Ruhusu jumbe za matangazo kwenye laini yako, au tumia nambari nyingine.',
   'Could not send the code just now. Try again in a minute.':

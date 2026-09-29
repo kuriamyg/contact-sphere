@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { Consent } from '@/components/auth/consent';
 import { PhoneCodeForm } from '@/components/auth/phone-code-form';
+import { RegisterForm } from '@/components/auth/register-form';
 import { WipeOnSubmit } from '@/components/offline/offline-toggle';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { logoutToSignup } from '@/app/actions/auth';
@@ -13,7 +14,10 @@ import { currentUser, signupStatus, whoIs } from '@/lib/auth';
 
 export const generateMetadata = (): Promise<Metadata> => pageTitle('signUp');
 
-/** Open sign-up: with Google (ADR 0020) and/or an SMS code (B6). */
+/**
+ * Open sign-up: with Google (ADR 0020), an SMS code (B6), or a phone number
+ * and a password (ADR 0021).
+ */
 export default async function SignupPage() {
   const status = await signupStatus();
   if (!status.open) redirect('/login');
@@ -56,12 +60,25 @@ export default async function SignupPage() {
           {m.auth.signUpTitle}
         </h1>
         <p className="text-muted">
-          {status.sms ? m.auth.signUpLead : m.auth.signUpLeadGoogle}
+          {status.sms
+            ? m.auth.signUpLead
+            : status.google && status.password
+              ? m.auth.signUpLeadBoth
+              : status.password
+                ? m.auth.signUpLeadPassword
+                : m.auth.signUpLeadGoogle}
         </p>
       </header>
       {status.google && <GoogleButton label={m.auth.continueWithGoogle} />}
-      {status.google && status.sms && <OrDivider label={m.auth.or} />}
-      {status.sms && <PhoneCodeForm purpose="signup" />}
+      {status.google && (status.sms || status.password) && (
+        <OrDivider label={m.auth.or} />
+      )}
+      {/* An SMS code proves the number, so it wins when both are on. */}
+      {status.sms ? (
+        <PhoneCodeForm purpose="signup" />
+      ) : (
+        status.password && <RegisterForm />
+      )}
       <Consent />
       <p className="text-sm text-muted">
         {m.auth.haveAccount}{' '}

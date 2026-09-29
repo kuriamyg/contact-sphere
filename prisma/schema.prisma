@@ -29,9 +29,17 @@ model User {
   /// Optional since open sign-up (B6): an account has an email, a verified
   /// phone, or both (CHECK).
   email         String?   @unique @db.VarChar(254)
-  /// Kenyan mobile number in E.164 (+2547… / +2541…), proven by an SMS code
-  /// at sign-up. Signs in like an email. B6, ADR 0018.
+  /// Kenyan mobile number in E.164 (+2547… / +2541…). Signs in like an
+  /// email. B6, ADR 0018. Proven by an SMS code only when phoneVerifiedAt
+  /// is set; a password sign-up (ADR 0021) uses it as a username.
   phone         String?   @unique @db.VarChar(16)
+  /// When an SMS code proved the owner holds this number. Null = typed in
+  /// at a password sign-up and never proven (ADR 0021).
+  phoneVerifiedAt DateTime? @map("phone_verified_at") @db.Timestamptz(3)
+  /// SHA-256 (hex) of the one-time recovery key shown at a password
+  /// sign-up; with the phone number it resets a forgotten password when
+  /// SMS is off. Never the key itself. ADR 0021.
+  recoveryKeyHash String?   @map("recovery_key_hash") @db.Char(64)
   /// How the app greets the owner ("Kuria"). Optional; trimmed, never blank.
   displayName   String?   @map("display_name") @db.VarChar(100)
   /// argon2id, in PHC string format (algorithm, parameters and salt are

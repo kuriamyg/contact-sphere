@@ -26,8 +26,11 @@ import {
   GoogleSignInDto,
   LoginDto,
   LocaleDto,
+  NewRecoveryKeyDto,
   PhoneCodeDto,
   ProfileDto,
+  RecoverDto,
+  RegisterDto,
   ResetPasswordDto,
   SetupDto,
   SignupDto,
@@ -109,6 +112,29 @@ export class AuthController {
     @Headers('x-client-ua') ua?: string,
   ): Promise<SessionResult> {
     return this.auth.signup(dto, deviceLabel(ua));
+  }
+
+  /**
+   * Sign-up with a phone number and a password, no code (ADR 0021).
+   * Returns a session and the recovery key, shown to the owner once.
+   */
+  @Public()
+  @Throttle(STRICT)
+  @Post('register')
+  register(
+    @Body() dto: RegisterDto,
+    @Headers('x-client-ua') ua?: string,
+  ): Promise<SessionResult & { recoveryKey: string }> {
+    return this.auth.register(dto, deviceLabel(ua));
+  }
+
+  /** Forgot password with the recovery key; returns a new key. */
+  @Public()
+  @Throttle(STRICT)
+  @Post('recover')
+  @HttpCode(HttpStatus.OK)
+  recover(@Body() dto: RecoverDto): Promise<{ recoveryKey: string }> {
+    return this.auth.recover(dto);
   }
 
   /** Forgot password step 1: a code to the account's phone. */
@@ -252,5 +278,16 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
   ): Promise<void> {
     return this.auth.changePassword(a.userId, a.sessionId, dto);
+  }
+
+  /** A new recovery key (shown once); the old one stops working. */
+  @Throttle(STRICT)
+  @Post('recovery-key')
+  @HttpCode(HttpStatus.OK)
+  recoveryKey(
+    @CurrentAuth() a: AuthContext,
+    @Body() dto: NewRecoveryKeyDto,
+  ): Promise<{ recoveryKey: string }> {
+    return this.auth.newRecoveryKeyFor(a.userId, dto.password);
   }
 }

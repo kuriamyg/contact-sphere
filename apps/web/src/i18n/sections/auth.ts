@@ -53,6 +53,20 @@ export const auth = section(
     continueToApp: 'Continue to Contact Sphere',
     notYou: 'Not {name}?',
     signOut: 'Sign out',
+    signUpLeadPassword:
+      'Use your mobile number and a password you will remember. No code, no email needed.',
+    signUpLeadBoth:
+      'Continue with Google, or use your mobile number and a password.',
+    recoveryKeyTitle: 'Save your recovery key',
+    recoveryKeySaved: 'I’ve saved it',
+    recoveryKeyLead:
+      'If you forget your password, this key and your number are the only way back in. It is shown once. Write it down or keep a screenshot somewhere safe — never share it.',
+    newRecoveryKeyTitle: 'Recovery key',
+    newRecoveryKeyLead:
+      'Lost your key? Make a new one. The old key stops working at once.',
+    resetLeadKey:
+      'Enter your number, the recovery key you saved when you signed up, and a new password.',
+    resetWithSms: 'No recovery key? Get a code by SMS instead',
   },
   {
     signInTitle: 'Ingia',
@@ -107,5 +121,19 @@ export const auth = section(
     continueToApp: 'Endelea kwenye Contact Sphere',
     notYou: 'Si {name}?',
     signOut: 'Toka',
+    signUpLeadPassword:
+      'Tumia nambari yako ya simu na nenosiri utakalokumbuka. Hakuna msimbo wala barua pepe inayohitajika.',
+    signUpLeadBoth:
+      'Endelea na Google, au tumia nambari yako ya simu na nenosiri.',
+    recoveryKeyTitle: 'Hifadhi ufunguo wako wa kurejesha',
+    recoveryKeySaved: 'Nimeuhifadhi',
+    recoveryKeyLead:
+      'Ukisahau nenosiri, ufunguo huu na nambari yako ndiyo njia pekee ya kuingia tena. Unaonyeshwa mara moja. Uandike au uhifadhi picha ya skrini mahali salama — usimpe mtu yeyote.',
+    newRecoveryKeyTitle: 'Ufunguo wa kurejesha',
+    newRecoveryKeyLead:
+      'Umepoteza ufunguo? Tengeneza mpya. Ufunguo wa zamani unaacha kufanya kazi mara moja.',
+    resetLeadKey:
+      'Weka nambari yako, ufunguo wa kurejesha uliouhifadhi ulipojisajili, na nenosiri jipya.',
+    resetWithSms: 'Huna ufunguo? Pata msimbo kwa SMS badala yake',
   },
 );

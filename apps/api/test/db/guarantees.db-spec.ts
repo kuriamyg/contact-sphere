@@ -211,6 +211,30 @@ describe('users', () => {
       UNIQUE_VIOLATION,
     );
   });
+
+  it('stores a recovery key only as a SHA-256 digest (ADR 0021)', async () => {
+    const id = await insertUser(app, 'ann@example.com');
+    const set = (v: string) =>
+      app.query('UPDATE users SET recovery_key_hash = $1 WHERE id = $2', [
+        v,
+        id,
+      ]);
+    expect(await sqlState(set('7KQM2WXDHB9R4TFN'.padEnd(64, ' ')))).toBe(
+      CHECK_VIOLATION,
+    );
+    await set('a'.repeat(64));
+  });
+
+  it('marks a phone verified only when there is a phone', async () => {
+    const id = await insertUser(app, 'ann@example.com');
+    expect(
+      await sqlState(
+        app.query('UPDATE users SET phone_verified_at = now() WHERE id = $1', [
+          id,
+        ]),
+      ),
+    ).toBe(CHECK_VIOLATION);
+  });
 });
 
 describe('sessions', () => {

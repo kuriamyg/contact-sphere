@@ -207,7 +207,10 @@ export default async function ProfilePage() {
             {user.phone && (
               <div className="space-y-1">
                 <p className="text-sm font-medium">{t.phone}</p>
-                <p className="text-muted">{user.phone}</p>
+                <p className="text-muted">
+                  {user.phone}
+                  {user.phoneVerified === false && ` · ${t.phoneNotVerified}`}
+                </p>
               </div>
             )}
             {user.google && (
@@ -261,6 +264,17 @@ export default async function ProfilePage() {
                   <ChangePasswordForm />
                 </div>
               </details>
+            )}
+            {/* Resets a forgotten password without SMS (ADR 0021). */}
+            {user.hasPassword !== false && (
+              <div className="space-y-1 border-t border-border pt-4">
+                <Link href="/recovery-key" className="font-medium underline">
+                  {t.recoveryKey}
+                </Link>
+                <p className="text-sm text-muted">
+                  {user.hasRecoveryKey ? t.recoveryKeyHas : t.recoveryKeyNone}
+                </p>
+              </div>
             )}
           </section>
 

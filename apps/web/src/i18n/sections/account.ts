@@ -16,6 +16,12 @@ export const account = section(
     phone: 'Mobile number',
     signInMethod: 'Sign-in',
     withGoogle: 'Continue with Google ({email})',
+    phoneNotVerified: 'not verified',
+    recoveryKey: 'Recovery key',
+    recoveryKeyHas:
+      'Resets your password if you forget it. Lost it? Make a new one.',
+    recoveryKeyNone:
+      'None yet. Make one so you can reset a forgotten password.',
     emailNeedsAddress:
       'Email reminders need an email address, and this account signs in with a mobile number. Phone reminders above work without one.',
     security: 'Security',
@@ -86,6 +92,12 @@ export const account = section(
     phone: 'Nambari ya simu',
     signInMethod: 'Kuingia',
     withGoogle: 'Endelea na Google ({email})',
+    phoneNotVerified: 'haijathibitishwa',
+    recoveryKey: 'Ufunguo wa kurejesha',
+    recoveryKeyHas:
+      'Huweka upya nenosiri ukilisahau. Umeupoteza? Tengeneza mpya.',
+    recoveryKeyNone:
+      'Bado huna. Tengeneza ili uweze kuweka upya nenosiri ukilisahau.',
     emailNeedsAddress:
       'Vikumbusho vya barua pepe vinahitaji anwani ya barua pepe, na akaunti hii huingia kwa nambari ya simu. Vikumbusho vya simu hapo juu hufanya kazi bila hiyo.',
     security: 'Usalama',

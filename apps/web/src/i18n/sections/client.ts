@@ -70,6 +70,28 @@ export const client = section(
       resend: 'Resend code',
       otherNumber: 'Use a different number',
     },
+    register: {
+      confirm: 'Confirm password',
+    },
+    recoveryKey: {
+      label: 'Your recovery key',
+      copy: 'Copy key',
+      copied: 'Copied',
+      failed: 'Could not copy — write it down',
+      saved: 'I’ve saved it',
+      make: 'Make a new recovery key',
+      making: 'Making…',
+      password: 'Your password',
+      identifier: 'Mobile number or email',
+      key: 'Recovery key',
+      keyHint: '16 characters, like 7KQM-2WXD-HB9R-4TFN.',
+      confirm: 'Confirm new password',
+      reset: 'Set new password',
+      resetting: 'Setting…',
+      resetDone:
+        'Your password has been changed and every device signed out. Your old key no longer works — save this new one.',
+      signIn: 'Sign in',
+    },
     mfa: {
       code: 'Code',
       codeHint:
@@ -463,6 +485,28 @@ export const client = section(
       saving: 'Inahifadhi…',
       resend: 'Tuma msimbo tena',
       otherNumber: 'Tumia nambari nyingine',
+    },
+    register: {
+      confirm: 'Thibitisha nenosiri',
+    },
+    recoveryKey: {
+      label: 'Ufunguo wako wa kurejesha',
+      copy: 'Nakili ufunguo',
+      copied: 'Umenakiliwa',
+      failed: 'Haikunakili — uandike',
+      saved: 'Nimeuhifadhi',
+      make: 'Tengeneza ufunguo mpya wa kurejesha',
+      making: 'Inatengeneza…',
+      password: 'Nenosiri lako',
+      identifier: 'Nambari ya simu au barua pepe',
+      key: 'Ufunguo wa kurejesha',
+      keyHint: 'Herufi 16, kama 7KQM-2WXD-HB9R-4TFN.',
+      confirm: 'Thibitisha nenosiri jipya',
+      reset: 'Weka nenosiri jipya',
+      resetting: 'Inaweka…',
+      resetDone:
+        'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ufunguo wako wa zamani hautumiki tena — hifadhi huu mpya.',
+      signIn: 'Ingia',
     },
     mfa: {
       code: 'Msimbo',

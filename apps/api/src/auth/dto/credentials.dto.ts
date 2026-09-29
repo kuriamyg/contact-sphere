@@ -118,6 +118,57 @@ export class SignupDto {
   locale?: 'en' | 'sw';
 }
 
+/**
+ * Sign up with a phone number and a password (ADR 0021). No code: the
+ * number is a username, marked not verified.
+ */
+export class RegisterDto {
+  @IsString()
+  @MaxLength(32)
+  phone!: string;
+
+  @IsString()
+  @Length(1, PASSWORD_MAX)
+  password!: string;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value !== 'string') return value;
+    const t = value.trim().replace(/\s+/g, ' ');
+    return t === '' ? undefined : t;
+  })
+  @IsString()
+  @MaxLength(100)
+  displayName?: string;
+
+  @IsOptional()
+  @IsIn(LOCALES)
+  locale?: 'en' | 'sw';
+}
+
+/** Forgot password without SMS: the recovery key proves the account. */
+export class RecoverDto {
+  /** The phone number or email the account signs in with. */
+  @IsString()
+  @Length(1, 254)
+  identifier!: string;
+
+  @IsString()
+  @Length(1, 64)
+  recoveryKey!: string;
+
+  @IsString()
+  @Length(1, PASSWORD_MAX)
+  newPassword!: string;
+}
+
+/** A new recovery key replaces the old one; the password proves it is you. */
+export class NewRecoveryKeyDto {
+  @IsString()
+  @Length(1, PASSWORD_MAX)
+  password!: string;
+}
+
 /** Finish a password reset: the code proves the number. */
 export class ResetPasswordDto {
   @IsString()

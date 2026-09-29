@@ -36,6 +36,7 @@ mattered.
 | [0018](0018-open-signup-sms-codes.md)            | Open sign-up with a mobile number and SMS codes            | Accepted |
 | [0019](0019-plans-and-payments.md)               | Plans, payments and the operator                           | Accepted |
 | [0020](0020-google-sign-in.md)                   | Continue with Google replaces SMS sign-up                  | Accepted |
+| [0021](0021-phone-password-signup.md)            | Sign-up with a phone number, a password and a recovery key | Accepted |
 
 New ADR: copy the shape of an existing one, take the next number, add it to
 this table in the same PR as the change it justifies.
