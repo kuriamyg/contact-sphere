@@ -22,8 +22,9 @@ into chat or code.
 Status: ⏳ next · 🔨 in progress · ✅ done (then removed at the next
 refresh) · 💤 waiting on something outside the code.
 
-**Where we are (2026-09-29):** Commercial C1–C4 are done. Next build
-round: **Product, from P1**. L1 and L2 wait for money.
+**Where we are (2026-09-29):** Commercial C1–C4 are done. The owner chose
+to build **P6 then P5** first (P1–P4 wait; the owner handles the bot
+themselves). P6a (relationships) is in progress. L1 and L2 wait for money.
 
 ---
 
@@ -44,16 +45,17 @@ round: **Product, from P1**. L1 and L2 wait for money.
 | L1  | B9b: M-Pesa go-live + Ratiba renewals | 💤     | A till or paybill approved for Daraja. Switch on the M-Pesa prompt (built, ADR 0019), add automatic monthly renewals (M-Pesa Ratiba) and a receipt screen.                    |
 | L2  | Phone verification by SMS             | 💤     | A registered sender ID (Do Not Disturb blocks shared senders). Verify numbers of password sign-ups (ADR 0021), turn SMS reset back on, settle "someone registered my number". |
 
-## 2. Product — in this order (after Commercial)
+## 2. Product — P6, then P5, then P1–P4
 
 | #   | Item                                      | Status | What                                                                                                                                                                                                         |
 | --- | ----------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| P6a | Relationships                             | 🔨     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.                                                        |
+| P6b | Relationship map (Plus)                   | ⏳     | Pick a graph library (ADR, CSP-safe); `/map`: focus on a person, filter by kind, family layout, zoom/pan, a list view for small screens; ~300 people smooth.                                                 |
+| P5  | **Android app with phone sync (largest)** | ⏳     | Native Android app, two-way sync with the phone's own address book, with consent. Separate project (own ADRs, repo folder, Play Store listing). The adoption unlock: people will not keep two address books. |
 | P1  | Tour follow-ups                           | ⏳     | The owner picks a tour design (A–E, see the tour PR); tips inside pages (the + on Contacts, the import wizard, a contact's page).                                                                            |
 | P2  | Reminders by WhatsApp / SMS; more dates   | ⏳     | Morning reminder over WhatsApp or SMS (paid channels, costed in `docs/product/messaging-costs.md`); anniversaries and other important dates.                                                                 |
 | P3  | Email morning digest — switch on          | 💤     | Built (A3). Needs a domain verified at Resend or Brevo.                                                                                                                                                      |
 | P4  | Community plan                            | ⏳     | Shared, consented member lists for a chama, church or team: invite members, each member controls what is shared.                                                                                             |
-| P5  | **Android app with phone sync (largest)** | ⏳     | Native Android app, two-way sync with the phone's own address book, with consent. Separate project (own ADRs, repo folder, Play Store listing). The adoption unlock: people will not keep two address books. |
-| P6  | Relationship map (Phase 13)               | ⏳     | Family tree and "who introduced whom", once contact data is rich.                                                                                                                                            |
 
 ## 3. Engineering upkeep
 
@@ -77,6 +79,10 @@ round: **Product, from P1**. L1 and L2 wait for money.
 - [ ] Cloudflare Turnstile keys (free, ADR 0022): Turnstile → Add widget
       for `contact-sphere-nine.vercel.app`, then set `TURNSTILE_SITE_KEY` and
       `TURNSTILE_SECRET_KEY` on the production API.
+- [ ] For the Android app (P5): a Google Play developer account (USD 25,
+      one-off; new personal accounts need 12 testers for 14 days before
+      release), an Android phone to test on, and the app id (suggested
+      `com.coderiserdigital.contactsphere`).
 - [ ] Later: a domain (email), a till/paybill for Daraja, a sender ID.
 - [ ] First pilot: send a friend `/signup`, give 3 free months on
       `/operator`, talk at week 2 and week 6 (`docs/product/pilot.md`).

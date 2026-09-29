@@ -25,14 +25,14 @@ datasource db {
 model User {
   /// UUIDv7: time-ordered, so new rows append to the index instead of
   /// scattering across it, and ids reveal no row count.
-  id            String    @id @default(uuid(7)) @db.Uuid
+  id              String    @id @default(uuid(7)) @db.Uuid
   /// Optional since open sign-up (B6): an account has an email, a verified
   /// phone, or both (CHECK).
-  email         String?   @unique @db.VarChar(254)
+  email           String?   @unique @db.VarChar(254)
   /// Kenyan mobile number in E.164 (+2547… / +2541…). Signs in like an
   /// email. B6, ADR 0018. Proven by an SMS code only when phoneVerifiedAt
   /// is set; a password sign-up (ADR 0021) uses it as a username.
-  phone         String?   @unique @db.VarChar(16)
+  phone           String?   @unique @db.VarChar(16)
   /// When an SMS code proved the owner holds this number. Null = typed in
   /// at a password sign-up and never proven (ADR 0021).
   phoneVerifiedAt DateTime? @map("phone_verified_at") @db.Timestamptz(3)
@@ -44,43 +44,43 @@ model User {
   /// server never sees the file; this only drives the "back up" reminder.
   lastBackupAt    DateTime? @map("last_backup_at") @db.Timestamptz(3)
   /// How the app greets the owner ("Kuria"). Optional; trimmed, never blank.
-  displayName   String?   @map("display_name") @db.VarChar(100)
+  displayName     String?   @map("display_name") @db.VarChar(100)
   /// argon2id, in PHC string format (algorithm, parameters and salt are
   /// inside the string). Never the password itself. ADR 0006. Null for
   /// accounts that sign in with Google only (ADR 0020).
-  passwordHash  String?   @map("password_hash") @db.VarChar(255)
+  passwordHash    String?   @map("password_hash") @db.VarChar(255)
   /// Google's stable account id ("sub") for "Continue with Google"
   /// (ADR 0020). Never changes, unlike the email.
-  googleSub     String?   @unique @map("google_sub") @db.VarChar(255)
+  googleSub       String?   @unique @map("google_sub") @db.VarChar(255)
   /// TOTP secret, ENCRYPTED with the API's TOTP_ENCRYPTION_KEY
   /// (AES-256-GCM, "v1:" prefix). Set while enrolling; kept once enabled.
   /// ADR 0013.
-  totpSecret    String?   @map("totp_secret") @db.VarChar(255)
+  totpSecret      String?   @map("totp_secret") @db.VarChar(255)
   /// Null = two-factor off (or enrolment not confirmed yet).
-  totpEnabledAt DateTime? @map("totp_enabled_at") @db.Timestamptz(3)
+  totpEnabledAt   DateTime? @map("totp_enabled_at") @db.Timestamptz(3)
   /// The last accepted 30-second step; a code can never be used twice.
-  totpLastStep  BigInt?   @map("totp_last_step")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  totpLastStep    BigInt?   @map("totp_last_step")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   /// The Nairobi day the morning reminder was last pushed; the daily job
   /// can run twice without sending twice. Phase 11.
-  digestSentOn  DateTime? @map("digest_sent_on") @db.Date
+  digestSentOn    DateTime? @map("digest_sent_on") @db.Date
   /// Opt-in: the morning reminder by email too (A3). Off by default.
-  digestEmail   Boolean   @default(false) @map("digest_email")
+  digestEmail     Boolean   @default(false) @map("digest_email")
   /// The owner's own entry in their contacts, shown as their QR business
   /// card. Checked against owner and trash on every read (no FK: a
   /// composite SET NULL cannot be expressed in Prisma). Phase 11.
-  cardContactId String?   @map("card_contact_id") @db.Uuid
+  cardContactId   String?   @map("card_contact_id") @db.Uuid
   /// The owner's language: "en" or "sw" (CHECK). Drives server-written
   /// text such as the morning reminder. The web app keeps its own cookie
   /// for rendering pages.
-  locale        String    @default("en") @db.VarChar(5)
+  locale          String    @default("en") @db.VarChar(5)
   /// "operator" runs the service (the first account; sees /operator) or
   /// "member" (everyone who signs up). CHECK. B9, ADR 0019.
-  role          String    @default("member") @db.VarChar(10)
+  role            String    @default("member") @db.VarChar(10)
   /// Plus is active until this moment; null or past = the free plan.
   /// Sign-up starts a 30-day trial; payments and grants extend it.
-  plusUntil     DateTime? @map("plus_until") @db.Timestamptz(3)
+  plusUntil       DateTime? @map("plus_until") @db.Timestamptz(3)
 
   auditLogs     AuditLog[]
   sessions      Session[]
@@ -256,15 +256,19 @@ model Contact {
   /// Set = in the trash. Hard-deleted 30 days later (ADR 0005).
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  owner          User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner          User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   phoneNumbers   PhoneNumber[]
   emailAddresses EmailAddress[]
-  dismissedAsA   DuplicateDismissal[] @relation("DismissalA")
-  dismissedAsB   DuplicateDismissal[] @relation("DismissalB")
-  mergesKept     ContactMerge[]       @relation("MergeSurvivor")
-  mergesAbsorbed ContactMerge[]       @relation("MergeMerged")
+  dismissedAsA   DuplicateDismissal[]    @relation("DismissalA")
+  dismissedAsB   DuplicateDismissal[]    @relation("DismissalB")
+  mergesKept     ContactMerge[]          @relation("MergeSurvivor")
+  mergesAbsorbed ContactMerge[]          @relation("MergeMerged")
   memberships    GroupMember[]
   followUps      FollowUp[]
+  relationsFrom  Relationship[]          @relation("RelationshipFrom")
+  relationsTo    Relationship[]          @relation("RelationshipTo")
+  dismissedAsRA  RelationshipDismissal[] @relation("RelDismissalA")
+  dismissedAsRB  RelationshipDismissal[] @relation("RelDismissalB")
 
   /// Lets child rows reference (id, owner_id) together, so a phone number
   /// can never belong to one owner while its contact belongs to another.
@@ -419,6 +423,46 @@ model GroupMember {
 
 /// "Follow up with this person on this day" — a dated note (Phase 9).
 /// Done ones are kept (done_at) so the contact's history stays readable.
+/// A link between two of the owner's contacts (P6, ADR 0023): family,
+/// who introduced whom, work, community. Only ever between contacts of the
+/// same owner (composite FKs). Directed kinds (parent, introduced, mentor,
+/// client) read "from … to"; for the others the pair is stored smaller id
+/// first, so each link exists once (CHECKs).
+model Relationship {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  fromId    String   @map("from_contact_id") @db.Uuid
+  toId      String   @map("to_contact_id") @db.Uuid
+  /// See RELATIONSHIP_KINDS in the API (CHECK).
+  kind      String   @db.VarChar(20)
+  /// Optional words of the owner's own ("aunt", "best man"); lower-case.
+  label     String?  @db.VarChar(40)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  from Contact @relation("RelationshipFrom", fields: [fromId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  to   Contact @relation("RelationshipTo", fields: [toId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@unique([ownerId, fromId, toId, kind])
+  @@index([ownerId, toId])
+  @@map("relationships")
+}
+
+/// A suggested link the owner said is wrong ("not related"), so it is not
+/// suggested again. Pair stored smaller id first.
+model RelationshipDismissal {
+  ownerId   String   @map("owner_id") @db.Uuid
+  aId       String   @map("a_id") @db.Uuid
+  bId       String   @map("b_id") @db.Uuid
+  kind      String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  a Contact @relation("RelDismissalA", fields: [aId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  b Contact @relation("RelDismissalB", fields: [bId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@id([ownerId, aId, bId, kind])
+  @@map("relationship_dismissals")
+}
+
 model FollowUp {
   id        String    @id @default(uuid(7)) @db.Uuid
   ownerId   String    @map("owner_id") @db.Uuid

@@ -6,6 +6,7 @@ import { normaliseTags, searchText, sortKey } from '../contacts/contact-names';
 import { normalisePhone } from '../contacts/phone';
 import { uuidv7 } from '../contacts/uuid';
 import { PrismaService } from '../prisma/prisma.service';
+import { ordered } from '../relationships/kinds';
 import {
   type Archive,
   ARCHIVE_FORMAT,
@@ -33,6 +34,7 @@ export interface RestorePlan {
   };
   memberships: number;
   followUps: number;
+  relationships: number;
   /** Entries the file had that could not be read. */
   unreadable: number;
 }
@@ -83,7 +85,7 @@ export class BackupService {
   ) {}
 
   async export(ownerId: string, now = new Date()): Promise<Archive> {
-    const [contacts, groups, followUps] = await Promise.all([
+    const [contacts, groups, followUps, relationships] = await Promise.all([
       this.prisma.contact.findMany({
         where: { ownerId, deletedAt: null },
         orderBy: [{ sortName: 'asc' }, { id: 'asc' }],
@@ -107,6 +109,16 @@ export class BackupService {
         orderBy: { dueOn: 'asc' },
         take: 10_000,
         select: { contactId: true, dueOn: true, note: true, doneAt: true },
+      }),
+      this.prisma.relationship.findMany({
+        where: {
+          ownerId,
+          from: { deletedAt: null },
+          to: { deletedAt: null },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 20_000,
+        select: { fromId: true, toId: true, kind: true, label: true },
       }),
     ]);
     const archive: Archive = {
@@ -147,6 +159,10 @@ export class BackupService {
         note: f.note,
         done: f.doneAt !== null,
       })),
+      relationships: relationships.map((r) => ({
+        ...r,
+        kind: r.kind as Archive['relationships'][number]['kind'],
+      })),
     };
     await this.prisma.user.update({
       where: { id: ownerId },
@@ -158,6 +174,7 @@ export class BackupService {
         contacts: archive.contacts.length,
         groups: archive.groups.length,
         follow_ups: archive.followUps.length,
+        relationships: archive.relationships.length,
       },
     });
     return archive;
@@ -169,7 +186,15 @@ export class BackupService {
 
   async restore(ownerId: string, input: unknown): Promise<RestorePlan> {
     const work = await this.plan(ownerId, input);
-    const { plan, created, idOf, newGroups, groupUpdates, followUps } = work;
+    const {
+      plan,
+      created,
+      idOf,
+      newGroups,
+      groupUpdates,
+      followUps,
+      relationships,
+    } = work;
     const now = new Date();
     await this.prisma.$transaction(
       async (tx) => {
@@ -269,6 +294,13 @@ export class BackupService {
             })),
           });
         }
+        if (relationships.length > 0) {
+          await tx.relationship.createMany({
+            data: relationships.map((r) => ({ ownerId, ...r })),
+            // Already linked the same way: left as it is.
+            skipDuplicates: true,
+          });
+        }
         await this.audit.record(
           'backup.restored',
           {
@@ -279,6 +311,7 @@ export class BackupService {
               groups_added: plan.groups.toAdd,
               groups_updated: plan.groups.toUpdate,
               follow_ups_added: plan.followUps,
+              relationships_added: plan.relationships,
             },
           },
           tx,
@@ -417,6 +450,32 @@ export class BackupService {
       createdIds.has(idOf.get(f.contactId) ?? ''),
     );
 
+    // Links between contacts that are (or will be) in this account, in the
+    // order the database needs; ones already there are left alone.
+    const existingLinks = await this.prisma.relationship.findMany({
+      where: { ownerId },
+      select: { fromId: true, toId: true, kind: true },
+    });
+    const have = new Set(
+      existingLinks.map((l) => `${l.kind}:${l.fromId}:${l.toId}`),
+    );
+    const relationships: {
+      fromId: string;
+      toId: string;
+      kind: string;
+      label: string | null;
+    }[] = [];
+    for (const r of archive.relationships) {
+      const a = idOf.get(r.fromId);
+      const b = idOf.get(r.toId);
+      if (!a || !b || a === b) continue;
+      const o = ordered(r.kind, a, b);
+      const key = `${r.kind}:${o.fromId}:${o.toId}`;
+      if (have.has(key)) continue;
+      have.add(key);
+      relationships.push({ kind: r.kind, label: r.label, ...o });
+    }
+
     const plan: RestorePlan = {
       contacts: {
         inBackup: archive.contacts.length,
@@ -435,8 +494,17 @@ export class BackupService {
         0,
       ),
       followUps: followUps.length,
+      relationships: relationships.length,
       unreadable,
     };
-    return { plan, created, idOf, newGroups, groupUpdates, followUps };
+    return {
+      plan,
+      created,
+      idOf,
+      newGroups,
+      groupUpdates,
+      followUps,
+      relationships,
+    };
   }
 }

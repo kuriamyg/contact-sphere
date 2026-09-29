@@ -5,6 +5,19 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Relationships between contacts
+
+- A contact's page now has **Relationships**: link them to anyone else you
+  saved (parent, child, husband or wife, brother or sister, cousin, who
+  introduced you, friend, colleague, neighbour, same church or chama,
+  client, supplier, mentor…) with an optional note like "first-born". The
+  link shows on both contacts, each from its own side.
+- **Suggested links**: "You met Otieno through Wanjiru" (from "met
+  through") and "these two share a surname". Nothing is linked until you
+  confirm; "Not related" hides a suggestion for good.
+- Encrypted backups now carry relationships, and a restore brings them
+  back.
+
 ### Changed — Docs match what is live
 
 - Pilot playbook: Google or phone + password sign-up, recovery key, tour,

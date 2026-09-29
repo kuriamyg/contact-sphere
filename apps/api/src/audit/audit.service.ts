@@ -28,6 +28,8 @@ export type AuditAction =
   | 'auth.profile_updated'
   | 'backup.exported'
   | 'backup.restored'
+  | 'relationship.added'
+  | 'relationship.removed'
   | 'contact.created'
   | 'contact.updated'
   | 'contact.archived'

@@ -12,6 +12,7 @@ import {
 import { addToGroup } from '@/app/actions/groups';
 import { undoMerge } from '@/app/actions/merge';
 import { setCard } from '@/app/actions/reach';
+import { removeRelationship } from '@/app/actions/relationships';
 import {
   addFollowUp,
   deleteFollowUp,
@@ -36,6 +37,7 @@ import {
 } from '@/lib/contacts';
 import type { Messages } from '@/i18n/en';
 import { groupsForContact, listGroupsQuietly } from '@/lib/groups';
+import { relationshipsFor, roleName } from '@/lib/relationships';
 import { fmt, plural } from '@/i18n/format';
 import { getLocale, getMessages, pageTitle } from '@/i18n/server';
 import { listHref, parseListParams } from '@/lib/contact-params';
@@ -65,16 +67,18 @@ export default async function ContactPage({
   if (!c) notFound();
   // Opening a contact is what "last used" means (ADR 0007).
   if (!c.deletedAt) await markUsed(c.id).catch(() => undefined);
-  const [merges, groups, allGroups, reminders] = c.deletedAt
-    ? [[], [], [], null]
+  const [merges, groups, allGroups, reminders, links] = c.deletedAt
+    ? [[], [], [], null, []]
     : await Promise.all([
         undoableMerges(c.id),
         groupsForContact(c.id),
         listGroupsQuietly(),
         remindersFor(c.id),
+        relationshipsFor(c.id),
       ]);
   const [m, locale] = await Promise.all([getMessages(), getLocale()]);
   const t = m.contacts.detail;
+  const rt = m.relationships;
   const back = `/contacts/${c.id}`;
   const joinable = allGroups.filter((g) => !groups.some((x) => x.id === g.id));
 
@@ -325,6 +329,70 @@ export default async function ContactPage({
               </form>
             </details>
           )}
+        </section>
+      )}
+
+      {!c.deletedAt && (
+        <section aria-labelledby="links" className="space-y-3">
+          <h2 id="links" className="text-sm font-semibold text-muted uppercase">
+            {rt.section.title}
+          </h2>
+          {links.length > 0 ? (
+            <ul className="divide-y divide-border rounded-xl card">
+              {links.map((l) => (
+                <li
+                  key={l.id}
+                  className="flex items-center justify-between gap-2 px-4 py-3"
+                >
+                  <Link
+                    href={`/contacts/${l.other.id}`}
+                    className="flex min-w-0 items-center gap-3 hover:underline"
+                  >
+                    <Avatar
+                      name={l.other.displayName}
+                      colourKey={l.other.id}
+                      size="sm"
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate">
+                        {l.other.displayName}
+                      </span>
+                      <span className="block truncate text-sm text-muted">
+                        {roleName(l.role, c.displayName, rt.roles)}
+                        {l.label && ` · ${l.label}`}
+                      </span>
+                    </span>
+                  </Link>
+                  <form action={removeRelationship}>
+                    <input type="hidden" name="id" value={l.id} />
+                    <input type="hidden" name="contactId" value={c.id} />
+                    <button
+                      type="submit"
+                      aria-label={fmt(rt.section.removeLabel, {
+                        name: l.other.displayName,
+                      })}
+                      className={button}
+                    >
+                      {rt.section.remove}
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">{rt.section.none}</p>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <Link href={`/contacts/${c.id}/link`} className={button}>
+              {rt.section.add}
+            </Link>
+            <Link
+              href="/contacts/links"
+              className="self-center text-sm font-medium text-accent hover:underline"
+            >
+              {rt.section.suggestions}
+            </Link>
+          </div>
         </section>
       )}
 

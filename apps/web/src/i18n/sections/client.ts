@@ -461,6 +461,7 @@ export const client = section(
         other: '{n} groups get members back',
       },
       followUps: { one: '{n} follow-up', other: '{n} follow-ups' },
+      relationships: { one: '{n} relationship', other: '{n} relationships' },
       overLimit: {
         one: '{n} group left out: the free plan holds 3.',
         other: '{n} groups left out: the free plan holds 3.',
@@ -1021,6 +1022,7 @@ export const client = section(
         other: 'Vikundi {n} vinarudishiwa wanachama',
       },
       followUps: { one: 'Ufuatiliaji {n}', other: 'Ufuatiliaji {n}' },
+      relationships: { one: 'Uhusiano {n}', other: 'Mahusiano {n}' },
       overLimit: {
         one: 'Kikundi {n} kimeachwa: mpango wa bure una vikundi 3.',
         other: 'Vikundi {n} vimeachwa: mpango wa bure una vikundi 3.',

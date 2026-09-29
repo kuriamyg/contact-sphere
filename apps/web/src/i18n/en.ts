@@ -13,6 +13,7 @@ import { home } from './sections/home';
 import { meta } from './sections/meta';
 import { missing } from './sections/missing';
 import { notices } from './sections/notices';
+import { relationships } from './sections/relationships';
 import { remember } from './sections/remember';
 import { today } from './sections/today';
 
@@ -32,6 +33,7 @@ const ALL = {
   meta,
   missing,
   notices,
+  relationships,
   remember,
   today,
 };

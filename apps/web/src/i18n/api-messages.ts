@@ -100,6 +100,11 @@ const EXACT: Record<string, string> = {
   'No such tag.': 'Hakuna lebo hiyo.',
   'Give the group a name.': 'Kipe kikundi jina.',
   'Group not found.': 'Kikundi hakikupatikana.',
+  'Those two are already linked that way.':
+    'Hao wawili tayari wameunganishwa hivyo.',
+  'Choose someone other than this contact.':
+    'Chagua mtu mwingine, si anwani hii yenyewe.',
+  'Link not found.': 'Kiungo hakikupatikana.',
   'You already have a group with that name.':
     'Tayari una kikundi chenye jina hilo.',
   'Not a member of that group.': 'Si mwanachama wa kikundi hicho.',

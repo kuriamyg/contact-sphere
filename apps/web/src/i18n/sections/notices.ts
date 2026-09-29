@@ -56,6 +56,13 @@ export const notices = section<Record<string, Notice>>(
     follow_up_invalid: { error: 'Give the follow-up a real date and a note.' },
     follow_up_done: { success: 'Follow-up done.' },
     follow_up_deleted: { success: 'Follow-up deleted.' },
+    link_added: { success: 'Linked. It shows on both contacts.' },
+    link_exists: { error: 'Those two are already linked that way.' },
+    link_removed: { success: 'Link removed. Both contacts are still saved.' },
+    link_pick: { error: 'Choose who to link, and how they are related.' },
+    link_dismissed: {
+      success: 'Got it — that pair will not be suggested again.',
+    },
     failed: { error: 'That did not work. Nothing was changed — try again.' },
   },
   {
@@ -127,6 +134,15 @@ export const notices = section<Record<string, Notice>>(
     },
     follow_up_done: { success: 'Ufuatiliaji umekamilika.' },
     follow_up_deleted: { success: 'Ufuatiliaji umefutwa.' },
+    link_added: {
+      success: 'Wameunganishwa. Inaonekana kwa anwani zote mbili.',
+    },
+    link_exists: { error: 'Hao wawili tayari wameunganishwa hivyo.' },
+    link_removed: {
+      success: 'Kiungo kimeondolewa. Anwani zote mbili bado zimehifadhiwa.',
+    },
+    link_pick: { error: 'Chagua wa kuunganisha, na mnavyohusiana.' },
+    link_dismissed: { success: 'Sawa — jozi hiyo haitapendekezwa tena.' },
     failed: {
       error: 'Hilo halikufanikiwa. Hakuna kilichobadilishwa — jaribu tena.',
     },
