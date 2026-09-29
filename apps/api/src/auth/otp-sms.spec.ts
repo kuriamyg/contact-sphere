@@ -26,7 +26,9 @@ describe("Africa's Talking codes", () => {
         });
       }) as unknown as typeof fetch,
     );
-    expect(await sms.send('+254712000101', 'Your code is 123456')).toBe(true);
+    expect(await sms.send('+254712000101', 'Your code is 123456')).toEqual({
+      ok: true,
+    });
     expect(calls[0].url).toBe(
       'https://api.sandbox.africastalking.com/version1/messaging',
     );
@@ -56,34 +58,41 @@ describe("Africa's Talking codes", () => {
         });
       }) as unknown as typeof fetch,
     );
-    expect(await sms.send('+254712000101', 'x')).toBe(true);
+    expect(await sms.send('+254712000101', 'x')).toEqual({ ok: true });
     expect(url).toBe('https://api.africastalking.com/version1/messaging');
     expect(new URLSearchParams(body).get('from')).toBe('ContactSph');
   });
 
-  it('is false for a rejected number, an HTTP error or a network failure', async () => {
+  it('reports why a send was refused, never the number', async () => {
     const make = (f: () => Promise<Response>) =>
       new AfricasTalkingOtpSms(
         { provider: 'africastalking', username: 'x', apiKey: 'k'.repeat(30) },
         f,
       );
+    const recipient = (statusCode: number, status: string) => () =>
+      reply(201, { SMSMessageData: { Recipients: [{ statusCode, status }] } });
     expect(
-      await make(() =>
-        reply(201, {
-          SMSMessageData: {
-            Recipients: [{ statusCode: 403, status: 'InvalidPhoneNumber' }],
-          },
-        }),
-      ).send('+254712000101', 'x'),
-    ).toBe(false);
-    expect(await make(() => reply(401, {})).send('+254712000101', 'x')).toBe(
-      false,
+      await make(recipient(403, 'InvalidPhoneNumber')).send(
+        '+254712000101',
+        'x',
+      ),
+    ).toEqual({
+      ok: false,
+      blocked: false,
+      reason: 'InvalidPhoneNumber (403)',
+    });
+    // Do Not Disturb: only the line's owner can change it.
+    expect(
+      await make(recipient(406, 'UserInBlacklist')).send('+254712000101', 'x'),
+    ).toEqual({ ok: false, blocked: true, reason: 'UserInBlacklist (406)' });
+    expect(await make(() => reply(401, {})).send('+254712000101', 'x')).toEqual(
+      { ok: false, blocked: false, reason: 'HTTP 401' },
     );
     expect(
       await make(() => Promise.reject(new Error('down'))).send(
         '+254712000101',
         'x',
       ),
-    ).toBe(false);
+    ).toEqual({ ok: false, blocked: false, reason: 'unreachable' });
   });
 });

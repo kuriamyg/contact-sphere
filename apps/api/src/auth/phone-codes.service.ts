@@ -6,7 +6,9 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  Logger,
   ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
@@ -29,6 +31,8 @@ export const CODES_PER_DAY = 5;
 const NOT_A_MOBILE = 'Enter a Kenyan mobile number, like 0712 345 678.';
 const CODE_EXPIRED = 'That code has expired. Ask for a new one.';
 const CODE_WRONG = 'That code is not right.';
+const LINE_BLOCKS_SMS =
+  'Your line is blocking messages from companies (Do Not Disturb), so the code could not be delivered. Allow promotional messages on your line, or use another number.';
 
 const TEXT = {
   en: {
@@ -54,6 +58,7 @@ const TEXT = {
  */
 @Injectable()
 export class PhoneCodes {
+  private readonly logger = new Logger('PhoneCodes');
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
@@ -147,9 +152,15 @@ export class PhoneCodes {
     else text = account ? withCode : null; // reset: nothing for strangers
 
     if (text) {
-      const ok = await this.sms.send(phone, text);
-      if (!ok) {
+      const sent = await this.sms.send(phone, text);
+      if (!sent.ok) {
         await this.prisma.phoneCode.delete({ where: { id: row.id } });
+        // The provider's reason, never the number: the next failure is
+        // diagnosable from the logs alone.
+        this.logger.warn(`SMS code not sent: ${sent.reason}`);
+        if (sent.blocked) {
+          throw new UnprocessableEntityException(LINE_BLOCKS_SMS);
+        }
         throw new ServiceUnavailableException(
           'Could not send the code just now. Try again in a minute.',
         );

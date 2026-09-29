@@ -33,10 +33,10 @@ export const auth = section(
       'Enter the mobile number you sign in with. If it has an account, we send a verification code to it by SMS.',
     passwordReset:
       'Your password has been changed and every device signed out. Sign in with the new one.',
-    alreadySignedIn: 'You are signed in as {name}.',
-    signOutToCreate:
-      'To create another account — for someone else, or to test — sign out first, or use a private browser tab.',
-    goToContacts: 'Go to your contacts',
+    alreadySignedInTitle: 'You’re already signed in',
+    alreadySignedIn: 'Signed in as {name}.',
+    continueToApp: 'Continue to Contact Sphere',
+    notYou: 'Not {name}?',
     signOut: 'Sign out',
   },
   {
@@ -72,10 +72,10 @@ export const auth = section(
       'Weka nambari ya simu unayoingia nayo. Ikiwa ina akaunti, tutaitumia msimbo wa uthibitisho kwa SMS.',
     passwordReset:
       'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
+    alreadySignedInTitle: 'Tayari umeingia',
     alreadySignedIn: 'Umeingia kama {name}.',
-    signOutToCreate:
-      'Kuunda akaunti nyingine — kwa mtu mwingine, au kujaribu — toka kwanza, au tumia kichupo cha faragha cha kivinjari.',
-    goToContacts: 'Nenda kwenye anwani zako',
+    continueToApp: 'Endelea kwenye Contact Sphere',
+    notYou: 'Si {name}?',
     signOut: 'Toka',
   },
 );

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { apiText, getMessages } from '@/i18n/server';
+import { apiError, getMessages } from '@/i18n/server';
 import { api } from '@/lib/api';
 import type { PaymentView } from '@/lib/billing';
 
@@ -17,13 +17,7 @@ const field = (form: FormData, name: string) => {
   return typeof v === 'string' ? v : '';
 };
 
-async function failure(status: number, message?: string): Promise<string> {
-  const t = (await getMessages()).errors;
-  if (status >= 500 || status === 0) {
-    return (await apiText(message)) ?? t.unavailable;
-  }
-  return (await apiText(message)) ?? (status === 429 ? t.tooMany : t.generic);
-}
+const failure = apiError;
 
 /** Sends the M-Pesa prompt to the phone (B9). */
 export async function payWithMpesa(
