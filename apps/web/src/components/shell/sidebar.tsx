@@ -66,7 +66,7 @@ export function Sidebar({
         </span>
       </Link>
 
-      <form action="/contacts" role="search">
+      <form action="/contacts" role="search" data-tour="search">
         <label className="flex h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-muted focus-within:ring-2 focus-within:ring-accent">
           <NavIcon name="search" size={16} />
           <span className="sr-only">{t.search}</span>
@@ -93,6 +93,7 @@ export function Sidebar({
             <Link
               key={i.href}
               href={i.href}
+              data-tour={i.label}
               aria-current={current ? 'page' : undefined}
               className={`${row} ${current ? 'bg-accent-soft text-foreground' : 'text-muted hover:bg-surface-hover hover:text-foreground'}`}
             >
@@ -127,6 +128,7 @@ export function Sidebar({
 
       <Link
         href="/account"
+        data-tour="account"
         aria-current={accountOn ? 'page' : undefined}
         className={`mt-auto flex items-center gap-3 rounded-2xl border p-2.5 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${
           accountOn

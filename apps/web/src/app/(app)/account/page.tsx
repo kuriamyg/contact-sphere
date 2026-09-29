@@ -22,6 +22,7 @@ import {
 } from '@/components/icons';
 import { NameForm } from '@/components/profile/name-form';
 import { InstallApp } from '@/components/pwa/install-app';
+import { TourButton } from '@/components/onboarding/tour-button';
 import { LanguageSwitch } from '@/components/shell/language-switch';
 import { ThemeSwitch } from '@/components/shell/theme-switch';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
@@ -287,6 +288,9 @@ export default async function ProfilePage() {
             </CardTitle>
             <p className="text-sm text-muted">{t.installBody}</p>
             <InstallApp />
+            <div className="border-t border-border pt-3">
+              <TourButton />
+            </div>
           </section>
 
           <section

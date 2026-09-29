@@ -241,6 +241,79 @@ h3 {
   }
 }
 
+/* The account screen slides up; tour cards pop in (first-run tour). */
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.22s ease-out;
+}
+@keyframes tour-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+@keyframes tour-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 9999px rgba(2, 6, 23, 0.72),
+      0 0 0 2px var(--accent),
+      0 0 0 6px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 9999px rgba(2, 6, 23, 0.72),
+      0 0 0 2px var(--accent),
+      0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+/* A hole in the dimmed screen around the control, gliding step to step. */
+.tour-spot {
+  animation: tour-pulse 1.8s ease-in-out infinite;
+  transition:
+    top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tour-dim {
+  background: rgba(2, 6, 23, 0.72);
+}
+.tour-card {
+  animation: tour-pop 0.25s ease-out both;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 3px 0 var(--accent);
+}
+.tour-arrow {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  transform: rotate(45deg);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.tour-arrow-top {
+  top: -8.5px;
+  border-right: 0;
+  border-bottom: 0;
+  background: var(--accent);
+}
+.tour-arrow-bottom {
+  bottom: -8.5px;
+  border-left: 0;
+  border-top: 0;
+}
+
 /* Animations must never be forced on people who asked the OS for less. */
 @media (prefers-reduced-motion: reduce) {
   *,
