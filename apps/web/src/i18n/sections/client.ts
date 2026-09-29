@@ -420,6 +420,25 @@ export const client = section(
       close: 'Close',
       tour: 'Take the tour',
     },
+    planNotice: {
+      freeInDays: 'Your free Plus ends in {n} days',
+      freeTomorrow: 'Your free Plus ends tomorrow',
+      freeToday: 'Your free Plus ends today',
+      paidInDays: 'Your Plus ends in {n} days',
+      paidTomorrow: 'Your Plus ends tomorrow',
+      paidToday: 'Your Plus ends today',
+      freeBody:
+        'On {date}. Keep morning reminders and unlimited groups for KES 99 a month.',
+      paidBody:
+        'On {date}. Renew to keep morning reminders and unlimited groups — KES 99 a month.',
+      endedTitle: 'You’re on the free plan now',
+      endedBody:
+        'Plus ended on {date}. Morning reminders are off and you can have up to 3 groups. Plus is KES 99 a month.',
+      keep: 'Keep Plus',
+      renew: 'Renew Plus',
+      getBack: 'Get Plus back',
+      notNow: 'Not now',
+    },
     tour: {
       progress: 'Step {n} of {total}',
       skip: 'Skip',
@@ -893,6 +912,25 @@ export const client = section(
       account: 'Akaunti',
       close: 'Funga',
       tour: 'Pitia mwongozo',
+    },
+    planNotice: {
+      freeInDays: 'Plus yako ya bure inaisha baada ya siku {n}',
+      freeTomorrow: 'Plus yako ya bure inaisha kesho',
+      freeToday: 'Plus yako ya bure inaisha leo',
+      paidInDays: 'Plus yako inaisha baada ya siku {n}',
+      paidTomorrow: 'Plus yako inaisha kesho',
+      paidToday: 'Plus yako inaisha leo',
+      freeBody:
+        'Tarehe {date}. Endelea na vikumbusho vya asubuhi na vikundi visivyo na kikomo kwa KES 99 kwa mwezi.',
+      paidBody:
+        'Tarehe {date}. Ilipie tena uendelee na vikumbusho vya asubuhi na vikundi visivyo na kikomo — KES 99 kwa mwezi.',
+      endedTitle: 'Sasa uko kwenye mpango wa bure',
+      endedBody:
+        'Plus iliisha tarehe {date}. Vikumbusho vya asubuhi vimezimwa na unaweza kuwa na vikundi 3 tu. Plus ni KES 99 kwa mwezi.',
+      keep: 'Endelea na Plus',
+      renew: 'Lipia Plus tena',
+      getBack: 'Rudisha Plus',
+      notNow: 'Si sasa',
     },
     tour: {
       progress: 'Hatua {n} kati ya {total}',

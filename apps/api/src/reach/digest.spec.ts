@@ -1,5 +1,5 @@
 import type { TodayView } from '../remember/remember.service';
-import { digestText } from './reach.service';
+import { digestText, planReminder } from './reach.service';
 
 const base: TodayView = {
   today: '2026-09-26',
@@ -64,5 +64,28 @@ describe('digestText in Kiswahili', () => {
         'sw',
       ),
     ).toBe('Leo: mtu 1 wa kuwasiliana naye.');
+  });
+});
+
+describe('planReminder (C1)', () => {
+  it('speaks only 3 days and 1 day before Plus ends', () => {
+    expect(planReminder(5, false)).toBeNull();
+    expect(planReminder(2, false)).toBeNull();
+    expect(planReminder(0, false)).toBeNull();
+    expect(planReminder(3, false)).toBe(
+      'Your free Plus ends in 3 days. Keep it for KES 99 a month.',
+    );
+    expect(planReminder(1, true)).toBe(
+      'Your Plus ends tomorrow. Renew for KES 99 a month.',
+    );
+  });
+
+  it('in Kiswahili', () => {
+    expect(planReminder(1, false, 'sw')).toBe(
+      'Plus yako ya bure inaisha kesho. Iendeleze kwa KES 99 kwa mwezi.',
+    );
+    expect(planReminder(3, true, 'sw')).toBe(
+      'Plus yako inaisha baada ya siku 3. Ilipie tena kwa KES 99 kwa mwezi.',
+    );
   });
 });

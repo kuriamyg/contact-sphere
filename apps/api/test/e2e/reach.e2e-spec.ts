@@ -259,6 +259,50 @@ describe('morning digest', () => {
     });
     expect((await api('get', '/reach/status')).body.push.devices).toBe(0);
   });
+
+  it('reminds a member 3 days and 1 day before Plus ends, even with nothing due (C1)', async () => {
+    const member = await secondUser();
+    await api('post', '/reach/push/devices', member)
+      .send(device(2))
+      .expect(204);
+    // Plus ends at noon, Nairobi time, 3 days from today.
+    const endsIn = (days: number) =>
+      owner.query(
+        `UPDATE users SET plus_until = ($1::date + $2::int)::timestamp + interval '9 hours',
+                          digest_sent_on = NULL
+         WHERE email = 'other@example.com'`,
+        [nairobiToday(), days],
+      );
+    await endsIn(3);
+    expect((await run().expect(200)).body).toMatchObject({ sent: 1 });
+    const [, msg] = deliver.mock.calls[0] as [
+      unknown,
+      { body: string; url: string },
+    ];
+    expect(msg).toMatchObject({
+      body: 'Your free Plus ends in 3 days. Keep it for KES 99 a month.',
+      url: '/account#plan-heading',
+    });
+
+    // Not on the other days.
+    await endsIn(2);
+    expect((await run().expect(200)).body).toMatchObject({ sent: 0 });
+
+    // A paying member is asked to renew.
+    await owner.query(
+      `INSERT INTO payments (id, owner_id, method, months, amount_kes, status, receipt, paid_at)
+       SELECT gen_random_uuid(), id, 'manual', 1, 99, 'paid', 'SJK3ABCD12', now()
+       FROM users WHERE email = 'other@example.com'`,
+    );
+    await endsIn(1);
+    expect((await run().expect(200)).body).toMatchObject({ sent: 1 });
+    const [, renew] = deliver.mock.calls[1] as [unknown, { body: string }];
+    expect(renew.body).toBe(
+      'Your Plus ends tomorrow. Renew for KES 99 a month.',
+    );
+    const me = await api('get', '/auth/me', member).expect(200);
+    expect(me.body).toMatchObject({ plan: 'plus', paidPlus: true });
+  });
 });
 
 describe('morning reminder by email', () => {
