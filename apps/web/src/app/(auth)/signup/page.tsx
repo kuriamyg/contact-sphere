@@ -10,6 +10,7 @@ import { getMessages, pageTitle } from '@/i18n/server';
 import { logoutToSignup } from '@/app/actions/auth';
 import { fmt } from '@/i18n/format';
 import { GoogleButton, OrDivider } from '@/components/auth/google-button';
+import { inAndroidApp } from '@/lib/in-app';
 import { currentUser, signupStatus, whoIs } from '@/lib/auth';
 import { turnstileFor } from '@/lib/turnstile';
 
@@ -71,7 +72,14 @@ export default async function SignupPage() {
                 : m.auth.signUpLeadGoogle}
         </p>
       </header>
-      {status.google && <GoogleButton label={m.auth.continueWithGoogle} />}
+      {status.google &&
+        ((await inAndroidApp()) ? (
+          <p className="rounded-lg card p-3 text-sm text-muted">
+            {m.auth.googleInApp}
+          </p>
+        ) : (
+          <GoogleButton label={m.auth.continueWithGoogle} />
+        ))}
       {status.google && (status.sms || status.password) && (
         <OrDivider label={m.auth.or} />
       )}

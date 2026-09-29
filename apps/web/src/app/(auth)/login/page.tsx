@@ -6,6 +6,7 @@ import { LoginForm } from '@/components/auth/login-form';
 import { WipeAll } from '@/components/offline/offline-sync';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { GoogleButton, OrDivider } from '@/components/auth/google-button';
+import { inAndroidApp } from '@/lib/in-app';
 import { FormMessage } from '@/components/auth/field';
 import { currentUser, setupAvailable, signupStatus } from '@/lib/auth';
 
@@ -59,7 +60,13 @@ export default async function LoginPage({
       <FormMessage error={googleProblem} />
       {status.googleClientId && (
         <>
-          <GoogleButton label={m.auth.continueWithGoogle} />
+          {(await inAndroidApp()) ? (
+            <p className="rounded-lg card p-3 text-sm text-muted">
+              {m.auth.googleInApp}
+            </p>
+          ) : (
+            <GoogleButton label={m.auth.continueWithGoogle} />
+          )}
           <OrDivider label={m.auth.or} />
         </>
       )}

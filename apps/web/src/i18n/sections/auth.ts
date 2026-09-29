@@ -34,6 +34,8 @@ export const auth = section(
     passwordReset:
       'Your password has been changed and every device signed out. Sign in with the new one.',
     continueWithGoogle: 'Continue with Google',
+    googleInApp:
+      'Google sign-in is coming to the app in the next update. For now, use your phone number and password here — or open Contact Sphere in Chrome to continue with Google.',
     or: 'or',
     signUpLeadGoogle:
       'Use your Google account — no new password to remember. Your contacts stay private to you.',
@@ -102,6 +104,8 @@ export const auth = section(
     passwordReset:
       'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
     continueWithGoogle: 'Endelea na Google',
+    googleInApp:
+      'Kuingia kwa Google kunakuja kwenye programu katika sasisho lijalo. Kwa sasa, tumia nambari yako ya simu na nenosiri hapa — au fungua Contact Sphere kwenye Chrome kuendelea na Google.',
     or: 'au',
     signUpLeadGoogle:
       'Tumia akaunti yako ya Google — hakuna nenosiri jipya la kukumbuka. Anwani zako zinabaki za faragha kwako.',

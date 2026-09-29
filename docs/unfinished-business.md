@@ -24,8 +24,8 @@ refresh) · 💤 waiting on something outside the code.
 
 **Where we are (2026-09-29):** Commercial C1–C4 are done. The owner chose
 to build **P6 then P5** first (P1–P4 wait; the owner handles the bot
-themselves). P6a (relationships) is live; P6b (the map) is in progress. L1
-and L2 wait for money.
+themselves). P6 (relationships and the map) is live. P5 (Android) has
+started with P5a. L1 and L2 wait for money.
 
 ---
 
@@ -48,15 +48,19 @@ and L2 wait for money.
 
 ## 2. Product — P6, then P5, then P1–P4
 
-| #   | Item                                      | Status | What                                                                                                                                                                                                         |
-| --- | ----------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| P6a | Relationships                             | ✅     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.                                                        |
-| P6b | Relationship map (Plus)                   | 🔨     | Own SVG, no library (ADR 0024). `/contacts/map`: focus on a person, filter by kind, family tree, zoom/pan, the same people as a list; up to 300 people.                                                      |
-| P5  | **Android app with phone sync (largest)** | ⏳     | Native Android app, two-way sync with the phone's own address book, with consent. Separate project (own ADRs, repo folder, Play Store listing). The adoption unlock: people will not keep two address books. |
-| P1  | Tour follow-ups                           | ⏳     | The owner picks a tour design (A–E, see the tour PR); tips inside pages (the + on Contacts, the import wizard, a contact's page).                                                                            |
-| P2  | Reminders by WhatsApp / SMS; more dates   | ⏳     | Morning reminder over WhatsApp or SMS (paid channels, costed in `docs/product/messaging-costs.md`); anniversaries and other important dates.                                                                 |
-| P3  | Email morning digest — switch on          | 💤     | Built (A3). Needs a domain verified at Resend or Brevo.                                                                                                                                                      |
-| P4  | Community plan                            | ⏳     | Shared, consented member lists for a chama, church or team: invite members, each member controls what is shared.                                                                                             |
+| #   | Item                                      | Status | What                                                                                                                                                            |
+| --- | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P6a | Relationships                             | ✅     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.           |
+| P6b | Relationship map (Plus)                   | ✅     | Own SVG, no library (ADR 0024). `/contacts/map`: focus on a person, filter by kind, family tree, zoom/pan, the same people as a list; up to 300 people.         |
+| P5a | Android app shell + import from the phone | 🔨     | Capacitor shell around the live web app (ADR 0025); read-only "Import from this phone" through the usual preview; test builds as the `android-latest` download. |
+| P5b | Google sign-in inside the app             | ⏳     | Sign-in in the phone's browser, handed back to the app with a one-time code (PKCE-style). Until then the app shows phone + password.                            |
+| P5c | Write to the phone (own account)          | ⏳     | Contact Sphere contacts in the phone's Contacts app under a separate "Contact Sphere" account; the owner's other contacts never touched.                        |
+| P5d | Two-way sync                              | ⏳     | Changes on either side, field-level merge, owner decides clashes (as ADR 0015). Own ADR first.                                                                  |
+| P5e | Play Store release                        | 💤     | USD 25 account, 12+ testers for 14 days, Play billing decision for Plus, upload key in GitHub secrets.                                                          |
+| P1  | Tour follow-ups                           | ⏳     | The owner picks a tour design (A–E, see the tour PR); tips inside pages (the + on Contacts, the import wizard, a contact's page).                               |
+| P2  | Reminders by WhatsApp / SMS; more dates   | ⏳     | Morning reminder over WhatsApp or SMS (paid channels, costed in `docs/product/messaging-costs.md`); anniversaries and other important dates.                    |
+| P3  | Email morning digest — switch on          | 💤     | Built (A3). Needs a domain verified at Resend or Brevo.                                                                                                         |
+| P4  | Community plan                            | ⏳     | Shared, consented member lists for a chama, church or team: invite members, each member controls what is shared.                                                |
 
 ## 3. Engineering upkeep
 

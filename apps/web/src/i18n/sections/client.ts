@@ -187,6 +187,12 @@ export const client = section(
       notes: 'Notes',
     },
     importWizard: {
+      fromPhone: 'Import from this phone',
+      fromPhoneHint:
+        'Reads the contacts on this phone. You see what will be added before anything is saved.',
+      thisPhone: 'This phone',
+      phoneDenied:
+        'Contact Sphere was not allowed to read your contacts. Allow it in Settings → Apps → Contact Sphere → Permissions, then try again.',
       steps: { choose: 'Choose', check: 'Check', done: 'Done' },
       stepsLabel: 'Import steps',
       dropHint: 'Tap to choose, or drop the file here',
@@ -732,6 +738,12 @@ export const client = section(
       notes: 'Maelezo',
     },
     importWizard: {
+      fromPhone: 'Leta kutoka simu hii',
+      fromPhoneHint:
+        'Inasoma anwani zilizo kwenye simu hii. Unaona kitakachoongezwa kabla ya kuhifadhi chochote.',
+      thisPhone: 'Simu hii',
+      phoneDenied:
+        'Contact Sphere haikuruhusiwa kusoma anwani zako. Ruhusu kwenye Mipangilio → Programu → Contact Sphere → Ruhusa, kisha jaribu tena.',
       steps: { choose: 'Chagua', check: 'Kagua', done: 'Tayari' },
       stepsLabel: 'Hatua za kuleta',
       dropHint: 'Gusa kuchagua, au dondosha faili hapa',

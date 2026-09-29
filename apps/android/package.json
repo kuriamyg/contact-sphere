@@ -1,0 +1,16 @@
+{
+  "name": "contact-sphere-android",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Android app: the Contact Sphere web app in a native shell, plus phone-contacts access (P5, ADR 0025).",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2"
+  }
+}
