@@ -42,3 +42,22 @@ export function mfaCookieOptions(production: boolean, expiresAt: Date) {
     expires: expiresAt,
   };
 }
+
+/**
+ * Carries a new account's recovery key (ADR 0021) from the sign-up action
+ * to the one page that shows it: HttpOnly, only sent to /recovery-key,
+ * gone after 10 minutes or as soon as the owner says it is saved.
+ */
+export function recoveryKeyCookieName(production: boolean): string {
+  return production ? '__Secure-cs_rk' : 'cs_rk';
+}
+
+export function recoveryKeyCookieOptions(production: boolean, expiresAt: Date) {
+  return {
+    httpOnly: true,
+    secure: production,
+    sameSite: 'strict' as const,
+    path: '/recovery-key',
+    expires: expiresAt,
+  };
+}

@@ -145,6 +145,17 @@ parties_ who never signed up; this belongs in the privacy policy.
 - **No password to steal** for Google-only accounts; deleting one needs the
   session, the typed word and the second factor when on.
 
+## Phone + password sign-up and recovery keys (ADR 0021)
+
+| Threat                                        | Control                                                                                                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Guessing a recovery key                       | 80 random bits; wrong keys count toward the per-account lock-out (same as sign-in) and the 5/min per-address limit; one answer for wrong key and unknown account                     |
+| Key stolen from the database                  | Only SHA-256 stored (CHECK: 64 hex); a key works once, then is replaced                                                                                                              |
+| Key leaked in transit to the page             | 10-minute HttpOnly, SameSite=Strict cookie scoped to `/recovery-key`, cleared on "I've saved it"; never in a URL or page JS                                                          |
+| Someone signs up with another person's number | Number marked not verified; accepted risk for the pilot. SMS reset codes are never sent to unverified numbers, so a number's holder cannot take over an account made by someone else |
+| Recovery bypassing two-factor                 | The key resets only the password; TOTP is still asked at sign-in                                                                                                                     |
+| Bot sign-ups                                  | 5/min per address; add a challenge (Turnstile) if abused                                                                                                                             |
+
 ## 6. Known gaps (tracked in `docs/backlog.md`)
 
 - Two-factor is optional per account (ADR 0013); turn it on before

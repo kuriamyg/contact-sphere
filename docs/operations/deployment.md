@@ -63,11 +63,15 @@ Open sign-up (ADR 0018), off unless set:
 
 Sign-in with Google (ADR 0020):
 
-| Variable               | Value                                           |
-| ---------------------- | ----------------------------------------------- |
-| `GOOGLE_CLIENT_ID`     | OAuth client id (`…apps.googleusercontent.com`) |
-| `GOOGLE_CLIENT_SECRET` | OAuth client secret — secret, Render only       |
-| `SIGNUP_METHODS`       | `google`, `sms` or `google,sms` (default `sms`) |
+| Variable               | Value                                                               |
+| ---------------------- | ------------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`     | OAuth client id (`…apps.googleusercontent.com`)                     |
+| `GOOGLE_CLIENT_SECRET` | OAuth client secret — secret, Render only                           |
+| `SIGNUP_METHODS`       | Any of `google`, `sms`, `password`, comma-separated (default `sms`) |
+
+`password` (ADR 0021) is a phone number + password + recovery key and needs
+no other setting. Production runs `SIGNUP_METHODS=google,password` once the
+Google client exists, `password` until then.
 
 In Google Cloud the client's **authorised redirect URI** is
 `https://contact-sphere-nine.vercel.app/auth/google/callback` (every

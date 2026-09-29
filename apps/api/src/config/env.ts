@@ -91,13 +91,16 @@ export interface Env {
    */
   google?: GoogleConfig;
   /**
-   * How new people may join when OPEN_SIGNUP=on: SIGNUP_METHODS=google,
-   * sms or both. Each needs its own configuration.
+   * How new people may join when OPEN_SIGNUP=on: SIGNUP_METHODS lists
+   * google, sms and/or password. Google and SMS need their own
+   * configuration; password (phone + password + recovery key, ADR 0021)
+   * needs none.
    */
   signupMethods: SignupMethod[];
 }
 
-export type SignupMethod = 'google' | 'sms';
+const SIGNUP_METHODS = ['google', 'sms', 'password'] as const;
+export type SignupMethod = (typeof SIGNUP_METHODS)[number];
 
 export interface GoogleConfig {
   provider: 'google' | 'fake';
@@ -575,8 +578,10 @@ function parseSignup(
   const raw = source.SIGNUP_METHODS?.trim();
   // Before ADR 0020 sign-up was SMS only; keep that as the default.
   const methods = (raw ? raw.split(',') : ['sms']).map((m) => m.trim());
-  if (!methods.every((m) => m === 'google' || m === 'sms')) {
-    throw new EnvError('SIGNUP_METHODS must list google and/or sms.');
+  if (
+    !methods.every((m) => (SIGNUP_METHODS as readonly string[]).includes(m))
+  ) {
+    throw new EnvError('SIGNUP_METHODS must list google, sms and/or password.');
   }
   const signupMethods = [...new Set(methods)] as SignupMethod[];
   if (openSignup) {

@@ -20,6 +20,8 @@ import type {
   ChangePasswordDto,
   GoogleSignInDto,
   LoginDto,
+  RecoverDto,
+  RegisterDto,
   ResetPasswordDto,
   SetupDto,
   SignupDto,
@@ -40,6 +42,11 @@ import {
   type SessionView,
 } from './session.service';
 import { GOOGLE_OIDC, type GoogleOidc } from './google-oidc';
+import {
+  hashRecoveryKey,
+  newRecoveryKey,
+  normaliseRecoveryKey,
+} from './recovery-key';
 import { hashToken, newSessionToken, secretsEqual } from './tokens';
 import { TotpService } from './totp.service';
 import { MFA_CHALLENGE_MS, MFA_MAX_ATTEMPTS } from './auth.constants';
@@ -59,8 +66,12 @@ export interface Me {
   id: string;
   /** Null for accounts made by phone (B6). */
   email: string | null;
-  /** Verified Kenyan mobile, E.164; null for email-only accounts. */
+  /** Kenyan mobile, E.164; null for email-only accounts. */
   phone: string | null;
+  /** An SMS code proved the phone (false for password sign-ups, ADR 0021). */
+  phoneVerified: boolean;
+  /** Has a recovery key for a forgotten password (ADR 0021). */
+  hasRecoveryKey: boolean;
   displayName: string | null;
   /** "en" or "sw". */
   locale: string;
@@ -90,6 +101,13 @@ const NO_ACCOUNT =
   'There is no Contact Sphere account for this Google account.';
 const NO_PASSWORD =
   'This account signs in with Google, so it has no password to change.';
+const NOT_A_MOBILE = 'Enter a Kenyan mobile number, like 0712 345 678.';
+const NUMBER_TAKEN = 'This number already has an account. Sign in instead.';
+/** One message for every failed recovery, like INVALID_LOGIN. */
+const RECOVERY_FAILED =
+  'That account and recovery key do not match. Check both and try again.';
+const TOO_MANY_ATTEMPTS =
+  'Too many failed attempts for this account. Try again in 15 minutes.';
 
 const BREACHED_PASSWORD =
   'This password has appeared in known data breaches, so attackers try it first. Choose a different one.';
@@ -171,10 +189,7 @@ export class AuthService {
     // One lock-out key per account identifier, however it was typed.
     const key = hashToken(email ?? phone ?? dto.phone ?? '');
     if (await this.failures.isLocked(key)) {
-      throw new HttpException(
-        'Too many failed attempts for this account. Try again in 15 minutes.',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+      throw new HttpException(TOO_MANY_ATTEMPTS, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     const where = email ? { email } : phone ? { phone } : null;
@@ -474,6 +489,8 @@ export class AuthService {
         plusUntil: true,
         passwordHash: true,
         googleSub: true,
+        phoneVerifiedAt: true,
+        recoveryKeyHash: true,
       },
     });
     // A session whose user vanished cannot happen (cascade), but never
@@ -483,6 +500,8 @@ export class AuthService {
       id: user.id,
       email: user.email,
       phone: user.phone,
+      phoneVerified: user.phoneVerifiedAt !== null,
+      hasRecoveryKey: user.recoveryKeyHash !== null,
       displayName: user.displayName,
       locale: user.locale,
       createdAt: user.createdAt.toISOString(),
@@ -548,9 +567,18 @@ export class AuthService {
     );
   }
 
+  /** Can new people join with a phone number and a password (ADR 0021)? */
+  passwordSignupOpen(): boolean {
+    return this.env.openSignup && this.env.signupMethods.includes('password');
+  }
+
   /** Is open sign-up on here, by any method? */
   signupOpen(): boolean {
-    return this.smsSignupOpen() || this.googleSignupOpen();
+    return (
+      this.smsSignupOpen() ||
+      this.googleSignupOpen() ||
+      this.passwordSignupOpen()
+    );
   }
 
   /**
@@ -561,14 +589,168 @@ export class AuthService {
     open: boolean;
     sms: boolean;
     google: boolean;
+    password: boolean;
     googleClientId: string | null;
   } {
     return {
       open: this.signupOpen(),
       sms: this.smsSignupOpen(),
       google: this.googleSignupOpen(),
+      password: this.passwordSignupOpen(),
       googleClientId: this.google ? (this.env.google?.clientId ?? null) : null,
     };
+  }
+
+  /**
+   * Sign-up with a phone number and a password, no code (ADR 0021). The
+   * number is a username, marked not verified. The answer carries a
+   * recovery key, shown to the owner once: with the number it resets a
+   * forgotten password when there is no SMS.
+   */
+  async register(
+    dto: RegisterDto,
+    device: string | null = null,
+  ): Promise<SessionResult & { recoveryKey: string }> {
+    if (!this.passwordSignupOpen()) throw new NotFoundException();
+    const phone = kenyanMobile(dto.phone);
+    if (!phone) throw new BadRequestException(NOT_A_MOBILE);
+    const problem = passwordProblem(dto.password, phone);
+    if (problem) throw new BadRequestException(problem);
+    await this.refuseBreached(dto.password);
+    const passwordHash = await hashPassword(dto.password);
+    const recoveryKey = newRecoveryKey();
+    try {
+      const result = await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            phone,
+            passwordHash,
+            recoveryKeyHash: hashRecoveryKey(recoveryKey),
+            displayName: dto.displayName ?? null,
+            locale: dto.locale ?? 'en',
+            // Everyone starts with a Plus trial (B9, ADR 0019).
+            plusUntil: new Date(Date.now() + TRIAL_DAYS * 86_400_000),
+          },
+          select: { id: true, email: true, phone: true },
+        });
+        const session = await this.sessions.create(
+          user.id,
+          new Date(),
+          tx,
+          device,
+        );
+        await this.audit.record(
+          'auth.signup_completed',
+          {
+            actorUserId: user.id,
+            entityType: 'user',
+            entityId: user.id,
+            metadata: { method: 'password' },
+          },
+          tx,
+        );
+        return { ...session, user };
+      });
+      return { ...result, recoveryKey };
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(NUMBER_TAKEN);
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Forgot password without SMS (ADR 0021): the phone (or email) and the
+   * recovery key. Counts toward the same lock-out as sign-in, so the key
+   * cannot be guessed. Sets the new password, signs every device out and
+   * returns a NEW key: a key works once.
+   */
+  async recover(dto: RecoverDto): Promise<{ recoveryKey: string }> {
+    const typed = dto.identifier.trim();
+    const email = typed.includes('@') ? typed.toLowerCase() : null;
+    const phone = email ? null : kenyanMobile(typed);
+    if (!email && !phone) throw new BadRequestException(NOT_A_MOBILE);
+    const key = hashToken((email ?? phone) as string);
+    if (await this.failures.isLocked(key)) {
+      throw new HttpException(TOO_MANY_ATTEMPTS, HttpStatus.TOO_MANY_REQUESTS);
+    }
+    // The password rules first: a weak new password spends no attempt.
+    const problem = passwordProblem(
+      dto.newPassword,
+      (email ?? phone) as string,
+    );
+    if (problem) throw new BadRequestException(problem);
+    await this.refuseBreached(dto.newPassword);
+
+    const user = await this.prisma.user.findUnique({
+      where: email ? { email } : { phone: phone as string },
+      select: { id: true, recoveryKeyHash: true },
+    });
+    const typedKey = normaliseRecoveryKey(dto.recoveryKey);
+    const ok =
+      !!user?.recoveryKeyHash &&
+      !!typedKey &&
+      secretsEqual(hashRecoveryKey(typedKey), user.recoveryKeyHash);
+    if (!user || !ok) {
+      await this.failures.record(key);
+      await this.audit.record('auth.recovery_failed', {
+        entityType: user ? 'user' : undefined,
+        entityId: user?.id,
+      });
+      throw new BadRequestException(RECOVERY_FAILED);
+    }
+
+    const recoveryKey = newRecoveryKey();
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { passwordHash, recoveryKeyHash: hashRecoveryKey(recoveryKey) },
+      });
+      await this.sessions.revokeAll(user.id, undefined, tx);
+      await this.audit.record(
+        'auth.password_recovered',
+        { actorUserId: user.id, entityType: 'user', entityId: user.id },
+        tx,
+      );
+    });
+    await this.failures.clear(key);
+    return { recoveryKey };
+  }
+
+  /**
+   * A new recovery key for a signed-in owner (lost the old one, or never
+   * had one). The password proves it is them; the old key stops working.
+   */
+  async newRecoveryKeyFor(
+    userId: string,
+    password: string,
+  ): Promise<{ recoveryKey: string }> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (user.passwordHash === null) throw new BadRequestException(NO_PASSWORD);
+    if (!(await verifyPassword(user.passwordHash, password))) {
+      throw new UnauthorizedException('Your password is not correct.');
+    }
+    const recoveryKey = newRecoveryKey();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { recoveryKeyHash: hashRecoveryKey(recoveryKey) },
+      });
+      await this.audit.record(
+        'auth.recovery_key_created',
+        { actorUserId: userId, entityType: 'user', entityId: userId },
+        tx,
+      );
+    });
+    return { recoveryKey };
   }
 
   /** Step 1 of sign-up: text a code to the number (B6). */
@@ -597,6 +779,8 @@ export class AuthService {
         const user = await tx.user.create({
           data: {
             phone,
+            // The code just proved it.
+            phoneVerifiedAt: new Date(),
             passwordHash,
             displayName: dto.displayName ?? null,
             locale: dto.locale ?? 'en',
@@ -650,10 +834,13 @@ export class AuthService {
     await this.codes.verify('reset', phone, dto.code);
     const user = await this.prisma.user.findUnique({
       where: { phone },
-      select: { id: true },
+      select: { id: true, phoneVerifiedAt: true },
     });
-    // Unknown numbers are never texted a code, so a right code means an account.
-    if (!user) throw new BadRequestException('That code is not right.');
+    // Unknown and never-verified numbers are never texted a reset code
+    // (ADR 0021), so a right code means an account proven by this number.
+    if (!user?.phoneVerifiedAt) {
+      throw new BadRequestException('That code is not right.');
+    }
     const passwordHash = await hashPassword(dto.newPassword);
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id: user.id }, data: { passwordHash } });

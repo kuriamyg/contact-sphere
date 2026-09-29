@@ -126,7 +126,7 @@ export class PhoneCodes {
 
     const account = await this.prisma.user.findUnique({
       where: { phone },
-      select: { id: true },
+      select: { id: true, phoneVerifiedAt: true },
     });
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     // A row even when no code is texted, so the limits above also stop
@@ -149,7 +149,10 @@ export class PhoneCodes {
     let text: string | null;
     const withCode = t.code(code) + this.otpLine(code);
     if (purpose === 'signup') text = account ? t.exists : withCode;
-    else text = account ? withCode : null; // reset: nothing for strangers
+    // Reset: nothing for strangers, nor for a number typed in at a password
+    // sign-up and never proven — whoever holds it may not own the account
+    // (ADR 0021); that account resets with its recovery key.
+    else text = account?.phoneVerifiedAt ? withCode : null;
 
     if (text) {
       const sent = await this.sms.send(phone, text);

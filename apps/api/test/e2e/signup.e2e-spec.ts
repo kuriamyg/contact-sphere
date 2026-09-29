@@ -77,6 +77,7 @@ describe('open sign-up (B6)', () => {
       open: true,
       sms: true,
       google: false,
+      password: false,
       googleClientId: null,
     });
     const { app: closed } = await createTestApp();
@@ -189,6 +190,9 @@ describe('open sign-up (B6)', () => {
       email: null,
       displayName: 'Wanjiru',
       locale: 'sw',
+      // The code proved the number (ADR 0021).
+      phoneVerified: true,
+      hasRecoveryKey: false,
     });
     // Codes are used up; the audit log never holds the number.
     const { rows } = await owner.query<{ n: number }>(

@@ -83,6 +83,7 @@ describe('Continue with Google (ADR 0020)', () => {
       open: true,
       sms: false,
       google: true,
+      password: false,
       googleClientId: 'test-client',
     });
     await api('post', '/auth/signup/code')

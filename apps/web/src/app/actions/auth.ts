@@ -11,6 +11,8 @@ import { api, isProduction } from '@/lib/api';
 import {
   mfaCookieName,
   mfaCookieOptions,
+  recoveryKeyCookieName,
+  recoveryKeyCookieOptions,
   sessionCookieName,
   sessionCookieOptions,
 } from '@/lib/session-cookie';
@@ -61,7 +63,9 @@ async function startSession(session: SessionResponse): Promise<void> {
  */
 async function clearCookie(
   name: string,
-  options: ReturnType<typeof sessionCookieOptions>,
+  options:
+    | ReturnType<typeof sessionCookieOptions>
+    | ReturnType<typeof recoveryKeyCookieOptions>,
 ): Promise<void> {
   (await cookies()).set(name, '', { ...options, expires: new Date(0) });
 }
@@ -227,6 +231,110 @@ export async function resetPassword(
   });
   if (res.status !== 204) return failure(res.status, res.message);
   redirect('/login?reset=1');
+}
+
+/** Kept after a failed try: React clears the form on every submit. */
+export interface RegisterState extends FormState {
+  phone?: string;
+  displayName?: string;
+}
+
+/**
+ * Sign-up with a phone number and a password (ADR 0021). The recovery key
+ * rides in a short-lived cookie to /recovery-key, the one page that shows
+ * it: returning it here would be lost, because setting the session cookie
+ * re-renders this page as "already signed in".
+ */
+export async function register(
+  _: RegisterState,
+  form: FormData,
+): Promise<RegisterState> {
+  const phone = field(form, 'phone').trim();
+  const displayName = field(form, 'displayName').trim();
+  const password = field(form, 'password');
+  if (password !== field(form, 'confirmPassword')) {
+    return {
+      error: (await getMessages()).errors.passwordsDiffer,
+      phone,
+      displayName,
+    };
+  }
+  const res = await api<SessionResponse & { recoveryKey: string }>(
+    '/auth/register',
+    {
+      method: 'POST',
+      auth: false,
+      body: {
+        phone,
+        password,
+        locale: await getLocale(),
+        ...optional('displayName', displayName),
+      },
+    },
+  );
+  if (res.status !== 201 || !res.data) {
+    return { ...(await failure(res.status, res.message)), phone, displayName };
+  }
+  await startSession(res.data);
+  (await cookies()).set(
+    recoveryKeyCookieName(isProduction()),
+    res.data.recoveryKey,
+    recoveryKeyCookieOptions(isProduction(), new Date(Date.now() + 600_000)),
+  );
+  redirect('/recovery-key');
+}
+
+/** "I've saved it": the key leaves this device's cookies for good. */
+export async function recoveryKeySaved(): Promise<void> {
+  await clearCookie(
+    recoveryKeyCookieName(isProduction()),
+    recoveryKeyCookieOptions(isProduction(), new Date(0)),
+  );
+  redirect('/today');
+}
+
+export interface RecoveryKeyState extends FormState {
+  /** The new key, shown once. */
+  recoveryKey?: string;
+  identifier?: string;
+}
+
+/** Forgot password with the recovery key (ADR 0021); shows the new key. */
+export async function recoverPassword(
+  _: RecoveryKeyState,
+  form: FormData,
+): Promise<RecoveryKeyState> {
+  const identifier = field(form, 'identifier').trim();
+  const newPassword = field(form, 'newPassword');
+  if (newPassword !== field(form, 'confirmPassword')) {
+    return { error: (await getMessages()).errors.passwordsDiffer, identifier };
+  }
+  const res = await api<{ recoveryKey: string }>('/auth/recover', {
+    method: 'POST',
+    auth: false,
+    body: {
+      identifier,
+      recoveryKey: field(form, 'recoveryKey'),
+      newPassword,
+    },
+  });
+  if (res.status !== 200 || !res.data) {
+    return { ...(await failure(res.status, res.message)), identifier };
+  }
+  return { recoveryKey: res.data.recoveryKey };
+}
+
+/** Profile → a new recovery key; the old one stops working. */
+export async function makeRecoveryKey(
+  _: RecoveryKeyState,
+  form: FormData,
+): Promise<RecoveryKeyState> {
+  const res = await api<{ recoveryKey: string }>('/auth/recovery-key', {
+    method: 'POST',
+    body: { password: field(form, 'password') },
+  });
+  if (res.status !== 200 || !res.data) return failure(res.status, res.message);
+  return { recoveryKey: res.data.recoveryKey };
 }
 
 export async function logout(): Promise<void> {

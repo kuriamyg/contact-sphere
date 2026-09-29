@@ -64,15 +64,14 @@ export default async function LoginPage({
         </>
       )}
       <LoginForm />
-      {status.open && (
-        <div className="space-y-2 text-sm text-muted">
-          {status.sms && (
-            <p>
-              <Link href="/reset" className="underline">
-                {m.auth.forgot}
-              </Link>
-            </p>
-          )}
+      <div className="space-y-2 text-sm text-muted">
+        {/* The recovery key works on any account that has one (ADR 0021). */}
+        <p>
+          <Link href="/reset" className="underline">
+            {m.auth.forgot}
+          </Link>
+        </p>
+        {status.open && (
           <p>
             {m.auth.newHere}{' '}
             <Link
@@ -82,8 +81,8 @@ export default async function LoginPage({
               {m.auth.createAccount}
             </Link>
           </p>
-        </div>
-      )}
+        )}
+      </div>
       {canSetUp && (
         <p className="text-sm text-muted">
           {m.auth.firstTime}{' '}
