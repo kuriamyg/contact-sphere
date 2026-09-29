@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, Ref } from 'react';
 
 import { ChromeRing } from '@/components/brand/chrome-ring';
 
@@ -6,10 +6,11 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
   hint?: string;
+  ref?: Ref<HTMLInputElement>;
 };
 
 /** A labelled input. The label is always visible — never a placeholder-only field. */
-export function Field({ label, name, hint, id, ...input }: FieldProps) {
+export function Field({ label, name, hint, id, ref, ...input }: FieldProps) {
   const inputId = id ?? name;
   const hintId = hint ? `${inputId}-hint` : undefined;
   return (
@@ -18,6 +19,7 @@ export function Field({ label, name, hint, id, ...input }: FieldProps) {
         {label}
       </label>
       <input
+        ref={ref}
         id={inputId}
         name={name}
         aria-describedby={hintId}

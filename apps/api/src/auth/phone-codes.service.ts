@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import type { Env } from '../config/env';
+import { ENV } from '../config/env.provider';
 import { PrismaService } from '../prisma/prisma.service';
 import { kenyanMobile } from './mobile';
 import { OTP_SMS, type OtpSms } from './otp-sms';
@@ -31,13 +33,13 @@ const CODE_WRONG = 'That code is not right.';
 const TEXT = {
   en: {
     code: (c: string) =>
-      `Contact Sphere code: ${c}. It expires in 10 minutes. Never share it with anyone.`,
+      `Your Contact Sphere verification code is ${c}. It expires in 10 minutes. Do not share it with anyone.`,
     exists:
       'This number already has a Contact Sphere account. Sign in, or reset your password if you forgot it.',
   },
   sw: {
     code: (c: string) =>
-      `Msimbo wa Contact Sphere: ${c}. Unaisha baada ya dakika 10. Usimpe mtu yeyote.`,
+      `Msimbo wako wa uthibitisho wa Contact Sphere ni ${c}. Unaisha baada ya dakika 10. Usimpe mtu yeyote.`,
     exists:
       'Nambari hii tayari ina akaunti ya Contact Sphere. Ingia, au weka upya nenosiri ikiwa umelisahau.',
   },
@@ -56,7 +58,23 @@ export class PhoneCodes {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     @Inject(OTP_SMS) private readonly sms: OtpSms | null,
+    @Inject(ENV) private readonly env: Env,
   ) {}
+
+  /**
+   * The last line of a code SMS in the WebOTP / Android SMS format
+   * ("@host #code"), so Chrome on Android can offer to fill the code in
+   * by itself — only on our own site.
+   */
+  private otpLine(code: string): string {
+    const origin = this.env.webOrigins[0];
+    if (!origin) return '';
+    try {
+      return `\n\n@${new URL(origin).host} #${code}`;
+    } catch {
+      return '';
+    }
+  }
 
   get enabled(): boolean {
     return this.sms !== null;
@@ -124,8 +142,9 @@ export class PhoneCodes {
 
     const t = TEXT[locale];
     let text: string | null;
-    if (purpose === 'signup') text = account ? t.exists : t.code(code);
-    else text = account ? t.code(code) : null; // reset: nothing for strangers
+    const withCode = t.code(code) + this.otpLine(code);
+    if (purpose === 'signup') text = account ? t.exists : withCode;
+    else text = account ? withCode : null; // reset: nothing for strangers
 
     if (text) {
       const ok = await this.sms.send(phone, text);

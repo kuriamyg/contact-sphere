@@ -5,6 +5,14 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Changed — Sign-up wording and code auto-fill
+
+- Sign-up and password reset now speak of a **verification code by SMS**,
+  and the SMS reads "Your Contact Sphere verification code is …".
+- On Android (Chrome), the code can **fill itself in** from the SMS.
+- Opening the sign-up link while signed in now says so, with "Sign out"
+  and "Go to your contacts", instead of silently going to your contacts.
+
 ### Added — Plans and paying with M-Pesa (B9a)
 
 - **Free and Plus.** Free keeps all your contacts and 3 groups; Plus

@@ -27,12 +27,17 @@ export const auth = section(
     signInLink: 'Sign in',
     signUpTitle: 'Create your account',
     signUpLead:
-      'Use your mobile number. We text you a code to check it is yours — no email needed.',
+      'Sign up with your mobile number. We verify it with a one-time code by SMS — no email needed.',
     resetTitle: 'Reset your password',
     resetLead:
-      'Enter the mobile number you sign in with. If it has an account, we text it a code.',
+      'Enter the mobile number you sign in with. If it has an account, we send a verification code to it by SMS.',
     passwordReset:
       'Your password has been changed and every device signed out. Sign in with the new one.',
+    alreadySignedIn: 'You are signed in as {name}.',
+    signOutToCreate:
+      'To create another account — for someone else, or to test — sign out first, or use a private browser tab.',
+    goToContacts: 'Go to your contacts',
+    signOut: 'Sign out',
   },
   {
     signInTitle: 'Ingia',
@@ -61,11 +66,16 @@ export const auth = section(
     signInLink: 'Ingia',
     signUpTitle: 'Fungua akaunti yako',
     signUpLead:
-      'Tumia nambari yako ya simu. Tutakutumia msimbo kwa SMS kuthibitisha kuwa ni yako — hakuna barua pepe inayohitajika.',
+      'Jisajili kwa nambari yako ya simu. Tunaithibitisha kwa msimbo wa mara moja kwa SMS — hakuna barua pepe inayohitajika.',
     resetTitle: 'Weka upya nenosiri lako',
     resetLead:
-      'Weka nambari ya simu unayoingia nayo. Ikiwa ina akaunti, tutaitumia msimbo kwa SMS.',
+      'Weka nambari ya simu unayoingia nayo. Ikiwa ina akaunti, tutaitumia msimbo wa uthibitisho kwa SMS.',
     passwordReset:
       'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
+    alreadySignedIn: 'Umeingia kama {name}.',
+    signOutToCreate:
+      'Kuunda akaunti nyingine — kwa mtu mwingine, au kujaribu — toka kwanza, au tumia kichupo cha faragha cha kivinjari.',
+    goToContacts: 'Nenda kwenye anwani zako',
+    signOut: 'Toka',
   },
 );
