@@ -69,7 +69,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Audit entries for every auth event (no emails)
 - [x] Tests: unit, DB guarantees, API e2e, real-browser flow
 - [x] Deployed: staging (16/16 live checks) and production (14/14)
-- [ ] Owner creates the production account; then remove `SETUP_TOKEN`
+- [x] Owner creates the production account
+- [ ] Remove `SETUP_TOKEN` from the production API (owner, Render)
 - [x] TOTP two-factor (ADR 0013): encrypted secret, single-use codes,
       recovery codes, challenge step; enable/disable from Account
 - [x] A5: breached-password check (HIBP range API, fails open); device
@@ -94,13 +95,21 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] Browser flow (41 checks, phone size) and 360 px layout checks
 - [x] Account deletion (ADR 0005 §4, ADR 0017) — B7
 - [x] Open sign-up with a mobile number, SMS codes, phone sign-in and reset
-      by SMS (ADR 0018) — B6; on in staging (Africa's Talking sandbox), off in
-      production until a live key and B9
+      by SMS (ADR 0018) — B6; built, off in production (Do Not Disturb blocks
+      shared senders; needs a sender ID — L2 in unfinished-business)
 - [x] Plans (Free, Plus KES 99/990, 30-day trial), operator page (accounts,
       free months, hand-recorded M-Pesa), M-Pesa prompt via Daraja behind
       config (ADR 0019) — B9a
 - [x] Continue with Google replaces SMS sign-up (Do Not Disturb blocked
       SMS codes); SMS stays in the code for a sender ID later (ADR 0020)
+- [x] Phone + password sign-up with a one-time recovery key; SMS reset
+      only for proven numbers (ADR 0021); production runs
+      `SIGNUP_METHODS=google,password`
+- [x] First-run tour, full-screen account page, show-password eye (#48)
+- [x] C1: reminders before and after Plus ends (banner + morning push)
+- [x] C2: encrypted backup and restore (ADR 0009 accepted)
+- [x] C3: "not a robot" check on sign-up — Cloudflare Turnstile, off until
+      its keys are set (ADR 0022)
 - [ ] B9b: Daraja go-live on a till/paybill; M-Pesa Ratiba renewals
 - [ ] B8: ODPC registration — pack ready in `docs/odpc/` (voluntary for now,
       KES 4,000); owner registers on the portal, then add the number to the
@@ -139,7 +148,8 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
       officials first; trashed contacts hidden and back on restore
 - [x] Group page: SMS everyone, copy numbers for WhatsApp, per-member
       call/WhatsApp, .vcf export; add from a picker or a contact's page
-- [ ] Later: free-plan limit (3 groups) with billing (Phase 12); shared,
+- [x] Free-plan limit (3 groups) with billing (B9a)
+- [ ] Later: shared,
       consented member directories (Community plan)
 
 ## Phase 9 — Remember
@@ -212,9 +222,9 @@ Carried over from `PROJECT_CONTEXT.md` §13 and extended by the gap analysis
 - [x] CSP: allow exactly `display:none` (React streaming) via hash
 - [x] Strategy and re-ordered roadmap: docs/product/strategy.md
 
-## Later phases
+## What's left
 
-See `docs/product/strategy.md` §7 for the current order.
+Everything still to build or do, in order: `docs/unfinished-business.md`.
 
 See `PROJECT_CONTEXT.md` §12. Open evaluation: graph library for Phase 7
 (candidates: Cytoscape.js, Sigma.js + Graphology, React Flow — compare on
