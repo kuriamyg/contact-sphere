@@ -256,3 +256,77 @@ describe('Google with sign-up closed', () => {
     await post(googleRequest(WANJIRU)).expect(200);
   });
 });
+
+describe('Google sign-in for the Android app (P5b, ADR 0025)', () => {
+  const pair = () => {
+    const verifier = randomBytes(32).toString('base64url');
+    return {
+      verifier,
+      challenge: createHash('sha256').update(verifier).digest('base64url'),
+    };
+  };
+
+  it('gives the browser a single-use code, not a session; the app redeems it', async () => {
+    const { verifier, challenge } = pair();
+    const res = await api('post', '/auth/google')
+      .send(googleRequest(WANJIRU, { appChallenge: challenge }))
+      .expect(200);
+    expect(body(res).token).toBeUndefined();
+    const handoff = body(res).handoff as string;
+    expect(handoff).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    const { rows } = await owner.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM sessions',
+    );
+    expect(rows[0].n).toBe(0);
+
+    // Another app that caught the link, without the secret: refused.
+    await api('post', '/auth/app/redeem')
+      .send({ code: handoff, verifier: pair().verifier })
+      .expect(400);
+    const ok = await api('post', '/auth/app/redeem')
+      .send({ code: handoff, verifier })
+      .expect(200);
+    const token = body(ok).token as string;
+    expect(token).toBeTruthy();
+    await api('get', '/auth/me', token).expect(200);
+    // Once only.
+    const again = await api('post', '/auth/app/redeem')
+      .send({ code: handoff, verifier })
+      .expect(400);
+    expect(body(again).message).toBe(
+      'That sign-in has expired. Please sign in again.',
+    );
+  });
+
+  it('refuses an expired code and a malformed challenge', async () => {
+    const { verifier, challenge } = pair();
+    const res = await api('post', '/auth/google')
+      .send(googleRequest(WANJIRU, { appChallenge: challenge }))
+      .expect(200);
+    await owner.query(
+      "UPDATE app_handoffs SET expires_at = created_at + interval '1 millisecond'",
+    );
+    await api('post', '/auth/app/redeem')
+      .send({ code: body(res).handoff, verifier })
+      .expect(400);
+    await api('post', '/auth/google')
+      .send(googleRequest(WANJIRU, { appChallenge: 'too-short' }))
+      .expect(400);
+  });
+
+  it('still asks for the second factor when two-factor is on', async () => {
+    const { verifier, challenge } = pair();
+    await api('post', '/auth/google').send(googleRequest(WANJIRU)).expect(200);
+    await owner.query(
+      "UPDATE users SET totp_enabled_at = now(), totp_secret = 'v1:test' WHERE google_sub = '1001'",
+    );
+    const res = await api('post', '/auth/google')
+      .send(googleRequest(WANJIRU, { appChallenge: challenge }))
+      .expect(200);
+    const ok = await api('post', '/auth/app/redeem')
+      .send({ code: body(res).handoff, verifier })
+      .expect(200);
+    expect(body(ok)).toMatchObject({ mfaRequired: true });
+    expect(body(ok).token).toBeUndefined();
+  });
+});

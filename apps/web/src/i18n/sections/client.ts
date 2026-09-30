@@ -3,6 +3,12 @@ import { section } from '../section';
 /** Strings used by client components (sent to the browser). */
 export const client = section(
   {
+    appSignIn: {
+      signingIn: 'Signing you in…',
+      again: 'Back to sign in',
+      update:
+        'Update the app to sign in with Google: download the latest test build, or use your phone number and password.',
+    },
     form: {
       saving: 'Saving…',
       save: 'Save',
@@ -551,6 +557,12 @@ export const client = section(
     },
   },
   {
+    appSignIn: {
+      signingIn: 'Tunakuingiza…',
+      again: 'Rudi kuingia',
+      update:
+        'Sasisha programu ili kuingia kwa Google: pakua toleo jipya la majaribio, au tumia nambari yako ya simu na nenosiri.',
+    },
     form: {
       saving: 'Inahifadhi…',
       save: 'Hifadhi',

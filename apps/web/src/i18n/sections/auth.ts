@@ -34,6 +34,11 @@ export const auth = section(
     passwordReset:
       'Your password has been changed and every device signed out. Sign in with the new one.',
     continueWithGoogle: 'Continue with Google',
+    appReturnTitle: 'Signed in with Google',
+    appReturnBody: 'Go back to the Contact Sphere app to finish.',
+    appReturnButton: 'Open Contact Sphere',
+    appReturnFailed:
+      'That sign-in did not work. Go back to the app and try again.',
     googleInApp:
       'Google sign-in is coming to the app in the next update. For now, use your phone number and password here — or open Contact Sphere in Chrome to continue with Google.',
     or: 'or',
@@ -104,6 +109,11 @@ export const auth = section(
     passwordReset:
       'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
     continueWithGoogle: 'Endelea na Google',
+    appReturnTitle: 'Umeingia kwa Google',
+    appReturnBody: 'Rudi kwenye programu ya Contact Sphere kumaliza.',
+    appReturnButton: 'Fungua Contact Sphere',
+    appReturnFailed:
+      'Kuingia huko hakukufanikiwa. Rudi kwenye programu ujaribu tena.',
     googleInApp:
       'Kuingia kwa Google kunakuja kwenye programu katika sasisho lijalo. Kwa sasa, tumia nambari yako ya simu na nenosiri hapa — au fungua Contact Sphere kwenye Chrome kuendelea na Google.',
     or: 'au',

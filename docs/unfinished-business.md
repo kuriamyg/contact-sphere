@@ -24,8 +24,8 @@ refresh) · 💤 waiting on something outside the code.
 
 **Where we are (2026-09-29):** Commercial C1–C4 are done. The owner chose
 to build **P6 then P5** first (P1–P4 wait; the owner handles the bot
-themselves). P6 (relationships and the map) is live. P5 (Android) has
-started with P5a. L1 and L2 wait for money.
+themselves). P6 (relationships and the map) is live. P5 (Android): P5a is
+live, P5b in progress. L1 and L2 wait for money.
 
 ---
 
@@ -52,8 +52,8 @@ started with P5a. L1 and L2 wait for money.
 | --- | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P6a | Relationships                             | ✅     | Link two contacts (family, who introduced whom, work, church, chama) with a note; suggestions from "met through" and shared surnames. Free. ADR 0023.           |
 | P6b | Relationship map (Plus)                   | ✅     | Own SVG, no library (ADR 0024). `/contacts/map`: focus on a person, filter by kind, family tree, zoom/pan, the same people as a list; up to 300 people.         |
-| P5a | Android app shell + import from the phone | 🔨     | Capacitor shell around the live web app (ADR 0025); read-only "Import from this phone" through the usual preview; test builds as the `android-latest` download. |
-| P5b | Google sign-in inside the app             | ⏳     | Sign-in in the phone's browser, handed back to the app with a one-time code (PKCE-style). Until then the app shows phone + password.                            |
+| P5a | Android app shell + import from the phone | ✅     | Capacitor shell around the live web app (ADR 0025); read-only "Import from this phone" through the usual preview; test builds as the `android-latest` download. |
+| P5b | Google sign-in inside the app             | 🔨     | Sign-in in a Chrome tab, handed back to the app with a single-use code redeemable only with the app's secret (ADR 0025).                                        |
 | P5c | Write to the phone (own account)          | ⏳     | Contact Sphere contacts in the phone's Contacts app under a separate "Contact Sphere" account; the owner's other contacts never touched.                        |
 | P5d | Two-way sync                              | ⏳     | Changes on either side, field-level merge, owner decides clashes (as ADR 0015). Own ADR first.                                                                  |
 | P5e | Play Store release                        | 💤     | USD 25 account, 12+ testers for 14 days, Play billing decision for Plus, upload key in GitHub secrets.                                                          |

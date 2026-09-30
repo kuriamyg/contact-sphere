@@ -6,8 +6,10 @@ import {
   IsString,
   Length,
   MaxLength,
+  Matches,
 } from 'class-validator';
 
+import { BASE64URL_43 } from '../app-handoff';
 import { PASSWORD_MAX } from '../auth.constants';
 
 const normaliseEmail = ({ value }: { value: unknown }) =>
@@ -220,4 +222,18 @@ export class GoogleSignInDto {
   @IsOptional()
   @IsIn(LOCALES)
   locale?: 'en' | 'sw';
+
+  /** From the Android app: base64url(SHA-256(verifier)), ADR 0025. */
+  @IsOptional()
+  @Matches(BASE64URL_43)
+  appChallenge?: string;
+}
+
+/** The Android app redeeming its sign-in hand-off (ADR 0025). */
+export class AppHandoffDto {
+  @Matches(BASE64URL_43)
+  code!: string;
+
+  @Matches(BASE64URL_43)
+  verifier!: string;
 }

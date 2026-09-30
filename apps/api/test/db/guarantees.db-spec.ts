@@ -87,7 +87,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await owner.query(
-    'TRUNCATE relationships, relationship_dismissals, payments, phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
+    'TRUNCATE app_handoffs, relationships, relationship_dismissals, payments, phone_codes, login_failures, sms_sends, push_subscriptions, follow_ups, group_members, groups, saved_searches, contact_merges, duplicate_dismissals, email_addresses, phone_numbers, contacts, mfa_challenges, recovery_codes, sessions, audit_logs, users',
   );
 });
 
@@ -894,5 +894,37 @@ describe('relationships (P6, ADR 0023)', () => {
               (SELECT count(*) FROM relationship_dismissals)::int AS d`,
     );
     expect(rows[0]).toEqual({ r: 0, d: 0 });
+  });
+});
+
+describe('app sign-in hand-offs (P5b, ADR 0025)', () => {
+  const handoff = (
+    userId: string,
+    challenge = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+    life = "interval '2 minutes'",
+    codeHash = 'b'.repeat(64),
+  ) =>
+    app.query(
+      `INSERT INTO app_handoffs (id, user_id, code_hash, challenge, expires_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, now() + ${life})`,
+      [userId, codeHash, challenge],
+    );
+
+  it('store only a hash and a well-formed challenge, and live minutes', async () => {
+    const u = await insertUser(app, 'ann@example.com');
+    expect(await sqlState(handoff(u, 'short'))).toBe(CHECK_VIOLATION);
+    expect(
+      await sqlState(handoff(u, undefined, undefined, 'NOT-A-HASH'.padEnd(64))),
+    ).toBe(CHECK_VIOLATION);
+    expect(await sqlState(handoff(u, undefined, "interval '1 hour'"))).toBe(
+      CHECK_VIOLATION,
+    );
+    await handoff(u);
+    expect(await sqlState(handoff(u))).toBe(UNIQUE_VIOLATION);
+    await app.query('DELETE FROM users WHERE id = $1', [u]);
+    const { rows } = await app.query(
+      'SELECT count(*)::int AS n FROM app_handoffs',
+    );
+    expect(rows[0]).toEqual({ n: 0 });
   });
 });

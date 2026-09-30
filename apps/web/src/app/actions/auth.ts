@@ -484,3 +484,43 @@ export async function updateProfile(
   revalidatePath('/', 'layout');
   return { success: (await getMessages()).errors.nameSaved };
 }
+
+/**
+ * Inside the Android app, after Google sign-in in the phone's browser
+ * (ADR 0025): trade the hand-off code and the app's secret for a session.
+ * Returns where to go next, or an error.
+ */
+export async function redeemAppSignIn(
+  code: string,
+  verifier: string,
+): Promise<{ next: string } | { error: string }> {
+  const ok = /^[A-Za-z0-9_-]{43}$/;
+  if (!ok.test(code) || !ok.test(verifier)) {
+    return { error: await apiError(400) };
+  }
+  const res = await api<{
+    token?: string;
+    expiresAt: string;
+    mfaRequired?: true;
+    challenge?: string;
+  }>('/auth/app/redeem', {
+    method: 'POST',
+    auth: false,
+    body: { code, verifier },
+  });
+  if (res.status !== 200 || !res.data) {
+    return { error: await apiError(res.status, res.message) };
+  }
+  const expires = new Date(res.data.expiresAt);
+  if (res.data.mfaRequired && res.data.challenge) {
+    (await cookies()).set(
+      mfaCookieName(isProduction()),
+      res.data.challenge,
+      mfaCookieOptions(isProduction(), expires),
+    );
+    return { next: '/login/verify' };
+  }
+  if (!res.data.token) return { error: await apiError(500) };
+  await startSession({ token: res.data.token, expiresAt: res.data.expiresAt });
+  return { next: '/today' };
+}

@@ -6,7 +6,8 @@ import { LoginForm } from '@/components/auth/login-form';
 import { WipeAll } from '@/components/offline/offline-sync';
 import { getMessages, pageTitle } from '@/i18n/server';
 import { GoogleButton, OrDivider } from '@/components/auth/google-button';
-import { inAndroidApp } from '@/lib/in-app';
+import { AppGoogleButton } from '@/components/auth/app-google-button';
+import { androidApp } from '@/lib/in-app';
 import { FormMessage } from '@/components/auth/field';
 import { currentUser, setupAvailable, signupStatus } from '@/lib/auth';
 
@@ -23,10 +24,11 @@ export default async function LoginPage({
   // If the API is unreachable, still show the form: signing in will then
   // say the service is unavailable, which is more useful than an error page.
   if (await currentUser().catch(() => null)) redirect('/contacts');
-  const [canSetUp, status, m] = await Promise.all([
+  const [canSetUp, status, m, inApp] = await Promise.all([
     setupAvailable(),
     signupStatus(),
     getMessages(),
+    androidApp(),
   ]);
   const googleProblem =
     query.google && query.google in m.auth.google
@@ -60,12 +62,14 @@ export default async function LoginPage({
       <FormMessage error={googleProblem} />
       {status.googleClientId && (
         <>
-          {(await inAndroidApp()) ? (
+          {!inApp ? (
+            <GoogleButton label={m.auth.continueWithGoogle} />
+          ) : inApp.googleHandoff ? (
+            <AppGoogleButton label={m.auth.continueWithGoogle} />
+          ) : (
             <p className="rounded-lg card p-3 text-sm text-muted">
               {m.auth.googleInApp}
             </p>
-          ) : (
-            <GoogleButton label={m.auth.continueWithGoogle} />
           )}
           <OrDivider label={m.auth.or} />
         </>
