@@ -5,6 +5,17 @@ versioning: [SemVer](https://semver.org) once the first release is cut.
 
 ## [Unreleased]
 
+### Added — Contact Sphere contacts in your phone's Contacts (Android app 0.3)
+
+- Profile → **Contacts on this phone**: put your contacts in the phone's own
+  Contacts app, so WhatsApp, calls and SMS show their names. They live in a
+  separate "Contact Sphere" account; your other phone contacts are never
+  changed. Tap again to update; **Remove them from this phone** takes
+  exactly those off again.
+- The app has the Contact Sphere icon and splash screen.
+- **contact-sphere-nine.vercel.app/android**: one link to share, with the
+  download and install steps (English and Kiswahili).
+
 ### Added — Continue with Google inside the Android app
 
 - In the app (test build 0.2), **Continue with Google** opens Google in a

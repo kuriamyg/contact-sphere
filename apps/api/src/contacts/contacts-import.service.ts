@@ -17,6 +17,20 @@ import { writeVcard } from './vcard/write';
 export const MAX_IMPORT_CARDS = 5_000;
 /** How many of the contacts to be imported the preview lists by name. */
 const PREVIEW_LIMIT = 1_000;
+/** Most contacts put on a phone at once (the phone's own limit is far higher). */
+export const MAX_PHONE_COPY = 5_000;
+
+/** One contact as the Android app writes it into the phone (P5c). */
+export interface PhoneCopyContact {
+  id: string;
+  displayName: string;
+  givenName: string | null;
+  familyName: string | null;
+  organization: string | null;
+  jobTitle: string | null;
+  phones: { number: string; label: string | null }[];
+  emails: { address: string; label: string | null }[];
+}
 
 export interface ImportPlan {
   /** Cards found in the file. */
@@ -160,6 +174,52 @@ export class ContactsImportService {
         }),
       )
       .join('');
+  }
+
+  /**
+   * The owner's active contacts (not archived, not in the trash) for the
+   * Android app to put in the phone's own Contacts (P5c, ADR 0025). Only
+   * what the phone shows: names, work, numbers, emails.
+   */
+  async phoneCopy(ownerId: string): Promise<PhoneCopyContact[]> {
+    const rows = await this.prisma.contact.findMany({
+      where: { ownerId, deletedAt: null, archivedAt: null },
+      orderBy: [{ sortName: 'asc' }, { id: 'asc' }],
+      take: MAX_PHONE_COPY,
+      select: {
+        id: true,
+        displayName: true,
+        givenName: true,
+        familyName: true,
+        organization: true,
+        jobTitle: true,
+        phoneNumbers: {
+          orderBy: { position: 'asc' },
+          select: { raw: true, e164: true, label: true },
+        },
+        emailAddresses: {
+          orderBy: { position: 'asc' },
+          select: { address: true, label: true },
+        },
+      },
+    });
+    await this.audit.record('contact.exported', {
+      actorUserId: ownerId,
+      metadata: { count: rows.length, to: 'phone' },
+    });
+    return rows.map((c) => ({
+      id: c.id,
+      displayName: c.displayName,
+      givenName: c.givenName,
+      familyName: c.familyName,
+      organization: c.organization,
+      jobTitle: c.jobTitle,
+      phones: c.phoneNumbers.map((p) => ({
+        number: p.e164 ?? p.raw,
+        label: p.label,
+      })),
+      emails: c.emailAddresses,
+    }));
   }
 
   private async plan(

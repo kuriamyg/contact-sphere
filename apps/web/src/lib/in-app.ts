@@ -18,10 +18,13 @@ export function appVersion(ua: string): [number, number] | null {
 export async function androidApp(): Promise<{
   /** This build can do Google sign-in through the browser (0.2+). */
   googleHandoff: boolean;
+  /** This build can put contacts in the phone's Contacts (0.3+). */
+  phoneCopy: boolean;
 } | null> {
   const v = appVersion((await headers()).get('user-agent') ?? '');
   if (!v) return null;
-  return { googleHandoff: v[0] > 0 || v[1] >= 2 };
+  const atLeast = (minor: number) => v[0] > 0 || v[1] >= minor;
+  return { googleHandoff: atLeast(2), phoneCopy: atLeast(3) };
 }
 
 export async function inAndroidApp(): Promise<boolean> {

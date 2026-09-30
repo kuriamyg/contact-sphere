@@ -11,6 +11,6 @@
     "allowMixedContent": false,
     "captureInput": true,
     "webContentsDebuggingEnabled": false,
-    "appendUserAgent": "ContactSphereAndroid/0.2"
+    "appendUserAgent": "ContactSphereAndroid/0.3"
   }
 }

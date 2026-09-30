@@ -37,7 +37,9 @@ import { getContactStats } from '@/lib/contacts';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { getReachStatus } from '@/lib/reach';
 import { getBilling } from '@/lib/billing';
+import { PhoneCopySection } from '@/components/account/phone-copy-section';
 import { BackupSection } from '@/components/backup/backup-section';
+import { androidApp } from '@/lib/in-app';
 import { PlanNoticeSlot } from '@/components/billing/plan-notice-slot';
 import { PlanSection } from '@/components/billing/plan-section';
 import { fmt } from '@/i18n/format';
@@ -82,13 +84,14 @@ function deviceName(device: string | null, locale: string): string | null {
  */
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [stats, reach, m, locale, devices, billing] = await Promise.all([
+  const [stats, reach, m, locale, devices, billing, inApp] = await Promise.all([
     getContactStats(),
     getReachStatus(),
     getMessages(),
     getLocale(),
     getDevices(),
     getBilling(),
+    androidApp(),
   ]);
   const t = m.account;
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
@@ -292,10 +295,30 @@ export default async function ProfilePage() {
             </CardTitle>
             <p className="text-sm text-muted">{t.installBody}</p>
             <InstallApp />
+            {!inApp && (
+              <Link
+                href="/android"
+                className="inline-block text-sm font-medium text-accent hover:underline"
+              >
+                {m.auth.android.title} →
+              </Link>
+            )}
             <div className="border-t border-border pt-3">
               <TourButton />
             </div>
           </section>
+
+          {inApp?.phoneCopy && (
+            <section
+              aria-labelledby="phone-copy-heading"
+              className={`${card} space-y-3`}
+            >
+              <CardTitle id="phone-copy-heading" icon={<DownloadIcon />}>
+                {m.client.phoneCopy.title}
+              </CardTitle>
+              <PhoneCopySection />
+            </section>
+          )}
 
           <section
             aria-labelledby="reminders-heading"

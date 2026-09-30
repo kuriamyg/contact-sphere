@@ -3,6 +3,25 @@ import { section } from '../section';
 /** Strings used by client components (sent to the browser). */
 export const client = section(
   {
+    phoneCopy: {
+      title: 'Contacts on this phone',
+      body: 'Put your Contact Sphere contacts in this phone’s Contacts app, so WhatsApp, calls and SMS show their names. They go in a separate “Contact Sphere” account; your other phone contacts are not changed.',
+      onPhone: '{n} contacts from Contact Sphere are on this phone.',
+      put: 'Put my contacts on this phone',
+      update: 'Update them on this phone',
+      working: 'Working…',
+      result:
+        'Done: {added} added, {updated} updated, {removed} removed, {unchanged} already up to date.',
+      remove: 'Remove them from this phone',
+      removeConfirm: 'Yes, remove them from this phone',
+      removed:
+        'Removed {n} contacts from this phone. Contact Sphere still has them all.',
+      denied:
+        'Contact Sphere was not allowed to change your contacts. Allow it in Settings → Apps → Contact Sphere → Permissions, then try again.',
+      failed:
+        'The phone’s contacts could not be updated. Nothing was lost — try again.',
+      safe: 'Archived contacts and the trash are not put on the phone. Changes you make on the phone are not sent back yet.',
+    },
     appSignIn: {
       signingIn: 'Signing you in…',
       again: 'Back to sign in',
@@ -557,6 +576,25 @@ export const client = section(
     },
   },
   {
+    phoneCopy: {
+      title: 'Anwani kwenye simu hii',
+      body: 'Weka anwani zako za Contact Sphere kwenye programu ya Anwani ya simu hii, ili WhatsApp, simu na SMS zionyeshe majina yao. Zinaenda kwenye akaunti tofauti ya “Contact Sphere”; anwani zako nyingine za simu hazibadilishwi.',
+      onPhone: 'Anwani {n} kutoka Contact Sphere ziko kwenye simu hii.',
+      put: 'Weka anwani zangu kwenye simu hii',
+      update: 'Zisasishe kwenye simu hii',
+      working: 'Inafanya kazi…',
+      result:
+        'Imekamilika: {added} zimeongezwa, {updated} zimesasishwa, {removed} zimeondolewa, {unchanged} tayari ziko sawa.',
+      remove: 'Ziondoe kwenye simu hii',
+      removeConfirm: 'Ndiyo, ziondoe kwenye simu hii',
+      removed:
+        'Anwani {n} zimeondolewa kwenye simu hii. Contact Sphere bado inazo zote.',
+      denied:
+        'Contact Sphere haikuruhusiwa kubadilisha anwani zako. Ruhusu kwenye Mipangilio → Programu → Contact Sphere → Ruhusa, kisha jaribu tena.',
+      failed:
+        'Anwani za simu hazikuweza kusasishwa. Hakuna kilichopotea — jaribu tena.',
+      safe: 'Anwani zilizowekwa kando na zilizo kwenye tupio haziwekwi kwenye simu. Mabadiliko unayofanya kwenye simu bado hayarudishwi.',
+    },
     appSignIn: {
       signingIn: 'Tunakuingiza…',
       again: 'Rudi kuingia',

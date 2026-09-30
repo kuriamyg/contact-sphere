@@ -21,6 +21,7 @@ import { type AuthContext, CurrentAuth } from '../auth/decorators';
 import {
   ContactsImportService,
   type ImportPlan,
+  type PhoneCopyContact,
 } from './contacts-import.service';
 import {
   ContactsMergeService,
@@ -225,6 +226,14 @@ export class ContactsController {
   @Header('Cache-Control', 'no-store')
   exportVcf(@CurrentAuth() a: AuthContext): Promise<string> {
     return this.vcf.export(a.userId);
+  }
+
+  /** Active contacts for the Android app to put on the phone (P5c). */
+  @Throttle(IMPORT_LIMIT)
+  @Get('phone-copy')
+  @Header('Cache-Control', 'no-store')
+  phoneCopy(@CurrentAuth() a: AuthContext): Promise<PhoneCopyContact[]> {
+    return this.vcf.phoneCopy(a.userId);
   }
 
   @Get()
