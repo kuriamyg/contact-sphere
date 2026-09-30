@@ -41,6 +41,29 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- The "Contact Sphere" account our contacts live under (P5c). -->
+        <service
+            android:name=".AuthenticatorService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <service
+            android:name=".SyncService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
     </application>
 
     <!-- Permissions -->
@@ -48,4 +71,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- "Import from this phone" (ADR 0025): read-only, asked at the moment of use. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- "Put my contacts on this phone" (P5c): writes only under the app's own
+         "Contact Sphere" account; asked at the moment of use. -->
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
 </manifest>

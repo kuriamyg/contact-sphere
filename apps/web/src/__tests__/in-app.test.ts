@@ -15,3 +15,26 @@ describe('the Android app User-Agent', () => {
     expect(appVersion('Mozilla/5.0 (Linux; Android 16) Chrome/140')).toBeNull();
   });
 });
+
+describe('what each app version can do', () => {
+  it('turns features on by version', async () => {
+    const { headers } = await import('next/headers');
+    const { androidApp } = await import('@/lib/in-app');
+    const at = (ua: string) =>
+      vi
+        .mocked(headers)
+        .mockResolvedValue(new Headers({ 'user-agent': ua }) as never);
+    at('Chrome');
+    expect(await androidApp()).toBeNull();
+    at('wv ContactSphereAndroid/0.2');
+    expect(await androidApp()).toEqual({
+      googleHandoff: true,
+      phoneCopy: false,
+    });
+    at('wv ContactSphereAndroid/0.3');
+    expect(await androidApp()).toEqual({
+      googleHandoff: true,
+      phoneCopy: true,
+    });
+  });
+});

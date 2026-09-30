@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         // Our own plugins must be registered before the bridge starts.
         registerPlugin(PhoneContactsPlugin.class);
         registerPlugin(AppSignInPlugin.class);
+        registerPlugin(PhoneCopyPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

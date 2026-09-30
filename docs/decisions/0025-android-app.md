@@ -91,3 +91,23 @@ the same answer; racing redeems claim the row once. Someone sending a
 victim a crafted `?app=` link gains nothing unless the victim also hands
 over the code shown after Google. Old test builds (0.1) keep the note in
 place of the Google button.
+
+## P5c as built (2026-09-30)
+
+- Profile → **Contacts on this phone** (app 0.3+): the app fetches the
+  owner's active contacts (`GET /contacts/phone-copy`: not archived, not in
+  the trash; numbers in +254 form) and writes them under its own Android
+  account **"Contact Sphere"** (type `com.coderiserdigital.contactsphere`,
+  registered by the app's authenticator service; a no-op sync adapter makes
+  the Contacts app show them).
+- Never writes to Google, Samsung or SIM contacts. Android joins each one
+  with the same person already on the phone, so the Contacts app shows one
+  entry.
+- Running it again updates in place by the contact's id (`SOURCE_ID`),
+  skips unchanged contacts (a hash in `SYNC1`) and removes only contacts
+  this app wrote that are gone. **Remove from this phone** deletes the
+  account and exactly its contacts.
+- One way only: edits made on the phone are not sent back yet (P5d).
+- Audit: `contact.exported` with `{count, to: "phone"}`.
+- The app now has our own icon and splash screen; `/android` is the public
+  page to share the test build.

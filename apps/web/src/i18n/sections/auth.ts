@@ -33,6 +33,22 @@ export const auth = section(
       'Enter the mobile number you sign in with. If it has an account, we send a verification code to it by SMS.',
     passwordReset:
       'Your password has been changed and every device signed out. Sign in with the new one.',
+    android: {
+      title: 'Contact Sphere for Android',
+      lead: 'The app on your phone: sign in with Google or your phone number, bring in your phone’s contacts, and put Contact Sphere contacts in your phone’s Contacts.',
+      download: 'Download the app (4 MB)',
+      steps: [
+        'Tap “Download the app”, then open the file when it finishes.',
+        'If Android asks, allow Chrome to install apps from this source.',
+        'Samsung: if it says the install is blocked, turn off Auto Blocker for a moment (Settings → Security and privacy → Auto Blocker), then turn it back on.',
+        'If Play Protect warns about an unknown app, tap More details → Install anyway.',
+        'Open Contact Sphere and sign in.',
+      ],
+      testing:
+        'This is a test version from our own site, before Google Play. Android 7 or newer. If you had an earlier test version, uninstall it first.',
+      iphone: 'On an iPhone or a computer?',
+      useWeb: 'Use Contact Sphere in your browser.',
+    },
     continueWithGoogle: 'Continue with Google',
     appReturnTitle: 'Signed in with Google',
     appReturnBody: 'Go back to the Contact Sphere app to finish.',
@@ -108,6 +124,22 @@ export const auth = section(
       'Weka nambari ya simu unayoingia nayo. Ikiwa ina akaunti, tutaitumia msimbo wa uthibitisho kwa SMS.',
     passwordReset:
       'Nenosiri lako limebadilishwa na vifaa vyote vimetolewa. Ingia kwa nenosiri jipya.',
+    android: {
+      title: 'Contact Sphere kwa Android',
+      lead: 'Programu kwenye simu yako: ingia kwa Google au nambari yako ya simu, leta anwani za simu yako, na weka anwani za Contact Sphere kwenye Anwani za simu yako.',
+      download: 'Pakua programu (MB 4)',
+      steps: [
+        'Gusa “Pakua programu”, kisha fungua faili likimaliza kupakuliwa.',
+        'Android ikiuliza, ruhusu Chrome kusakinisha programu kutoka chanzo hiki.',
+        'Samsung: ikisema usakinishaji umezuiwa, zima Auto Blocker kwa muda (Mipangilio → Usalama na faragha → Auto Blocker), kisha iwashe tena.',
+        'Play Protect ikionya kuhusu programu isiyojulikana, gusa Maelezo zaidi → Sakinisha hata hivyo.',
+        'Fungua Contact Sphere na uingie.',
+      ],
+      testing:
+        'Hili ni toleo la majaribio kutoka tovuti yetu, kabla ya Google Play. Android 7 au mpya zaidi. Kama ulikuwa na toleo la awali la majaribio, liondoe kwanza.',
+      iphone: 'Uko kwenye iPhone au kompyuta?',
+      useWeb: 'Tumia Contact Sphere kwenye kivinjari chako.',
+    },
     continueWithGoogle: 'Endelea na Google',
     appReturnTitle: 'Umeingia kwa Google',
     appReturnBody: 'Rudi kwenye programu ya Contact Sphere kumaliza.',
