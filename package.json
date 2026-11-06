@@ -31,8 +31,8 @@
     "test:db": "npm run test:db --workspaces --if-present"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
-    "prisma": "^7.10.0"
+    "prettier": "^3.9.10",
+    "prisma": "^7.10.1"
   },
   "allowScripts": {
     "@parcel/watcher": false,
